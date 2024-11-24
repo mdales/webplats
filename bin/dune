@@ -1,0 +1,5 @@
+(executable
+ (public_name webplats)
+ (name main)
+ (libraries webplats dream fpath)
+ (preprocess (pps lwt_ppx)))
