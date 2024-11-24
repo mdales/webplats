@@ -28,7 +28,8 @@ let of_directory ~base path =
 	| None -> failwith "base is not parent directory"
 	in
 
-	let paths = find_markdown_files path in
+	let paths = find_markdown_files path 
+	|> List.filter (fun p -> (Fpath.basename p) = "index.md" ) in
 	let pages = List.map (Page.of_file ~base:base) paths
 	|> List.filter (fun p -> not (Page.draft p))
 	|> List.sort (fun a b -> 

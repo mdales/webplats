@@ -2,4 +2,4 @@
 
 (library
  (name webplats)
- (libraries fpath dream cmarkit astring yaml))
+ (libraries fpath dream cmarkit astring yaml camlimages.core camlimages.jpeg))

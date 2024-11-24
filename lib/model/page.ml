@@ -13,7 +13,8 @@ type frontmatter = {
 
 type t = {
 	frontmatter : frontmatter;
-	url : string;
+	path : Fpath.t;
+	base : Fpath.t;
 }
 
 let yaml_dict_to_string a k = 
@@ -95,23 +96,27 @@ let read_frontmatter path =
 	
 
 let of_file ~base path = 
-	let url = Fpath.rem_prefix base path in
-	let frontmatter = try
-		 read_frontmatter path
-	with
-	| Not_found | Invalid_argument _ -> failwith (Printf.sprintf "Failed to find key in %s" (Fpath.to_string path))
-	in
-	
-	match url with
-	| Some url ->{ frontmatter ; url="/" ^ Fpath.to_string url}
-	| None -> failwith "base is not parent directory"
-
+	match Fpath.rem_prefix base path with 
+	| None -> failwith "Base wasn't prefix of path"
+	| Some _ -> (
+		let frontmatter = try
+			 read_frontmatter path
+		with
+		| Not_found | Invalid_argument _ -> failwith (Printf.sprintf "Failed to find key in %s" (Fpath.to_string path))
+		in
+		{ frontmatter ; path ; base}
+	)
+		
 let title t = 
 	match t.frontmatter.title with
 	| Some t -> t
 	| None -> "Untitled"
 	
-let url t = t.url
+let url t = 
+	(* Option.get is "safe" because of pre-condition check in `of_file` *)
+	let index_dir_path = Fpath.parent t.path in
+	let url_path = Option.get (Fpath.rem_prefix t.base index_dir_path) in
+	("/" ^ Fpath.to_string (url_path))
 
 let date t = t .frontmatter.date
 
@@ -121,3 +126,4 @@ let titleimage t = t.frontmatter.titleimage
 
 let draft t = t.frontmatter.draft
 
+let path t = Fpath.parent t.path

@@ -1,5 +1,12 @@
 open Webplats
 
+let loader page thumbnail_size _root _path _request =
+  let path = Snapshots.render_thumbnail page thumbnail_size in 
+  Dream.respond (In_channel.with_open_bin path (fun ic -> 
+    In_channel.input_all ic
+  ))
+  
+
 let () =
 
   let site = Site.of_directory (Fpath.v "/Users/michael/Sites/mynameismwd.org/content") in
@@ -18,8 +25,18 @@ let () =
       | "posts" -> Dream.get (Section.url sec) (fun _ -> Posts.render_section sec |> Dream.html)
       | _ -> Dream.get (Section.url sec) (fun _ -> Renderer.render_section sec |> Dream.html)
     ) ::
-    List.map (fun p -> 
-      Dream.get (Page.url p) (fun _ -> Renderer.render_page p |> Dream.html)
+    List.concat_map (fun p -> 
+      Dream.get (Page.url p) (fun _ -> Renderer.render_page p |> Dream.html) :: 
+      (
+        match Page.titleimage p with
+        | None -> []
+        | Some _img -> (
+            [
+              Dream.get ((Page.url p) ^ "thumbnail.jpg") (Dream.static ~loader:(loader p 300) "");
+              Dream.get ((Page.url p) ^ "thumbnail@2x.jpg") (Dream.static ~loader:(loader p 600) "");
+            ]
+        )
+      )
     ) (Section.pages sec) 
   ) (Site.sections site) in
   
