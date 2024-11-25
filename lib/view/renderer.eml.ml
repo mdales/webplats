@@ -9,8 +9,8 @@ let render_header title =
   <div class="header stripes">
     <header role="banner">
       <a ref="home">
-        <h1><%s title %></h1>
-        <h2>the website of Michael Winston Dales</h2>
+        <h1>my name is mwd</h1>
+        <h2>the <%s title %> of Michael Winston Dales</h2>
       </a>
     </header>
   </div>
@@ -89,14 +89,34 @@ let render_section sec =
   </body>
   </html>
 
+let ptime_to_str (t : Ptime.t) : string = 
+  let ((year, month, day), _) = Ptime.to_date_time t in
+  Printf.sprintf "%d %s %d" day months.(month - 1) year
 
-let render_page page =
-  <html>
-  <head>
-  <link rel="stylesheet" href="/css/base.min.1baad36ee4ee027cab80c240d7d6f3bd25a6b673801984ba90cb19fd0c96c0c35914a8be655c092babd943d87ce43c99874d9415f746837ae01492338478ab7b.css" integrity="sha512-G6rTbuTuAnyrgMJA19bzvSWmtnOAGYS6kMsZ/QyWwMNZFKi+ZVwJK6vZQ9h85DyZh02UFfdGg3rgFJIzhHirew==" type="text/css" media="screen">
-  <title><%s Page.title page %></title>
-  </head>
+let render_page sec page =
+  <%s! (render_head (Page.title page)) %>
   <body>
-    <h1><%s Page.title page %></h1>
+    <div class="almostall">
+      <%s! render_header (Section.title sec) %>
+      <div id="container">
+        <div class="content">
+          <section role="main">
+            <div class="article">
+              <article>
+                <div class="headerflex">
+                  <div class="headerflextitle">
+                    <h3><%s Page.title page %></h3>
+                  </div>
+                  <div class="headerflexmeta">
+                    <p><%s ptime_to_str (Page.date page) %></p>
+                  </div>
+                </div>
+                <%s Page.body page %>
+              </article>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
   </body>
   </html>

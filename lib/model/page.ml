@@ -8,7 +8,12 @@ type frontmatter = {
   draft : bool;
 }
 
-type t = { frontmatter : frontmatter; path : Fpath.t; base : Fpath.t }
+type t = {
+  frontmatter : frontmatter;
+  body : string;
+  path : Fpath.t;
+  base : Fpath.t;
+}
 
 let yaml_dict_to_string a k =
   match List.assoc_opt k a with
@@ -66,29 +71,29 @@ let yaml_to_struct y =
   | _ -> failwith "malformed yaml"
 
 let read_frontmatter path =
-  let raw_frontmatter =
+  let raw_frontmatter, body_markdown =
     In_channel.with_open_text (Fpath.to_string path) (fun ic ->
         let parts = In_channel.input_all ic |> Astring.String.cuts ~sep:"---" in
         match parts with
-        | _ :: fm :: _body -> fm
+        | _ :: fm :: body -> (fm, String.concat "\n---\n" body)
         | _ ->
             failwith
               (Printf.sprintf "failed to parse %s" (Fpath.to_string path)))
   in
   let frontmatter = String.trim raw_frontmatter |> Yaml.of_string_exn in
-  yaml_to_struct frontmatter
+  (yaml_to_struct frontmatter, body_markdown)
 
 let of_file ~base path =
   match Fpath.rem_prefix base path with
   | None -> failwith "Base wasn't prefix of path"
   | Some _ ->
-      let frontmatter =
+      let frontmatter, body =
         try read_frontmatter path
         with Not_found | Invalid_argument _ ->
           failwith
             (Printf.sprintf "Failed to find key in %s" (Fpath.to_string path))
       in
-      { frontmatter; path; base }
+      { frontmatter; path; body; base }
 
 let title t = match t.frontmatter.title with Some t -> t | None -> "Untitled"
 
@@ -103,3 +108,4 @@ let synopsis t = t.frontmatter.synopsis
 let titleimage t = t.frontmatter.titleimage
 let draft t = t.frontmatter.draft
 let path t = Fpath.parent t.path
+let body t = t.body

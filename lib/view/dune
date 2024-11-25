@@ -5,6 +5,12 @@
   (run dream_eml %{deps} --workspace %{workspace_root})))
 
 (rule
+ (targets photos.ml)
+ (deps photos.eml.ml)
+ (action
+  (run dream_eml %{deps} --workspace %{workspace_root})))
+
+(rule
  (targets posts.ml)
  (deps posts.eml.ml)
  (action

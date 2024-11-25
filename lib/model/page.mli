@@ -9,3 +9,4 @@ val synopsis : t -> string option
 val titleimage : t -> image option
 val draft : t -> bool
 val path : t -> Fpath.t
+val body : t -> string

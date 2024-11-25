@@ -30,13 +30,16 @@ let () =
         | "posts" ->
             Dream.get (Section.url sec) (fun _ ->
                 Posts.render_section sec |> Dream.html)
+        | "photos" ->
+            Dream.get (Section.url sec) (fun _ ->
+                Photos.render_section sec |> Dream.html)
         | _ ->
             Dream.get (Section.url sec) (fun _ ->
                 Renderer.render_section sec |> Dream.html))
         :: List.concat_map
              (fun p ->
                Dream.get (Page.url p) (fun _ ->
-                   Renderer.render_page p |> Dream.html)
+                   Renderer.render_page sec p |> Dream.html)
                ::
                (match Page.titleimage p with
                | None -> []
