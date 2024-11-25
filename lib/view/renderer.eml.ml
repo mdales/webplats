@@ -93,6 +93,11 @@ let ptime_to_str (t : Ptime.t) : string =
   let ((year, month, day), _) = Ptime.to_date_time t in
   Printf.sprintf "%d %s %d" day months.(month - 1) year
 
+let cmark_to_html : strict:bool -> safe:bool -> string -> string =
+fun ~strict ~safe md ->
+  let doc = Cmarkit.Doc.of_string ~strict md in
+  Cmarkit_html.of_doc ~safe doc
+
 let render_page sec page =
   <%s! (render_head (Page.title page)) %>
   <body>
@@ -111,7 +116,7 @@ let render_page sec page =
                     <p><%s ptime_to_str (Page.date page) %></p>
                   </div>
                 </div>
-                <%s Page.body page %>
+                <%s! cmark_to_html ~strict:false ~safe:true (Page.body page) %>
               </article>
             </div>
           </section>
