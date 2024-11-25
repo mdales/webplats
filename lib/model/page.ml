@@ -6,6 +6,7 @@ type frontmatter = {
   synopsis : string option;
   titleimage : image option;
   draft : bool;
+  tags : string list;
 }
 
 type t = {
@@ -19,6 +20,17 @@ let yaml_dict_to_string a k =
   match List.assoc_opt k a with
   | None -> None
   | Some v -> ( match v with `String str -> Some str | _ -> None)
+
+let yaml_dict_to_string_list a k =
+  match List.assoc_opt k a with
+  | None -> []
+  | Some v -> (
+      match v with
+      | `A lst ->
+          List.filter_map
+            (fun v -> match v with `String s -> Some s | _ -> None)
+            lst
+      | _ -> [])
 
 let yaml_dict_to_bool a k =
   match List.assoc_opt k a with
@@ -67,6 +79,7 @@ let yaml_to_struct y =
           (match yaml_dict_to_bool assoc "draft" with
           | Some b -> b
           | None -> true);
+        tags = yaml_dict_to_string_list assoc "tags";
       }
   | _ -> failwith "malformed yaml"
 
@@ -109,3 +122,4 @@ let titleimage t = t.frontmatter.titleimage
 let draft t = t.frontmatter.draft
 let path t = Fpath.parent t.path
 let body t = t.body
+let tags t = t.frontmatter.tags
