@@ -13,6 +13,10 @@ let () =
   let toplevel =
     [
       Dream.get "/" (fun _ -> Index.render_index site |> Dream.html);
+      Dream.get "/index.xml" (fun _ -> Rss.render_rss site (
+        List.concat_map Section.pages (Site.sections site)
+        |> List.sort (fun a b -> Ptime.compare (Page.date b) (Page.date a))
+      ) |> Dream.html);
       Dream.get "/css/**"
         (Dream.static "/Users/michael/Sites/mynameismwd.org/public/css/.");
       Dream.get "/face/**"
@@ -39,7 +43,10 @@ let () =
         | _ ->
             Dream.get (Section.url sec) (fun _ ->
                 Renderer.render_section sec |> Dream.html))
-        :: List.concat_map
+        :: 
+        Dream.get ((Section.url sec) ^ "index.xml") (fun _ -> Rss.render_rss site (Section.pages sec) |> Dream.html)
+        ::
+        List.concat_map
              (fun p ->
                Dream.get (Page.url p) (fun _ ->
                    Renderer.render_page sec p |> Dream.html)
