@@ -6,7 +6,7 @@ let render_video filename thumb_opt =
     poster="<%s t %>"
 % | None -> ());
     >
-    <source src="<%s filename %>" type="video/mp4"/>
+    <source src="<%s! filename %>" type="video/mp4"/>
     Your browser does not support the video element.
     </video>
   </div>
@@ -15,7 +15,7 @@ let render_audio filename =
   <div class="listimage">
     <div>
       <audio controls>
-        <source src="<%s filename %>" type="audio/mp4"/>
+        <source src="<%s! filename %>" type="audio/mp4"/>
         Your browser does not support the audio element.
       </audio>
     </div>
@@ -24,7 +24,7 @@ let render_audio filename =
 let render_youtube code = 
   <div class="listimage">
     <div>
-      <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/<%s code %>" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/<%s! code %>" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
     </div>
   </div>⏎ 
 

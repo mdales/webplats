@@ -56,6 +56,7 @@ let () =
                          match sc with
                          | Page.Video (r, None) -> [ r ]
                          | Page.Video (r, Some t) -> [ r; t ]
+                         | Page.Audio r -> [r]
                          | _ -> [])
                        (Page.shortcodes p)
                     |> List.map (fun filename ->
