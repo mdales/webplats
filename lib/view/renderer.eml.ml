@@ -26,47 +26,54 @@ let render_footer ()   =
   <div id="foot" class="stripes">
     <nav>
       <div id="endlinks">
+        <div>
+          <ul class="rsslinks">
+            <li>
+              <a href="/">All</a> 
+              (<a href="{{ .RSSLink }}" type="application/rss+xml" target="_blank">RSS</a>)
+            </li>
+            <li>
+              <a href="/posts/">Posts</a> 
+              (<a href="{{ .RSSLink }}" type="application/rss+xml" target="_blank">RSS</a>)
+            </li>
+            <li>
+              <a href="/sounds/">Sounds</a> 
+              (<a href="{{ .RSSLink }}" type="application/rss+xml" target="_blank">RSS</a>)
+            </li>
+          </ul>
+        </div>
+        <div>
+          <ul class="rsslinks">
+            <li>
+              <a href="/photos/">Photos</a> 
+              (<a href="{{ .RSSLink }}" type="application/rss+xml" target="_blank">RSS</a>)
+            </li>
+            <li>
+              <a href="/snapshots/">Snapshos</a> 
+              (<a href="{{ .RSSLink }}" type="application/rss+xml" target="_blank">RSS</a>)
+            </li>
+            <li>
+              <a href="/zines/">Zines</a> 
+              (<a href="{{ .RSSLink }}" type="application/rss+xml" target="_blank">RSS</a>)
+            </li>
+          </ul>
+        </div>
+        <div>
+          <ul class="rsslinks">
+          	<li><a href="https://mwdales-guitars.uk">Guitar making</a></li>
+          	<li><a href="https://digitalflapjack.com">Computering</a></li>
+          </ul>
+        </div>
+        <div>
+          <ul class="rsslinks">
+          	<li><a href="https://toot.mynameismwd.org/@michael">Social</a></li>
+          	<li><a href="/about/">About</a></li>
+          	<li><a href="/search/">Search</a></li>
+          </ul>
+        </div>
       </div>
     </nav>
   </div>
-
-let render_index site =
-  <html>
-  <%s! (render_head (Site.title site)) %>
-  <body>
-    <div class="almostall">
-      <%s! render_header (Site.title site) %>
-      
-      <div id="container">
-        <div class="content">
-          <section role="main">
-            <div class="article">
-              <h2>My things here</h2>
-                <div class="index">
-% (Site.sections site) |> List.iter begin fun (sec) ->
-                  <div>
-                    <a href="<%s Section.url sec %>">
-                      <div class="homebutton colour-<%s Section.title sec %>">
-                        <h3><%s Section.title sec %></h3>
-                        <p>
-                          <%d List.length (Section.pages sec) %> <%s Section.title sec %>,
-                          last updated <%s ptime_to_str (Page.date (List.hd (Section.pages sec))) %></p>
-                      </div>
-                    </a>
-                  </div>
-% end;
-                </div>
-              <h2>My other sites</h2>
-                <div class="index">
-                </div>
-            </div>
-          </section>
-        </div>
-      </div>      
-    </div>
-    <%s! render_footer () %>
-  </body>
-  </html>
 
 let render_section sec =
   <html>
@@ -89,10 +96,6 @@ let render_section sec =
     <%s! render_footer () %>
   </body>
   </html>
-
-let ptime_to_str (t : Ptime.t) : string = 
-  let ((year, month, day), _) = Ptime.to_date_time t in
-  Printf.sprintf "%d %s %d" day months.(month - 1) year
 
 let cmark_to_html : strict:bool -> safe:bool -> string -> string =
 fun ~strict ~safe md ->

@@ -12,7 +12,7 @@ let () =
 
   let toplevel =
     [
-      Dream.get "/" (fun _ -> Renderer.render_index site |> Dream.html);
+      Dream.get "/" (fun _ -> Index.render_index site |> Dream.html);
       Dream.get "/css/**"
         (Dream.static "/Users/michael/Sites/mynameismwd.org/public/css/.");
       Dream.get "/face/**"
