@@ -52,17 +52,13 @@ let () =
                            (Dream.static ~loader:(loader p 600) "");
                        ])
                   @ (List.concat_map
-                       (fun sc ->
+                       (fun (_, sc) ->
                          match sc with
                          | Page.Video (r, None) -> [ r ]
                          | Page.Video (r, Some t) -> [ r; t ]
                          | _ -> [])
                        (Page.shortcodes p)
                     |> List.map (fun filename ->
-                           Dream.log "adding %s -> %s"
-                             (Page.url p ^ filename)
-                             (Fpath.to_string
-                                (Fpath.add_seg (Page.path p) filename));
                            Dream.get
                              (Page.url p ^ filename)
                              (fun _ ->

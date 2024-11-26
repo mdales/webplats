@@ -1,6 +1,7 @@
+
 (rule
- (targets renderer.ml)
- (deps renderer.eml.ml)
+ (targets shortcodes.ml)
+ (deps shortcodes.eml.ml)
  (action
   (run dream_eml %{deps} --workspace %{workspace_root})))
 
@@ -19,5 +20,11 @@
 (rule
  (targets snapshots.ml)
  (deps snapshots.eml.ml)
+ (action
+  (run dream_eml %{deps} --workspace %{workspace_root})))
+
+(rule
+ (targets renderer.ml)
+ (deps renderer.eml.ml)
  (action
   (run dream_eml %{deps} --workspace %{workspace_root})))

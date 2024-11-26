@@ -5,6 +5,7 @@ type shortcode =
   | Image of string * string option * string option
   | Audio of string
   | Photo of string
+  | Youtube of string
   | Unknown of string list
 
 type t
@@ -19,4 +20,4 @@ val draft : t -> bool
 val path : t -> Fpath.t
 val body : t -> string
 val tags : t -> string list
-val shortcodes : t -> shortcode list
+val shortcodes : t -> ((int * int) * shortcode) list
