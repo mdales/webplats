@@ -24,6 +24,9 @@ let () =
     List.concat_map
       (fun sec ->
         (match Section.title sec with
+        | "sounds" ->
+            Dream.get (Section.url sec) (fun _ ->
+                Snapshots.render_section sec |> Dream.html)
         | "snapshots" ->
             Dream.get (Section.url sec) (fun _ ->
                 Snapshots.render_section sec |> Dream.html)
