@@ -34,33 +34,52 @@ let () =
   let sections =
     List.concat_map
       (fun sec ->
-        (match Section.title sec with
-        | "sounds" ->
-            Dream.get (Section.url sec) (fun _ ->
-                Snapshots.render_section sec |> Dream.html)
-        | "snapshots" ->
-            Dream.get (Section.url sec) (fun _ ->
-                Snapshots.render_section sec |> Dream.html)
-        | "posts" ->
-            Dream.get (Section.url sec) (fun _ ->
-                Posts.render_section sec |> Dream.html)
-        | "photos" ->
-            Dream.get (Section.url sec) (fun _ ->
-                Photos.render_section sec |> Dream.html)
-        | _ ->
-            Dream.get (Section.url sec) (fun _ ->
-                Renderer.render_section sec |> Dream.html))
+        let 
+          section_renderer, 
+          page_renderer,
+          thumbnail_loader,
+          retina_thumbnail_loader = match (Section.title sec) with
+        | "posts" -> (
+          Posts.render_section,
+          Renderer.render_page,
+          (fun p -> thumbnail_loader p 300),
+          (fun p -> thumbnail_loader p 600)
+        )
+        | "photos" -> (          
+          Photos.render_section,
+          Renderer.render_page,
+          (fun p -> 
+            let i = Option.get (Page.titleimage p) in
+            snapshot_image_loader p i.filename (640, 350)
+          ),          
+          (fun p -> 
+            let i = Option.get (Page.titleimage p) in
+            snapshot_image_loader p i.filename (1280, 700)
+          )
+        )
+        | "sounds" | "snapshots" -> (
+          Snapshots.render_section,
+          Snapshots.render_page,
+          (fun p -> thumbnail_loader p 300),
+          (fun p -> thumbnail_loader p 600)
+        )
+        | _-> (
+          Renderer.render_section, 
+          Renderer.render_page,
+          (fun p -> thumbnail_loader p 300),
+          (fun p -> thumbnail_loader p 600)
+        )
+        in
+        
+        (Dream.get (Section.url sec) (fun _ -> section_renderer sec |> Dream.html))
+        
         :: Dream.get
              (Section.url sec ^ "index.xml")
              (fun _ -> Rss.render_rss site (Section.pages sec) |> Dream.html)
         :: List.concat_map
              (fun p ->
-               (let renderer =
-                  match Section.title sec with
-                  | "snapshots" -> Snapshots.render_page
-                  | _ -> Renderer.render_page
-                in
-                Dream.get (Page.url p) (fun _ -> renderer sec p |> Dream.html))
+               (
+                Dream.get (Page.url p) (fun _ -> page_renderer sec p |> Dream.html))
                :: ((* title images *)
                    (match Page.titleimage p with
                    | None -> []
@@ -68,10 +87,10 @@ let () =
                        [
                          Dream.get
                            (Page.url p ^ "thumbnail.jpg")
-                           (Dream.static ~loader:(thumbnail_loader p 300) "");
+                           (Dream.static ~loader:(thumbnail_loader p) "");
                          Dream.get
                            (Page.url p ^ "thumbnail@2x.jpg")
-                           (Dream.static ~loader:(thumbnail_loader p 600) "");
+                           (Dream.static ~loader:(retina_thumbnail_loader p) "");
                        ])
                   (* snapshot style images from frontmatter *)
                   @ List.concat_map

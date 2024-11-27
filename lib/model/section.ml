@@ -21,8 +21,9 @@ let of_directory ~base path =
     find_markdown_files path
     |> List.filter (fun p -> Fpath.basename p = "index.md")
   in
+  Dream.log "%s" (Fpath.basename path);
   let pages =
-    List.map (Page.of_file ~base) paths
+    List.map (Page.of_file ~titleimage_details:((Fpath.basename path) = "photos") ~base) paths
     |> List.filter (fun p -> not (Page.draft p))
     |> List.sort (fun a b -> Ptime.compare (Page.date b) (Page.date a))
   in

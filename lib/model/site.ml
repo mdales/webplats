@@ -15,7 +15,6 @@ let of_directory path =
              (Page.date (List.hd (Section.pages b)))
              (Page.date (List.hd (Section.pages a))))
   in
-  Dream.log " %d\n" (List.length sections);
   { path; sections }
 
 let sections t = t.sections
