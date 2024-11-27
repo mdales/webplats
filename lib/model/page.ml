@@ -10,20 +10,12 @@ type frontmatter = {
   images : image list;
 }
 
-type shortcode =
-  | Video of string * string option
-  | Image of string * string option * string option
-  | Audio of string
-  | Photo of string
-  | Youtube of string
-  | Unknown of string list
-
 type t = {
   frontmatter : frontmatter;
   body : string;
   path : Fpath.t;
   base : Fpath.t;
-  shortcodes : ((int * int) * shortcode) list;
+  shortcodes : ((int * int) * Shortcode.t) list;
 }
 
 let yaml_dict_to_string a k =
@@ -82,15 +74,20 @@ let yaml_dict_to_image_list a k =
       match v with
       | `A lst ->
           List.filter_map
-            (fun v -> 
-              match v with 
-              | `String filename -> Some { filename ; description=None }
-              | `O assoc -> (match yaml_dict_to_string assoc "image" with
-                | Some filename -> Some { filename; description = yaml_dict_to_string assoc "alt" }
-                | None -> None
-              )
-              | _ -> None
-             ) lst
+            (fun v ->
+              match v with
+              | `String filename -> Some { filename; description = None }
+              | `O assoc -> (
+                  match yaml_dict_to_string assoc "image" with
+                  | Some filename ->
+                      Some
+                        {
+                          filename;
+                          description = yaml_dict_to_string assoc "alt";
+                        }
+                  | None -> None)
+              | _ -> None)
+            lst
       | _ -> [])
 
 let yaml_to_struct y =
@@ -126,44 +123,6 @@ let read_frontmatter path =
   let frontmatter = String.trim raw_frontmatter |> Yaml.of_string_exn in
   (yaml_to_struct frontmatter, body_markdown)
 
-let find_raw_shortcodes body =
-  let shortcode_regex = Str.regexp {|{{<\(.*\)>}}|} in
-  let rec loop pos acc =
-    try
-      let _ = Str.search_forward shortcode_regex body pos in
-      let loc = (Str.match_beginning ()) in
-      let nextpos = Str.match_end () in
-      let raw = Str.matched_group 1 body in
-      let shortcode = String.trim raw in
-      loop nextpos ((shortcode, (loc, String.length raw + 6)) :: acc)
-    with Not_found -> acc
-  in
-  List.rev (loop 0 [])
-
-let find_shortcodes body =
-  let rex = Pcre2.regexp {|"[^"]+"|[\w]+|} in
-  find_raw_shortcodes body
-  |> List.map (fun (r, loc) ->
-         ( loc, 
-           Array.to_list (Pcre2.extract_all ~rex r)
-           |> List.map (fun a ->
-                  let part = a.(0) in
-                  match String.starts_with ~prefix:"\"" part with
-                  | false -> part
-                  | true -> String.sub part 1 (String.length part - 2)) ))
-  |> List.map (fun (loc, sl) ->
-         ( loc,
-           match sl with
-           | [ "video"; arg1 ] -> Video (arg1, None)
-           | [ "video"; arg1; arg2 ] -> Video (arg1, Some arg2)
-           | [ "image"; arg1 ] -> Image (arg1, None, None)
-           | [ "image"; arg1; arg2 ] -> Image (arg1, Some arg2, None)
-           | [ "image"; arg1; arg2; arg3 ] -> Image (arg1, Some arg2, Some arg3)
-           | [ "audio"; arg1 ] -> Audio arg1
-           | [ "photo"; arg1 ] -> Photo arg1
-           | [ "youtube"; arg1 ] -> Youtube arg1
-           | _ -> Unknown sl ))
-
 let of_file ~base path =
   match Fpath.rem_prefix base path with
   | None -> failwith "Base wasn't prefix of path"
@@ -174,7 +133,7 @@ let of_file ~base path =
           failwith
             (Printf.sprintf "Failed to find key in %s" (Fpath.to_string path))
       in
-      let shortcodes = find_shortcodes body in
+      let shortcodes = Shortcode.find_shortcodes body in
       { frontmatter; path; body; base; shortcodes }
 
 let title t = match t.frontmatter.title with Some t -> t | None -> "Untitled"

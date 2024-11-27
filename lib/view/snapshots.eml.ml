@@ -26,9 +26,9 @@ let render_thumbnail page thumbnail_size =
     )
    )
 
-let render_image_fit page (image : Page.image) (max_width, max_height) =
-  let imgpath = Fpath.add_seg (Page.path page) image.filename in
-    let targetname = Printf.sprintf "/tmp/image_%dx%d_%s" max_width max_height image.filename  in
+let render_image_fit page filename (max_width, max_height) =
+  let imgpath = Fpath.add_seg (Page.path page) filename in
+    let targetname = Printf.sprintf "/tmp/image_%dx%d_%s" max_width max_height filename  in
     match Sys.file_exists targetname with
     | true -> targetname
     | false -> (

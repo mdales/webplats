@@ -28,9 +28,35 @@ let render_youtube code =
     </div>
   </div>
 
+let render_image filename alt klass =
+  <div class="listimage">
+    <div>
+      <figure>
+        <img
+% (match klass with Some name ->
+          class="<%s name %>"
+% | None -> ());
+          class="rounded"
+          src="<%s filename %>"
+% let name, ext = Fpath.split_ext (Fpath.v filename) in
+% let retina_filename = Printf.sprintf "%s@2x%s" (Fpath.to_string name) ext in
+          srcset="<%s retina_filename %> 2x, <%s filename %> 1x"
+% (match (alt) with Some desc ->
+          alt="<%s desc %>"
+% | None -> ());       
+        />
+      </figure>
+    </div>
+  </div>
+
+let render_photo reference =
+    <p>TODO: photo link to <a href="/photos/<%s reference %>/"><%s reference %></a></p>
+
 let render_shortcode shortcode =
   match shortcode with
-  | Page.Video (filename, thumb_opt) -> render_video filename thumb_opt
-  | Page.Audio (filename) -> render_audio filename
-  | Page.Youtube (code) -> render_youtube code
+  | Shortcode.Video (filename, thumb_opt) -> render_video filename thumb_opt
+  | Shortcode.Audio (filename) -> render_audio filename
+  | Shortcode.Youtube (code) -> render_youtube code
+  | Shortcode.Image (filename, alt, klass) -> render_image filename alt klass
+  | Shortcode.Photo (reference) -> render_photo reference
   | _ -> ""

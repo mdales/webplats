@@ -37,7 +37,7 @@ let render_section sec =
           </section>
         </div>
       </div>      
-    </div>
     <%s! Renderer.render_footer () %>
+    </div>
   </body>
   </html>
