@@ -14,13 +14,20 @@ let render_thumbnail page thumbnail_size =
       | true -> (((thumbnail_size * width) / height), thumbnail_size)
       | false -> (thumbnail_size, ((thumbnail_size * height) / width))
       in   
-      let rgb = match img with
-      | Rgb24 a -> a
+      let resultimg = match img with
+      | Rgb24 rgb -> (
+        let resized = Rgb24.resize None rgb newwidth newheight in
+        let cropped = Rgb24.sub resized ((newwidth - thumbnail_size) / 2) ((newheight - thumbnail_size) / 2) thumbnail_size thumbnail_size in
+        Images.Rgb24 cropped
+      )
+      | Rgba32 rgba -> (
+        let resized = Rgba32.resize None rgba newwidth newheight in
+        let cropped = Rgba32.sub resized ((newwidth - thumbnail_size) / 2) ((newheight - thumbnail_size) / 2) thumbnail_size thumbnail_size in
+        Images.Rgba32 cropped
+      )
       | _ -> failwith "unexpcted image format"
       in
-      let resized = Rgb24.resize None rgb newwidth newheight in
-      let cropped = Rgb24.sub resized ((newwidth - thumbnail_size) / 2) ((newheight - thumbnail_size) / 2) thumbnail_size thumbnail_size in
-      let resultimg = Images.Rgb24 cropped in
+      
       Images.save targetname None [] resultimg;
       targetname
     )
@@ -44,12 +51,17 @@ let render_image_fit page filename (max_width, max_height) =
         let ratio = min wratio hratio in
         let newwidth = int_of_float (ratio *. fwidth)
         and newheight = int_of_float (ratio *. fheight) in        
-        let rgb = match img with
-        | Rgb24 a -> a
+        let resultimg = match img with
+        | Rgb24 rgb -> (        
+          let resized = Rgb24.resize None rgb newwidth newheight in
+          Images.Rgb24 resized
+        )
+        | Rgba32 rgba -> ( 
+          let resized = Rgba32.resize None rgba newwidth newheight in
+          Images.Rgba32 resized
+        )
         | _ -> failwith "unexpcted image format"
         in
-        let resized = Rgb24.resize None rgb newwidth newheight in
-        let resultimg = Images.Rgb24 resized in
         Images.save targetname None [] resultimg;
         targetname
       )
