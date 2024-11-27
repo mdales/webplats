@@ -21,3 +21,4 @@ val path : t -> Fpath.t
 val body : t -> string
 val tags : t -> string list
 val shortcodes : t -> ((int * int) * shortcode) list
+val images : t -> image list

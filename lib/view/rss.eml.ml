@@ -30,6 +30,7 @@ let render_rss site pages =
           
           <guid>https://mynameismwd.org<%s Page.url page %></guid>
           <description>
+          	Working on content in the RSS feed!
           </description>
         </item>
 % ) (recent_pages pages));

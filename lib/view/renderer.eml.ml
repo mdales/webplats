@@ -30,15 +30,15 @@ let render_footer ()   =
           <ul class="rsslinks">
             <li>
               <a href="/">All</a> 
-              (<a href="{{ .RSSLink }}" type="application/rss+xml" target="_blank">RSS</a>)
+              (<a href="/index.xml" type="application/rss+xml" target="_blank">RSS</a>)
             </li>
             <li>
               <a href="/posts/">Posts</a> 
-              (<a href="{{ .RSSLink }}" type="application/rss+xml" target="_blank">RSS</a>)
+              (<a href="/posts/index.xml" type="application/rss+xml" target="_blank">RSS</a>)
             </li>
             <li>
               <a href="/sounds/">Sounds</a> 
-              (<a href="{{ .RSSLink }}" type="application/rss+xml" target="_blank">RSS</a>)
+              (<a href="/sounds/index.xml" type="application/rss+xml" target="_blank">RSS</a>)
             </li>
           </ul>
         </div>
@@ -46,15 +46,15 @@ let render_footer ()   =
           <ul class="rsslinks">
             <li>
               <a href="/photos/">Photos</a> 
-              (<a href="{{ .RSSLink }}" type="application/rss+xml" target="_blank">RSS</a>)
+              (<a href="/photos/index.xml" type="application/rss+xml" target="_blank">RSS</a>)
             </li>
             <li>
               <a href="/snapshots/">Snapshos</a> 
-              (<a href="{{ .RSSLink }}" type="application/rss+xml" target="_blank">RSS</a>)
+              (<a href="/snapshots/index.xml" type="application/rss+xml" target="_blank">RSS</a>)
             </li>
             <li>
               <a href="/zines/">Zines</a> 
-              (<a href="{{ .RSSLink }}" type="application/rss+xml" target="_blank">RSS</a>)
+              (<a href="/zines/index.xml" type="application/rss+xml" target="_blank">RSS</a>)
             </li>
           </ul>
         </div>
@@ -137,6 +137,7 @@ let render_page sec page =
           </section>
         </div>
       </div>
+      <%s! render_footer () %>   
     </div>
   </body>
   </html>

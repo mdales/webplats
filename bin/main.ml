@@ -1,7 +1,12 @@
 open Webplats
 
-let loader page thumbnail_size _root _path _request =
+let thumbnail_loader page thumbnail_size _root _path _request =
   let path = Snapshots.render_thumbnail page thumbnail_size in
+  Dream.respond
+    (In_channel.with_open_bin path (fun ic -> In_channel.input_all ic))
+
+let snapshot_image_loader page image bounds _root _path _request = 
+  let path = Snapshots.render_image_fit page image bounds in
   Dream.respond
     (In_channel.with_open_bin path (fun ic -> In_channel.input_all ic))
 
@@ -48,19 +53,36 @@ let () =
         ::
         List.concat_map
              (fun p ->
+               ( let renderer = match Section.title sec with
+               | "snapshots" -> Snapshots.render_page
+               | _ -> Renderer.render_page
+               in
                Dream.get (Page.url p) (fun _ ->
-                   Renderer.render_page sec p |> Dream.html)
+                   renderer sec p |> Dream.html)
+               )
                :: ((match Page.titleimage p with
                    | None -> []
                    | Some _img ->
                        [
                          Dream.get
                            (Page.url p ^ "thumbnail.jpg")
-                           (Dream.static ~loader:(loader p 300) "");
+                           (Dream.static ~loader:(thumbnail_loader p 300) "");
                          Dream.get
                            (Page.url p ^ "thumbnail@2x.jpg")
-                           (Dream.static ~loader:(loader p 600) "");
+                           (Dream.static ~loader:(thumbnail_loader p 600) "");
                        ])
+                  @ (List.concat_map (fun (i : Page.image) ->
+                    [                    
+                       Dream.get
+                         (Page.url p ^ i.filename)
+                         (Dream.static ~loader:(snapshot_image_loader p i (720, 1200)) "");
+                       let name, ext = Fpath.split_ext (Fpath.v i.filename) in
+                       let retina_name = (Fpath.to_string name) ^ "@2x" ^ ext in
+                       Dream.get
+                         (Page.url p ^ retina_name)
+                         (Dream.static ~loader:(snapshot_image_loader p i (720 * 2, 1200 * 2)) "");
+                    ]
+                  ) (Page.images p))
                   @ (List.concat_map
                        (fun (_, sc) ->
                          match sc with

@@ -7,6 +7,7 @@ type frontmatter = {
   titleimage : image option;
   draft : bool;
   tags : string list;
+  images : image list;
 }
 
 type shortcode =
@@ -73,6 +74,25 @@ let yaml_dict_to_image a k =
       | `String filename -> Some { filename; description = None }
       | _ -> None)
 
+(* This is complicated as older pages don't have alt text *)
+let yaml_dict_to_image_list a k =
+  match List.assoc_opt k a with
+  | None -> []
+  | Some v -> (
+      match v with
+      | `A lst ->
+          List.filter_map
+            (fun v -> 
+              match v with 
+              | `String filename -> Some { filename ; description=None }
+              | `O assoc -> (match yaml_dict_to_string assoc "image" with
+                | Some filename -> Some { filename; description = yaml_dict_to_string assoc "alt" }
+                | None -> None
+              )
+              | _ -> None
+             ) lst
+      | _ -> [])
+
 let yaml_to_struct y =
   match y with
   | `O assoc ->
@@ -89,6 +109,7 @@ let yaml_to_struct y =
           | Some b -> b
           | None -> true);
         tags = yaml_dict_to_string_list assoc "tags";
+        images = yaml_dict_to_image_list assoc "images";
       }
   | _ -> failwith "malformed yaml"
 
@@ -172,3 +193,4 @@ let path t = Fpath.parent t.path
 let body t = t.body
 let tags t = t.frontmatter.tags
 let shortcodes t = t.shortcodes
+let images t = t.frontmatter.images
