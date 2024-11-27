@@ -1,4 +1,9 @@
-type image = { filename : string; description : string option ; dimensions : (int * int) option }
+type image = {
+  filename : string;
+  description : string option;
+  dimensions : (int * int) option;
+}
+
 type t
 
 val of_file : ?titleimage_details:bool -> base:Fpath.t -> Fpath.t -> t

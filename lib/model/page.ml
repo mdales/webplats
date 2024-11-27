@@ -1,4 +1,8 @@
-type image = { filename : string; description : string option ; dimensions : (int * int) option }
+type image = {
+  filename : string;
+  description : string option;
+  dimensions : (int * int) option;
+}
 
 type frontmatter = {
   title : string option;
@@ -61,13 +65,17 @@ let yaml_dict_to_image a k =
       | `O assoc -> (
           match yaml_dict_to_string assoc "image" with
           | Some filename ->
-              Some { filename; description = yaml_dict_to_string assoc "alt" ; dimensions = None }
+              Some
+                {
+                  filename;
+                  description = yaml_dict_to_string assoc "alt";
+                  dimensions = None;
+                }
           | None -> None)
-      | `String filename -> (
-        Some { filename; description = None ; dimensions = None }
-      )
+      | `String filename ->
+          Some { filename; description = None; dimensions = None }
       | _ -> None)
-  
+
 (* This is complicated as older pages don't have alt text *)
 let yaml_dict_to_image_list a k =
   match List.assoc_opt k a with
@@ -78,7 +86,8 @@ let yaml_dict_to_image_list a k =
           List.filter_map
             (fun v ->
               match v with
-              | `String filename -> Some { filename; description = None; dimensions = None }
+              | `String filename ->
+                  Some { filename; description = None; dimensions = None }
               | `O assoc -> (
                   match yaml_dict_to_string assoc "image" with
                   | Some filename ->
@@ -86,7 +95,7 @@ let yaml_dict_to_image_list a k =
                         {
                           filename;
                           description = yaml_dict_to_string assoc "alt";
-                          dimensions = None
+                          dimensions = None;
                         }
                   | None -> None)
               | _ -> None)
@@ -125,25 +134,26 @@ let read_frontmatter path =
   in
   let frontmatter = String.trim raw_frontmatter |> Yaml.of_string_exn in
   (yaml_to_struct frontmatter, body_markdown)
-  
-let image_with_dimensions path img = 
-  match img with
-  | None -> img 
-  | Some img -> (
-    try
-      (* We use metadata rather than camlimage here as it's way faster *)
-      let metadata = Metadata.Image.parse_file (Fpath.to_string (Fpath.add_seg path img.filename)) in
-      let width = int_of_string (List.assoc "width" metadata)
-      and height = int_of_string (List.assoc "height" metadata) in
-      Some { img with dimensions = Some (width, height)}
-    with
-    | Failure _ -> (
-      Dream.log "Failed to parse %s" (Fpath.to_string (Fpath.add_seg path img.filename));
-      Some img
-    )
-  )
 
-let of_file ?(titleimage_details=false) ~base path =
+let image_with_dimensions path img =
+  match img with
+  | None -> img
+  | Some img -> (
+      try
+        (* We use metadata rather than camlimage here as it's way faster *)
+        let metadata =
+          Metadata.Image.parse_file
+            (Fpath.to_string (Fpath.add_seg path img.filename))
+        in
+        let width = int_of_string (List.assoc "width" metadata)
+        and height = int_of_string (List.assoc "height" metadata) in
+        Some { img with dimensions = Some (width, height) }
+      with Failure _ ->
+        Dream.log "Failed to parse %s"
+          (Fpath.to_string (Fpath.add_seg path img.filename));
+        Some img)
+
+let of_file ?(titleimage_details = false) ~base path =
   match Fpath.rem_prefix base path with
   | None -> failwith "Base wasn't prefix of path"
   | Some _ ->
@@ -153,11 +163,16 @@ let of_file ?(titleimage_details=false) ~base path =
           failwith
             (Printf.sprintf "Failed to find key in %s" (Fpath.to_string path))
       in
-      let frontmatter = match titleimage_details with
-      | false -> frontmatter
-      | true -> (
-        { frontmatter with titleimage = image_with_dimensions (Fpath.parent path) frontmatter.titleimage }
-      ) in
+      let frontmatter =
+        match titleimage_details with
+        | false -> frontmatter
+        | true ->
+            {
+              frontmatter with
+              titleimage =
+                image_with_dimensions (Fpath.parent path) frontmatter.titleimage;
+            }
+      in
       let shortcodes = Shortcode.find_shortcodes body in
       { frontmatter; path; body; base; shortcodes }
 

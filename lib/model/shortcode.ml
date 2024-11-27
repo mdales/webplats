@@ -25,7 +25,7 @@ let find_shortcodes body =
   find_raw_shortcodes body
   |> List.map (fun (r, loc) ->
          ( loc,
-           Array.to_list (Pcre2.extract_all ~rex r)
+           (try Array.to_list (Pcre2.extract_all ~rex r) with Not_found -> [])
            |> List.map (fun a ->
                   let part = a.(0) in
                   match String.starts_with ~prefix:"\"" part with

@@ -34,56 +34,50 @@ let () =
   let sections =
     List.concat_map
       (fun sec ->
-        let 
-          section_renderer, 
-          page_renderer,
-          thumbnail_loader,
-          retina_thumbnail_loader = match (Section.title sec) with
-        | "posts" -> (
-          Posts.render_section,
-          Renderer.render_page,
-          (fun p -> thumbnail_loader p 300),
-          (fun p -> thumbnail_loader p 600)
-        )
-        | "photos" -> (          
-          Photos.render_section,
-          Photos.render_page,
-          (fun p -> 
-            let i = Option.get (Page.titleimage p) in
-            snapshot_image_loader p i.filename (640, 350)
-          ),          
-          (fun p -> 
-            let i = Option.get (Page.titleimage p) in
-            snapshot_image_loader p i.filename (1280, 700)
-          )
-        )
-        | "sounds" | "snapshots" -> (
-          Snapshots.render_section,
-          Snapshots.render_page,
-          (fun p -> thumbnail_loader p 300),
-          (fun p -> thumbnail_loader p 600)
-        )
-        | _-> (
-          Renderer.render_section, 
-          Renderer.render_page,
-          (fun p -> thumbnail_loader p 300),
-          (fun p -> thumbnail_loader p 600)
-        )
+        let ( section_renderer,
+              page_renderer,
+              thumbnail_loader,
+              retina_thumbnail_loader ) =
+          match Section.title sec with
+          | "posts" ->
+              ( Posts.render_section,
+                Renderer.render_page,
+                (fun p -> thumbnail_loader p 300),
+                fun p -> thumbnail_loader p 600 )
+          | "photos" ->
+              ( Photos.render_section,
+                Photos.render_page,
+                (fun p ->
+                  let i = Option.get (Page.titleimage p) in
+                  snapshot_image_loader p i.filename (640, 350)),
+                fun p ->
+                  let i = Option.get (Page.titleimage p) in
+                  snapshot_image_loader p i.filename (1280, 700) )
+          | "sounds" | "snapshots" ->
+              ( Snapshots.render_section,
+                Snapshots.render_page,
+                (fun p -> thumbnail_loader p 300),
+                fun p -> thumbnail_loader p 600 )
+          | _ ->
+              ( Renderer.render_section,
+                Renderer.render_page,
+                (fun p -> thumbnail_loader p 300),
+                fun p -> thumbnail_loader p 600 )
         in
-        
-        (Dream.get (Section.url sec) (fun _ -> section_renderer sec |> Dream.html))
-        
+
+        Dream.get (Section.url sec) (fun _ ->
+            section_renderer sec |> Dream.html)
         :: Dream.get
              (Section.url sec ^ "index.xml")
              (fun _ -> Rss.render_rss site (Section.pages sec) |> Dream.html)
         :: List.concat_map
              (fun p ->
-               (
-                Dream.get (Page.url p) (fun _ -> page_renderer sec p |> Dream.html))
+               Dream.get (Page.url p) (fun _ ->
+                   page_renderer sec p |> Dream.html)
                :: ((* title images *)
                    (match Page.titleimage p with
                    | None -> []
-                   | Some img ->(
+                   | Some img -> (
                        [
                          Dream.get
                            (Page.url p ^ "thumbnail.jpg")
@@ -91,22 +85,33 @@ let () =
                          Dream.get
                            (Page.url p ^ "thumbnail@2x.jpg")
                            (Dream.static ~loader:(retina_thumbnail_loader p) "");
-                       ] @ (match (Section.title sec) with 
-                         | "photos" -> let name, ext =
-                                 Fpath.split_ext (Fpath.v img.filename)
-                               in
-                               let retina_name =
-                                 Fpath.to_string name ^ "@2x" ^ ext
-                               in[
-                           Dream.get
-                             (Page.url p ^ img.filename)
-                             (Dream.static ~loader:(snapshot_image_loader p img.filename (1008, 800)) "");
-                           Dream.get
-                             (Page.url p ^ retina_name)
-                             (Dream.static ~loader:(snapshot_image_loader p img.filename (2016, 1600)) "");
-                         ]
-                         | _ -> []
-                       )))
+                       ]
+                       @
+                       match Section.title sec with
+                       | "photos" ->
+                           let name, ext =
+                             Fpath.split_ext (Fpath.v img.filename)
+                           in
+                           let retina_name =
+                             Fpath.to_string name ^ "@2x" ^ ext
+                           in
+                           [
+                             Dream.get
+                               (Page.url p ^ img.filename)
+                               (Dream.static
+                                  ~loader:
+                                    (snapshot_image_loader p img.filename
+                                       (1008, 800))
+                                  "");
+                             Dream.get
+                               (Page.url p ^ retina_name)
+                               (Dream.static
+                                  ~loader:
+                                    (snapshot_image_loader p img.filename
+                                       (2016, 1600))
+                                  "");
+                           ]
+                       | _ -> []))
                   (* snapshot style images from frontmatter *)
                   @ List.concat_map
                       (fun (i : Page.image) ->
