@@ -47,7 +47,7 @@ let () =
         )
         | "photos" -> (          
           Photos.render_section,
-          Renderer.render_page,
+          Photos.render_page,
           (fun p -> 
             let i = Option.get (Page.titleimage p) in
             snapshot_image_loader p i.filename (640, 350)
@@ -83,7 +83,7 @@ let () =
                :: ((* title images *)
                    (match Page.titleimage p with
                    | None -> []
-                   | Some _img ->
+                   | Some img ->(
                        [
                          Dream.get
                            (Page.url p ^ "thumbnail.jpg")
@@ -91,7 +91,22 @@ let () =
                          Dream.get
                            (Page.url p ^ "thumbnail@2x.jpg")
                            (Dream.static ~loader:(retina_thumbnail_loader p) "");
-                       ])
+                       ] @ (match (Section.title sec) with 
+                         | "photos" -> let name, ext =
+                                 Fpath.split_ext (Fpath.v img.filename)
+                               in
+                               let retina_name =
+                                 Fpath.to_string name ^ "@2x" ^ ext
+                               in[
+                           Dream.get
+                             (Page.url p ^ img.filename)
+                             (Dream.static ~loader:(snapshot_image_loader p img.filename (1008, 800)) "");
+                           Dream.get
+                             (Page.url p ^ retina_name)
+                             (Dream.static ~loader:(snapshot_image_loader p img.filename (2016, 1600)) "");
+                         ]
+                         | _ -> []
+                       )))
                   (* snapshot style images from frontmatter *)
                   @ List.concat_map
                       (fun (i : Page.image) ->
