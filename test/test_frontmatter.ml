@@ -33,6 +33,46 @@ date: "2024-11-18 20:25:56"
   in
   assert_equal ~msg:"Date" expected (Frontmatter.date fm)
 
+let test_invalid_date _ =
+  let body = {|
+date: "a long time ago"
+|} in
+  let fm = Frontmatter.of_string body in
+  assert_equal ~msg:"Date" Ptime.epoch (Frontmatter.date fm)
+
+let test_get_invalud_custom_key_string _ =
+  let body = {|
+title: "This is a test"
+|} in
+  let fm = Frontmatter.of_string body in
+  let custom_value = Frontmatter.get_key_as_string fm "something" in
+  assert_equal ~msg:"custom value" None custom_value
+
+let test_get_custom_key_string _ =
+  let body = {|
+something: "This is a test"
+|} in
+  let fm = Frontmatter.of_string body in
+  let custom_value = Frontmatter.get_key_as_string fm "something" in
+  assert_equal ~msg:"custom value" (Some "This is a test") custom_value
+
+let test_get_invalud_custom_key_date _ =
+  let body = {|
+title: "This is a test"
+|} in
+  let fm = Frontmatter.of_string body in
+  let custom_value = Frontmatter.get_key_as_date fm "something" in
+  assert_equal ~msg:"custom value" None custom_value
+
+let test_get_custom_key_date _ =
+  let body = {|
+something: "2024-11-18 20:25:56"
+|} in
+  let fm = Frontmatter.of_string body in
+  let custom_value = Frontmatter.get_key_as_date fm "something" in
+  let expected = Ptime.of_date_time ((2024, 11, 18), ((20, 25, 56), 0)) in
+  assert_equal ~msg:"custom value" expected custom_value
+
 let suite =
   "Frontmatter tests"
   >::: [
@@ -40,6 +80,11 @@ let suite =
          "Simpe frontmatter" >:: test_simple_fontmatter;
          "RFC3339 date" >:: test_rfc3339_date;
          "Simple date" >:: test_simple_date;
+         "Invalid date" >:: test_invalid_date;
+         "Invalid custom string value" >:: test_get_invalud_custom_key_string;
+         "Custom string value" >:: test_get_custom_key_string;
+         "Invalid custom date value" >:: test_get_invalud_custom_key_date;
+         "Custom date value" >:: test_get_custom_key_date;
        ]
 
 let () = run_test_tt_main suite

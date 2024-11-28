@@ -12,6 +12,7 @@ type t = {
   draft : bool;
   tags : string list;
   images : image list;
+  raw : (string * Yaml.value) list;
 }
 
 let yaml_dict_to_string a k =
@@ -43,10 +44,12 @@ let yaml_dict_to_date a k =
       | `String str -> (
           match Ptime.of_rfc3339 str with
           | Ok (t, _, _) -> Some t
-          | _ ->
+          | _ -> (
               (* Some are not RFC3339, they're '2019-09-30 08:57:22' or such *)
-              Scanf.sscanf str "%d-%d-%d %d:%d:%d" (fun y m d h i s ->
-                  Ptime.of_date_time ((y, m, d), ((h, i, s), 0))))
+              try
+                Scanf.sscanf str "%d-%d-%d %d:%d:%d" (fun y m d h i s ->
+                    Ptime.of_date_time ((y, m, d), ((h, i, s), 0)))
+              with Stdlib.Scanf.Scan_failure _ -> None))
       | _ -> None)
 
 let yaml_dict_to_image a k =
@@ -111,6 +114,7 @@ let yaml_to_struct y =
           | None -> true);
         tags = yaml_dict_to_string_list assoc "tags";
         images = yaml_dict_to_image_list assoc "images";
+        raw = assoc;
       }
   | _ -> failwith "malformed yaml"
 
@@ -125,3 +129,5 @@ let titleimage t = t.titleimage
 let draft t = t.draft
 let tags t = t.tags
 let images t = t.images
+let get_key_as_string t key = yaml_dict_to_string t.raw key
+let get_key_as_date t key = yaml_dict_to_date t.raw key
