@@ -10,6 +10,15 @@ let test_invalid_empty_shortcode _ =
   assert_equal ~msg:"Code length" 7 len;
   assert_equal ~msg:"Code" (Shortcode.Unknown []) code
 
+let test_invalid_shortcode _ =
+  let body = {| {{< boop the snoot >}} |} in
+  let codes = Shortcode.find_shortcodes body in
+  assert_equal ~msg:"Code count" 1 (List.length codes);
+  let (loc, len), code = List.hd codes in
+  assert_equal ~msg:"Code offset" 1 loc;
+  assert_equal ~msg:"Code length" 22 len;
+  assert_equal ~msg:"Code" (Shortcode.Unknown [ "boop"; "the"; "snoot" ]) code
+
 let test_simple_image_shortcode _ =
   let body = {| {{< img test.jpg >}} |} in
   let codes = Shortcode.find_shortcodes body in
@@ -120,13 +129,14 @@ let suite =
   "Shortcode tests"
   >::: [
          "Test invalid empty shortcode" >:: test_invalid_empty_shortcode;
+         "Test invalud shortcode" >:: test_invalid_shortcode;
          "Test simple image shortcode" >:: test_simple_image_shortcode;
          "Test simple image shortcode with space in filename"
          >:: test_simple_image_shortcode_with_space;
          "Test image shortcode with alt" >:: test_image_shortcode_with_alt;
          "Test image shortcode with alt and css hint"
          >:: test_image_shortcode_with_alt_and_css_hint;
-         "Test invalud image shortcode with extra arg"
+         "Test invalid image shortcode with extra arg"
          >:: test_invalid_image_shortcode_with_extra_param;
          "Test image shortcode invalid empty"
          >:: test_invalid_empty_image_shortcode;

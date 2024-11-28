@@ -114,7 +114,7 @@ let () =
                        | _ -> []))
                   (* snapshot style images from frontmatter *)
                   @ List.concat_map
-                      (fun (i : Page.image) ->
+                      (fun (i : Frontmatter.image) ->
                         [
                           Dream.get
                             (Page.url p ^ i.filename)

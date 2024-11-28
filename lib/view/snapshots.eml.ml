@@ -139,7 +139,7 @@ let render_page sec page =
                 </div>
                 <%s! Renderer.render_body page %>
                 <div class="snapshotlist">
-% List.iter (fun (i : Page.image) ->
+% List.iter (fun (i : Frontmatter.image) ->
 %   let name, ext = Fpath.split_ext (Fpath.v i.filename) in
 %   let retina_filename = Printf.sprintf "%s@2x%s" (Fpath.to_string name) ext in
                    <div class="snapshotitem single">
