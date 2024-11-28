@@ -24,6 +24,17 @@ let fit_dimensions max_width max_height width height =
     (newwidth, newheight)
   )
 
+let location_info page =
+  let city = match (Page.get_key_as_string page "City") with
+  | None -> ""
+  | Some s -> Printf.sprintf "%s, " s
+  in
+  let country = match (Page.get_key_as_string page "Country") with Some s -> s | None -> "" in
+  match country with 
+  | "" | "United States" | "United States of America" -> Printf.sprintf "%s%s<br/>" city (match (Page.get_key_as_string page "State") with Some x -> x | None -> "")
+  | _ -> Printf.sprintf "%s%s<br/>" city country
+
+
 let render_section sec = 
   <html>
   <%s! (Renderer.render_head (Section.title sec)) %>
@@ -66,6 +77,7 @@ let render_section sec =
                 <a href="<%s Page.url page %>" class="title"><%s Page.title page %></a><br/><br/>
                 <div class="gallerycardinner">
                   <div>
+                    <%s! location_info page %>
                     <%s Renderer.ptime_to_str (Page.date page) %><br/>
                   </div>
                 </div>
@@ -122,6 +134,7 @@ let render_page sec page =
                 </div>
               </div>
               <div>
+                <%s! location_info page %>
                 <%s Renderer.ptime_to_str (Page.date page) %><br/>
                 <a href="https://creativecommons.org/licenses/by-nc/4.0/">License CC BY-NC</a><br/>
               </div>

@@ -12,3 +12,5 @@ val body : t -> string
 val tags : t -> string list
 val shortcodes : t -> ((int * int) * Shortcode.t) list
 val images : t -> Frontmatter.image list
+val get_key_as_string : t -> string -> string option
+val get_key_as_date : t -> string -> Ptime.t option
