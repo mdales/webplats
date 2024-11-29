@@ -119,7 +119,7 @@ let render_section sec =
   </html>
 
 
-let render_page sec page = 
+let render_page sec previous_page page next_page =
   <%s! (Renderer.render_head (Page.title page)) %>
   <body>
     <div class="almostall">
@@ -159,6 +159,18 @@ let render_page sec page =
                    </div>
 % ) (Page.images page);
                 </div>
+                
+                <div class="postscript">
+                  <ul>
+% (match previous_page with Some p -> 
+                    <li><strong>Next</strong>: <a href="<%s Page.url p %>"><%s Page.title p %></a></li>
+% | None -> ());
+% (match next_page with Some p -> 
+                    <li><strong>Previous</strong>: <a href="<%s Page.url p %>"><%s Page.title p %></a></li>
+% | None -> ());
+                  </ul>
+                </div>
+                
               </article>
             </div>
           </section>

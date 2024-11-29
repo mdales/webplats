@@ -121,7 +121,7 @@ let render_section sec =
   </html>
   
  
-let render_page sec page = 
+let render_page sec previous_page page next_page =
   <%s! (Renderer.render_head (Page.title page)) %>
   <body>
     <div class="almostall">
@@ -171,7 +171,17 @@ let render_page sec page =
                 <%s caption %> film <br/>
 % | None -> ());
                 <a href="https://creativecommons.org/licenses/by-nc/4.0/">License CC BY-NC</a><br/>
+              </div>              
+              <div class="photo">
+                <div class="headerflex">
+% (match previous_page with Some p -> 
+                    <a class="prev" href="<%s Page.url p %>">&#10094;</a>
+% | None -> ());
+% (match next_page with Some p -> 
+                    <a class="next" href="<%s Page.url p %>">&#10095;</a>
+% | None -> ());
               </div>
+             </div>
             </div>
           </div>
 % | None -> ());

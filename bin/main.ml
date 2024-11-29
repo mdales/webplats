@@ -105,14 +105,31 @@ let routes_for_direct_shortcodes page =
                   (Fpath.to_string (Fpath.add_seg (Page.path page) filename))
                   (fun ic -> In_channel.input_all ic))))
 
-let routes_for_page sec page page_renderer thumbnail_loader
-    retina_thumbnail_loader =
-  (* page itself *)
-  Dream.get (Page.url page) (fun _ -> page_renderer sec page |> Dream.html)
+let routes_for_page sec previous_page page next_page page_renderer
+    thumbnail_loader retina_thumbnail_loader =
+  Dream.get (Page.url page) (fun _ ->
+      page_renderer sec previous_page page next_page |> Dream.html)
   :: (routes_for_titleimage sec page thumbnail_loader retina_thumbnail_loader
      @ routes_for_snapshot_images page
      @ routes_for_image_shortcodes page
      @ routes_for_direct_shortcodes page)
+
+let routes_for_pages_in_section sec page_renderer thumbnail_loader
+    retina_thumbnail_loader : Dream.route list =
+  let pages = Section.pages sec in
+  match pages with
+  | [] -> []
+  | hd :: tl ->
+      let rec loop prev current rest =
+        let nextpage = match rest with [] -> None | hd :: _ -> Some hd in
+        let routes =
+          routes_for_page sec prev current nextpage page_renderer
+            thumbnail_loader retina_thumbnail_loader
+        in
+        routes
+        @ match rest with [] -> [] | hd :: tl -> loop (Some current) hd tl
+      in
+      loop None hd tl
 
 let () =
   let site =
@@ -174,11 +191,8 @@ let () =
         :: Dream.get
              (Section.url sec ^ "index.xml")
              (fun _ -> Rss.render_rss site (Section.pages sec) |> Dream.html)
-        :: List.concat_map
-             (fun page ->
-               routes_for_page sec page page_renderer thumbnail_loader
-                 retina_thumbnail_loader)
-             (Section.pages sec))
+        :: routes_for_pages_in_section sec page_renderer thumbnail_loader
+             retina_thumbnail_loader)
       (Site.sections site)
   in
   Dream.log "Adding %d routes" (List.length (toplevel @ sections));
