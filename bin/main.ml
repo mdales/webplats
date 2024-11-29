@@ -10,6 +10,110 @@ let snapshot_image_loader page image bounds _root _path _request =
   Dream.respond
     (In_channel.with_open_bin path (fun ic -> In_channel.input_all ic))
 
+let routes_for_titleimage sec page thumbnail_loader retina_thumbnail_loader =
+  let page_url = Page.url page in
+  match Page.titleimage page with
+  | None -> []
+  | Some img -> (
+      (* Basic thumbnails *)
+      [
+        Dream.get
+          (page_url ^ "thumbnail.jpg")
+          (Dream.static ~loader:(thumbnail_loader page) "");
+        Dream.get
+          (page_url ^ "thumbnail@2x.jpg")
+          (Dream.static ~loader:(retina_thumbnail_loader page) "");
+      ]
+      @
+      (* The photos images are also in the title image *)
+      match Section.title sec with
+      | "photos" ->
+          let name, ext = Fpath.split_ext (Fpath.v img.filename) in
+          let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
+          [
+            Dream.get (page_url ^ img.filename)
+              (Dream.static
+                 ~loader:(snapshot_image_loader page img.filename (1008, 800))
+                 "");
+            Dream.get (page_url ^ retina_name)
+              (Dream.static
+                 ~loader:(snapshot_image_loader page img.filename (2016, 1600))
+                 "");
+          ]
+      | _ -> [])
+
+let routes_for_snapshot_images page =
+  List.concat_map
+    (fun (i : Frontmatter.image) ->
+      [
+        (* non retina *)
+        Dream.get
+          (Page.url page ^ i.filename)
+          (Dream.static
+             ~loader:(snapshot_image_loader page i.filename (720, 1200))
+             "");
+        (* retina *)
+        (let name, ext = Fpath.split_ext (Fpath.v i.filename) in
+         let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
+         Dream.get
+           (Page.url page ^ retina_name)
+           (Dream.static
+              ~loader:
+                (snapshot_image_loader page i.filename (720 * 2, 1200 * 2))
+              ""));
+      ])
+    (Page.images page)
+
+let routes_for_image_shortcodes page =
+  List.concat_map
+    (fun (_, sc) ->
+      match sc with
+      | Shortcode.Image (filename, _, _) ->
+          [
+            Dream.get
+              (Page.url page ^ filename)
+              (Dream.static
+                 ~loader:(snapshot_image_loader page filename (800, 600))
+                 "");
+            (let name, ext = Fpath.split_ext (Fpath.v filename) in
+             let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
+             Dream.get
+               (Page.url page ^ retina_name)
+               (Dream.static
+                  ~loader:
+                    (snapshot_image_loader page filename (800 * 2, 600 * 2))
+                  ""));
+          ]
+      | _ -> [])
+    (Page.shortcodes page)
+
+let routes_for_direct_shortcodes page =
+  List.concat_map
+    (fun (_, sc) ->
+      match sc with
+      | Shortcode.Video (r, None) -> [ r ]
+      | Shortcode.Video (r, Some t) -> [ r; t ]
+      | Shortcode.Audio r -> [ r ]
+      | _ -> [])
+    (Page.shortcodes page)
+  |> List.map (fun filename ->
+         Dream.get
+           (Page.url page ^ filename)
+           (fun _ ->
+             Dream.respond
+               (In_channel.with_open_bin
+                  (Fpath.to_string (Fpath.add_seg (Page.path page) filename))
+                  (fun ic -> In_channel.input_all ic))))
+
+let routes_for_page sec page page_renderer thumbnail_loader
+    retina_thumbnail_loader =
+  (* page itself *)
+  Dream.get (Page.url page) (fun _ -> page_renderer sec page |> Dream.html)
+  :: (routes_for_titleimage sec page thumbnail_loader retina_thumbnail_loader
+     @ routes_for_snapshot_images page
+     @ routes_for_image_shortcodes page
+     @ routes_for_direct_shortcodes page)
+
 let () =
   let site =
     Site.of_directory (Fpath.v "/Users/michael/Sites/mynameismwd.org/content")
@@ -71,118 +175,9 @@ let () =
              (Section.url sec ^ "index.xml")
              (fun _ -> Rss.render_rss site (Section.pages sec) |> Dream.html)
         :: List.concat_map
-             (fun p ->
-               Dream.get (Page.url p) (fun _ ->
-                   page_renderer sec p |> Dream.html)
-               :: ((* title images *)
-                   (match Page.titleimage p with
-                   | None -> []
-                   | Some img -> (
-                       [
-                         Dream.get
-                           (Page.url p ^ "thumbnail.jpg")
-                           (Dream.static ~loader:(thumbnail_loader p) "");
-                         Dream.get
-                           (Page.url p ^ "thumbnail@2x.jpg")
-                           (Dream.static ~loader:(retina_thumbnail_loader p) "");
-                       ]
-                       @
-                       match Section.title sec with
-                       | "photos" ->
-                           let name, ext =
-                             Fpath.split_ext (Fpath.v img.filename)
-                           in
-                           let retina_name =
-                             Fpath.to_string name ^ "@2x" ^ ext
-                           in
-                           [
-                             Dream.get
-                               (Page.url p ^ img.filename)
-                               (Dream.static
-                                  ~loader:
-                                    (snapshot_image_loader p img.filename
-                                       (1008, 800))
-                                  "");
-                             Dream.get
-                               (Page.url p ^ retina_name)
-                               (Dream.static
-                                  ~loader:
-                                    (snapshot_image_loader p img.filename
-                                       (2016, 1600))
-                                  "");
-                           ]
-                       | _ -> []))
-                  (* snapshot style images from frontmatter *)
-                  @ List.concat_map
-                      (fun (i : Frontmatter.image) ->
-                        [
-                          Dream.get
-                            (Page.url p ^ i.filename)
-                            (Dream.static
-                               ~loader:
-                                 (snapshot_image_loader p i.filename (720, 1200))
-                               "");
-                          (let name, ext =
-                             Fpath.split_ext (Fpath.v i.filename)
-                           in
-                           let retina_name =
-                             Fpath.to_string name ^ "@2x" ^ ext
-                           in
-                           Dream.get
-                             (Page.url p ^ retina_name)
-                             (Dream.static
-                                ~loader:
-                                  (snapshot_image_loader p i.filename
-                                     (720 * 2, 1200 * 2))
-                                ""));
-                        ])
-                      (Page.images p)
-                  (* images from shortcodes *)
-                  @ List.concat_map
-                      (fun (_, sc) ->
-                        match sc with
-                        | Shortcode.Image (filename, _, _) ->
-                            [
-                              Dream.get
-                                (Page.url p ^ filename)
-                                (Dream.static
-                                   ~loader:
-                                     (snapshot_image_loader p filename (800, 600))
-                                   "");
-                              (let name, ext =
-                                 Fpath.split_ext (Fpath.v filename)
-                               in
-                               let retina_name =
-                                 Fpath.to_string name ^ "@2x" ^ ext
-                               in
-                               Dream.get
-                                 (Page.url p ^ retina_name)
-                                 (Dream.static
-                                    ~loader:
-                                      (snapshot_image_loader p filename
-                                         (800 * 2, 600 * 2))
-                                    ""));
-                            ]
-                        | _ -> [])
-                      (Page.shortcodes p)
-                  (* shortcodes that are directly mapped *)
-                  @ (List.concat_map
-                       (fun (_, sc) ->
-                         match sc with
-                         | Shortcode.Video (r, None) -> [ r ]
-                         | Shortcode.Video (r, Some t) -> [ r; t ]
-                         | Shortcode.Audio r -> [ r ]
-                         | _ -> [])
-                       (Page.shortcodes p)
-                    |> List.map (fun filename ->
-                           Dream.get
-                             (Page.url p ^ filename)
-                             (fun _ ->
-                               Dream.respond
-                                 (In_channel.with_open_bin
-                                    (Fpath.to_string
-                                       (Fpath.add_seg (Page.path p) filename))
-                                    (fun ic -> In_channel.input_all ic)))))))
+             (fun page ->
+               routes_for_page sec page page_renderer thumbnail_loader
+                 retina_thumbnail_loader)
              (Section.pages sec))
       (Site.sections site)
   in
