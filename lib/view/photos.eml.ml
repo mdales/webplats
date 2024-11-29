@@ -1,15 +1,12 @@
 
-let render_header title = 
-  <div class="miniheader">
-    <div class="miniheadertitle">
-      <header role="banner">
-        <a ref="home">
-          <h1>my name is mwd: <%s title %></h1>
-        </a>
-      </header>
-    </div>
-  </div>
+let months = [| "January" ; "Febuary" ; "March" ; "April" ; "May" ; "June" ; "July" ; "August" ; "September" ; "October" ; "November"; "December" |]
+
+
+let ptime_to_str (t : Ptime.t) : string = 
+  let ((year, month, day), _) = Ptime.to_date_time t in
+  Printf.sprintf "%d %s %d"day  months.(month - 1) year
   
+
 let fit_dimensions max_width max_height width height =
   let fwidth = float_of_int width
   and fheight = float_of_int height in
@@ -34,6 +31,37 @@ let location_info page =
   | "" | "United States" | "United States of America" -> Printf.sprintf "%s%s<br/>" city (match (Page.get_key_as_string page "State") with Some x -> x | None -> "")
   | _ -> Printf.sprintf "%s%s<br/>" city country
 
+
+let camera_info page = 
+  match (Page.get_key_as_string page "Make") with
+  | None -> ""
+  | Some make -> (
+    let model = match (Page.get_key_as_string page "Model") with
+      | None -> ""
+      | Some "ILCE-7RM2" -> "A7RII"
+      | Some model -> model
+    in
+    let camera = Printf.sprintf "%s %s" make model in
+    let lens = match (Page.get_key_as_string page "LensInfo") with
+      | None -> ""
+      | Some info -> (
+        let lensmake = match (Page.get_key_as_string page "LensMake") with None -> "" | Some m -> m in
+        Printf.sprintf "with a %s %s lens" lensmake info
+      )
+    in
+    Printf.sprintf "%s%s" camera lens
+  )
+
+let render_header title = 
+  <div class="miniheader">
+    <div class="miniheadertitle">
+      <header role="banner">
+        <a ref="home">
+          <h1>my name is mwd: <%s title %></h1>
+        </a>
+      </header>
+    </div>
+  </div>
 
 let render_section sec = 
   <html>
@@ -77,8 +105,9 @@ let render_section sec =
                 <a href="<%s Page.url page %>" class="title"><%s Page.title page %></a><br/><br/>
                 <div class="gallerycardinner">
                   <div>
-                    <%s! location_info page %>
-                    <%s Renderer.ptime_to_str (Page.date page) %><br/>
+                    <%s! location_info page %>                    
+% let date = match (Page.get_key_as_date page "Taken") with Some d -> d | None -> (Page.date page) in
+                <%s ptime_to_str date %><br/>
                   </div>
                 </div>
               </div>
@@ -135,7 +164,12 @@ let render_page sec page =
               </div>
               <div>
                 <%s! location_info page %>
-                <%s Renderer.ptime_to_str (Page.date page) %><br/>
+% let date = match (Page.get_key_as_date page "Taken") with Some d -> d | None -> (Page.date page) in
+                <%s ptime_to_str date %><br/>
+                <%s camera_info page %><br/>
+% (match (Page.get_key_as_string page "Caption") with Some caption ->
+                <%s caption %> film <br/>
+% | None -> ());
                 <a href="https://creativecommons.org/licenses/by-nc/4.0/">License CC BY-NC</a><br/>
               </div>
             </div>
