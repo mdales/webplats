@@ -1,4 +1,4 @@
-type t = { path : Fpath.t; pages : Page.t list; url : string }
+type t = { title : string; pages : Page.t list; url : string }
 
 let rec find_markdown_files path =
   Sys.readdir (Fpath.to_string path)
@@ -8,6 +8,8 @@ let rec find_markdown_files path =
          match Sys.is_directory (Fpath.to_string p) with
          | true -> find_markdown_files p
          | false -> ( match Fpath.get_ext p with ".md" -> [ p ] | _ -> []))
+
+let v title url pages = { title; pages; url }
 
 let of_directory ~base path =
   let url = Fpath.rem_prefix base path in
@@ -28,8 +30,8 @@ let of_directory ~base path =
     |> List.filter (fun p -> not (Page.draft p))
     |> List.sort (fun a b -> Ptime.compare (Page.date b) (Page.date a))
   in
-  { path; pages; url }
+  v (Fpath.basename path) url pages
 
-let title t = Fpath.basename t.path
+let title t = t.title
 let pages t = t.pages
 let url t = t.url
