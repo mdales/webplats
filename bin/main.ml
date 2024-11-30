@@ -145,10 +145,14 @@ let () =
             |> List.sort (fun a b -> Ptime.compare (Page.date b) (Page.date a))
             )
           |> Dream.html);
+      Dream.get "/static/**"
+        (Dream.static "/Users/michael/Sites/mynameismwd.org/static/.");
       Dream.get "/css/**"
         (Dream.static "/Users/michael/Sites/mynameismwd.org/public/css/.");
       Dream.get "/face/**"
         (Dream.static "/Users/michael/Sites/mynameismwd.org/public/face/.");
+      Dream.get "/img/**"
+        (Dream.static "/Users/michael/Sites/mynameismwd.org/public/img/.");
     ]
   in
 

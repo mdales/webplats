@@ -1,22 +1,38 @@
-type t = { path : Fpath.t; sections : Section.t list }
+type t = { path : Fpath.t; sections : Section.t list; root_pages : Page.t list }
 
 let of_directory path =
-  let sections =
+  let root_listing =
     Sys.readdir (Fpath.to_string path)
     |> Array.to_list
     |> List.map (fun p -> Fpath.append path (Fpath.v p))
-    |> List.filter_map (fun p ->
-           match Sys.is_directory (Fpath.to_string p) with
-           | false -> None
-           | true -> Some (Fpath.to_dir_path p))
+  in
+
+  let sections =
+    List.filter_map
+      (fun p ->
+        match Sys.is_directory (Fpath.to_string p) with
+        | false -> None
+        | true -> Some (Fpath.to_dir_path p))
+      root_listing
     |> List.map (fun p -> Section.of_directory ~base:path p)
     |> List.sort (fun a b ->
            Ptime.compare
              (Page.date (List.hd (Section.pages b)))
              (Page.date (List.hd (Section.pages a))))
   in
-  { path; sections }
+
+  let root_pages =
+    List.filter_map
+      (fun p ->
+        match Fpath.get_ext p with
+        | ".md" -> Some (Page.of_file ~base:path p)
+        | _ -> None)
+      root_listing
+  in
+
+  { path; sections; root_pages }
 
 let sections t = t.sections
 let path t = t.path
 let title t = Fpath.basename t.path
+let root_pages t = t.root_pages
