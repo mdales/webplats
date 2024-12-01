@@ -113,6 +113,35 @@ let render_body page =
   ) unrendered_markdown ordered_shortcodes in
   cmark_to_html ~strict:false ~safe:false body 
 
+let render_error site _error _debug_info suggested_response =
+  let status = Dream.status suggested_response in
+  let code = Dream.status_to_int status
+  and reason = Dream.status_to_string status in
+
+  Dream.set_header suggested_response "Content-Type" Dream.text_html;
+  Dream.set_body suggested_response begin
+    <%s! (render_head (Printf.sprintf "%d - %s" code reason)) %>
+    <body>
+      <div class="almostall">
+        <%s! render_header (Site.toplevel site) %>
+        <div id="container">
+          <div class="content">
+            <section role="main">
+              <div class="article">
+                <article>
+                  <h2><%i code %> <%s reason %></h2>
+                </article>
+              </div>
+            </section>
+          </div>
+        </div>
+        <%s! render_footer () %>   
+      </div>
+    </body>
+    </html>
+  end;
+  Lwt.return suggested_response
+
 let render_page sec previous_page page next_page =
   <%s! (render_head (Page.title page)) %>
   <body>

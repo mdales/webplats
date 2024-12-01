@@ -205,4 +205,6 @@ let () =
       (Site.sections site)
   in
   Dream.log "Adding %d routes" (List.length (toplevel @ sections));
-  Dream.run @@ Dream.logger @@ Dream.router (toplevel @ sections)
+  Dream.run ~error_handler:(Dream.error_template (Renderer.render_error site))
+  @@ Dream.logger
+  @@ Dream.router (toplevel @ sections)

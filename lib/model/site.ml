@@ -1,4 +1,4 @@
-type t = { path : Fpath.t; sections : Section.t list; toplevel : Section.t}
+type t = { path : Fpath.t; sections : Section.t list; toplevel : Section.t }
 
 let of_directory path =
   let root_listing =
@@ -27,10 +27,10 @@ let of_directory path =
         match Fpath.get_ext p with ".md" -> Some (Page.of_file p) | _ -> None)
       root_listing
   in
-  
+
   let toplevel = Section.v "website" "/" root_pages in
 
-  { path; sections ; toplevel }
+  { path; sections; toplevel }
 
 let sections t = t.toplevel :: t.sections
 let path t = t.path
