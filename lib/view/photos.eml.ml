@@ -78,11 +78,11 @@ let render_section sec =
           <article>
             <div class="galleryitem gallerylandscape">
               <div class="galleryimage">
-                <a href="<%s Page.url page %>">
+                <a href="<%s Section.url ~page sec %>">
                   <img
                     loading="lazy"
-                    src="<%s Page.url page %>thumbnail.jpg"
-                    srcset="<%s Page.url page %>thumbnail@2x.jpg 2x, <%s Page.url page %>thumbnail.jpg 1x"
+                    src="<%s Section.url ~page sec %>thumbnail.jpg"
+                    srcset="<%s Section.url ~page sec %>thumbnail@2x.jpg 2x, <%s Section.url ~page sec %>thumbnail.jpg 1x"
                     title="<%s Page.title page %>"
 % (match (i.dimensions) with Some (width, height) ->
 % let width, height = fit_dimensions 640 350 width height in
@@ -102,7 +102,7 @@ let render_section sec =
                 style="width: <%d adjusted_width %>px;"
 % | None -> ());
               >
-                <a href="<%s Page.url page %>" class="title"><%s Page.title page %></a><br/><br/>
+                <a href="<%s Section.url ~page sec %>" class="title"><%s Page.title page %></a><br/><br/>
                 <div class="gallerycardinner">
                   <div>
                     <%s! location_info page %>                    
@@ -141,8 +141,8 @@ let render_page sec previous_page page next_page =
             <div class="galleryimage">
                <img
                   loading="lazy"
-                  src="<%s Page.url page %><%s i.filename %>"
-                  srcset="<%s Page.url page %><%s retina_filename %> 2x, <%s Page.url page %><%s i.filename %> 1x"
+                  src="<%s Section.url ~page sec %><%s i.filename %>"
+                  srcset="<%s Section.url sec ~page %>/<%s retina_filename %> 2x, <%s Section.url ~page sec %><%s i.filename %> 1x"
                   title="<%s Page.title page %>"
                   width="<%d width %>"
                   height="<%d height %>"
@@ -156,7 +156,7 @@ let render_page sec previous_page page next_page =
                 style="width: <%d adjusted_width %>px;"
 % | _ -> ());
             >
-              <a href="<%s Page.url page %>" class="title"><%s Page.title page %></a><br/><br/>
+              <a href="<%s Section.url ~page sec %>" class="title"><%s Page.title page %></a><br/><br/>
               <div class="gallerycardinner">
                 <div class="gallerycardcontent">
                   <%s! Renderer.render_body page %>
@@ -174,11 +174,11 @@ let render_page sec previous_page page next_page =
               </div>              
               <div class="photo">
                 <div class="headerflex">
-% (match previous_page with Some p -> 
-                    <a class="prev" href="<%s Page.url p %>">&#10094;</a>
+% (match previous_page with Some page -> 
+                    <a class="prev" href="<%s Section.url ~page sec %>">&#10094;</a>
 % | None -> ());
-% (match next_page with Some p -> 
-                    <a class="next" href="<%s Page.url p %>">&#10095;</a>
+% (match next_page with Some page -> 
+                    <a class="next" href="<%s Section.url ~page sec %>">&#10095;</a>
 % | None -> ());
               </div>
              </div>

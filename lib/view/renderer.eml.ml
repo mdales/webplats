@@ -85,7 +85,7 @@ let render_section sec =
     <ul>
 % (Section.pages sec) |> List.iter begin fun (page) ->
       <li>
-      <a href="<%s Page.url page %>">
+      <a href="<%s Section.url ~page sec %>/">
           <%s Page.title page %>
         </a>
       </li>
@@ -135,11 +135,11 @@ let render_page sec previous_page page next_page =
                 
                 <div class="postscript">
                   <ul>
-% (match previous_page with Some p -> 
-                    <li><strong>Next</strong>: <a href="<%s Page.url p %>"><%s Page.title p %></a></li>
+% (match previous_page with Some page -> 
+                    <li><strong>Next</strong>: <a href="<%s Section.url ~page sec %>"><%s Page.title page %></a></li>
 % | None -> ());
-% (match next_page with Some p -> 
-                    <li><strong>Previous</strong>: <a href="<%s Page.url p %>"><%s Page.title p %></a></li>
+% (match next_page with Some page -> 
+                    <li><strong>Previous</strong>: <a href="<%s Section.url ~page sec %>"><%s Page.title page %></a></li>
 % | None -> ());
                   </ul>
                 </div>

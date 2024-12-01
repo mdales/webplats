@@ -17,7 +17,7 @@ let render_index site =
             <div class="article">
               <h2>My things here</h2>
                 <div class="index">
-% (Site.sections site) |> List.iter begin fun (sec) ->
+% (Site.sections site) |> List.filter (fun s -> not (Section.synthetic s)) |> List.iter begin fun (sec) ->
                   <div>
                     <a href="<%s Section.url sec %>">
                       <div class="homebutton colour-<%s Section.title sec %>">

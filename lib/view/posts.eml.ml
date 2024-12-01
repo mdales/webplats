@@ -21,7 +21,7 @@ let render_section sec =
             <div class="blogcontents__item">
               <ul class="leaders">
                   <li>
-                    <span><a href="<%s Page.url page %>"><%s Page.title page %></a></span>
+                    <span><a href="<%s Section.url ~page sec %>"><%s Page.title page %></a></span>
                     <span><%s ptime_to_str (Page.date page) %></span>
                   </li>
               </ul>

@@ -24,15 +24,13 @@ let of_directory path =
   let root_pages =
     List.filter_map
       (fun p ->
-        match Fpath.get_ext p with
-        | ".md" -> Some (Page.of_file ~base:path p)
-        | _ -> None)
+        match Fpath.get_ext p with ".md" -> Some (Page.of_file p) | _ -> None)
       root_listing
   in
 
   { path; sections; root_pages }
 
-let sections t = t.sections
+let sections t = Section.v "/" "/" t.root_pages :: t.sections
 let path t = t.path
 let title t = Fpath.basename t.path
 let root_pages t = t.root_pages

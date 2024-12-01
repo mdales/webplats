@@ -2,7 +2,6 @@ type t = {
   frontmatter : Frontmatter.t;
   body : string;
   path : Fpath.t;
-  base : Fpath.t;
   shortcodes : ((int * int) * Shortcode.t) list;
 }
 
@@ -37,35 +36,35 @@ let image_with_dimensions path (img : Frontmatter.image option) =
           (Fpath.to_string (Fpath.add_seg path img.filename));
         Some img)
 
-let of_file ?(titleimage_details = false) ~base path =
-  match Fpath.rem_prefix base path with
-  | None -> failwith "Base wasn't prefix of path"
-  | Some _ ->
-      let frontmatter, body =
-        try read_frontmatter path
-        with Not_found | Invalid_argument _ ->
-          failwith
-            (Printf.sprintf "Failed to find key in %s" (Fpath.to_string path))
-      in
-      let frontmatter =
-        match titleimage_details with
-        | false -> frontmatter
-        | true ->
-            Frontmatter.update_titleimage frontmatter
-              (image_with_dimensions (Fpath.parent path)
-                 (Frontmatter.titleimage frontmatter))
-      in
-      let shortcodes = Shortcode.find_shortcodes body in
-      { frontmatter; path; body; base; shortcodes }
+(* --- public interface --- *)
+
+let v path frontmatter body =
+  let shortcodes = Shortcode.find_shortcodes body in
+  { frontmatter; body; path; shortcodes }
+
+let of_file ?(titleimage_details = false) path =
+  let frontmatter, body =
+    try read_frontmatter path
+    with Not_found | Invalid_argument _ ->
+      failwith
+        (Printf.sprintf "Failed to find key in %s" (Fpath.to_string path))
+  in
+  let frontmatter =
+    match titleimage_details with
+    | false -> frontmatter
+    | true ->
+        Frontmatter.update_titleimage frontmatter
+          (image_with_dimensions (Fpath.parent path)
+             (Frontmatter.titleimage frontmatter))
+  in
+  v path frontmatter body
 
 let title t =
   match Frontmatter.title t.frontmatter with Some t -> t | None -> "Untitled"
 
-let url t =
-  (* Option.get is "safe" because of pre-condition check in `of_file` *)
-  let index_dir_path = Fpath.parent t.path in
-  let url_path = Option.get (Fpath.rem_prefix t.base index_dir_path) in
-  "/" ^ Fpath.to_string url_path
+let url_name t =
+  let basename = Fpath.basename (Fpath.rem_ext t.path) in
+  match basename with "index" -> Fpath.basename (Fpath.parent t.path) | x -> x
 
 let date t = Frontmatter.date t.frontmatter
 let synopsis t = Frontmatter.synopsis t.frontmatter

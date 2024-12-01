@@ -130,13 +130,13 @@ let suite =
          "Invalid custom string value" >:: test_get_invalid_custom_key_string;
          "Empty custom string value" >:: test_get_empty_custom_key_string;
          "Custom string value" >:: test_get_custom_key_string;
-         "Invalid custom date value" >:: test_get_invalid_custom_key_date;         
+         "Invalid custom date value" >:: test_get_invalid_custom_key_date;
          "Empty custom date value" >:: test_get_empty_custom_key_date;
          "Custom date value" >:: test_get_custom_key_date;
          "Custom string list" >:: test_get_custom_key_string_list;
          "Invalid custom string list"
          >:: test_get_invalid_custom_key_string_list;
-         "Empty custom string list" >:: test_get_empty_custom_key_string_list
+         "Empty custom string list" >:: test_get_empty_custom_key_string_list;
        ]
 
 let () = run_test_tt_main suite

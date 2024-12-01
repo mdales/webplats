@@ -11,7 +11,7 @@ let snapshot_image_loader page image bounds _root _path _request =
     (In_channel.with_open_bin path (fun ic -> In_channel.input_all ic))
 
 let routes_for_titleimage sec page thumbnail_loader retina_thumbnail_loader =
-  let page_url = Page.url page in
+  let page_url = Section.url ~page sec in
   match Page.titleimage page with
   | None -> []
   | Some img -> (
@@ -42,13 +42,13 @@ let routes_for_titleimage sec page thumbnail_loader retina_thumbnail_loader =
           ]
       | _ -> [])
 
-let routes_for_snapshot_images page =
+let routes_for_snapshot_images sec page =
   List.concat_map
     (fun (i : Frontmatter.image) ->
       [
         (* non retina *)
         Dream.get
-          (Page.url page ^ i.filename)
+          (Section.url ~page sec ^ i.filename)
           (Dream.static
              ~loader:(snapshot_image_loader page i.filename (720, 1200))
              "");
@@ -56,7 +56,7 @@ let routes_for_snapshot_images page =
         (let name, ext = Fpath.split_ext (Fpath.v i.filename) in
          let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
          Dream.get
-           (Page.url page ^ retina_name)
+           (Section.url ~page sec ^ retina_name)
            (Dream.static
               ~loader:
                 (snapshot_image_loader page i.filename (720 * 2, 1200 * 2))
@@ -64,21 +64,21 @@ let routes_for_snapshot_images page =
       ])
     (Page.images page)
 
-let routes_for_image_shortcodes page =
+let routes_for_image_shortcodes sec page =
   List.concat_map
     (fun (_, sc) ->
       match sc with
       | Shortcode.Image (filename, _, _) ->
           [
             Dream.get
-              (Page.url page ^ filename)
+              (Section.url ~page sec ^ filename)
               (Dream.static
                  ~loader:(snapshot_image_loader page filename (800, 600))
                  "");
             (let name, ext = Fpath.split_ext (Fpath.v filename) in
              let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
              Dream.get
-               (Page.url page ^ retina_name)
+               (Section.url ~page sec ^ retina_name)
                (Dream.static
                   ~loader:
                     (snapshot_image_loader page filename (800 * 2, 600 * 2))
@@ -87,7 +87,7 @@ let routes_for_image_shortcodes page =
       | _ -> [])
     (Page.shortcodes page)
 
-let routes_for_direct_shortcodes page =
+let routes_for_direct_shortcodes sec page =
   List.concat_map
     (fun (_, sc) ->
       match sc with
@@ -98,7 +98,7 @@ let routes_for_direct_shortcodes page =
     (Page.shortcodes page)
   |> List.map (fun filename ->
          Dream.get
-           (Page.url page ^ filename)
+           (Section.url ~page sec ^ filename)
            (fun _ ->
              Dream.respond
                (In_channel.with_open_bin
@@ -107,12 +107,12 @@ let routes_for_direct_shortcodes page =
 
 let routes_for_page sec previous_page page next_page page_renderer
     thumbnail_loader retina_thumbnail_loader =
-  Dream.get (Page.url page) (fun _ ->
+  Dream.get (Section.url ~page sec) (fun _ ->
       page_renderer sec previous_page page next_page |> Dream.html)
   :: (routes_for_titleimage sec page thumbnail_loader retina_thumbnail_loader
-     @ routes_for_snapshot_images page
-     @ routes_for_image_shortcodes page
-     @ routes_for_direct_shortcodes page)
+     @ routes_for_snapshot_images sec page
+     @ routes_for_image_shortcodes sec page
+     @ routes_for_direct_shortcodes sec page)
 
 let routes_for_pages_in_section sec page_renderer thumbnail_loader
     retina_thumbnail_loader : Dream.route list =
@@ -141,9 +141,11 @@ let () =
       Dream.get "/" (fun _ -> Index.render_index site |> Dream.html);
       Dream.get "/index.xml" (fun _ ->
           Rss.render_rss site
-            (List.concat_map Section.pages (Site.sections site)
-            |> List.sort (fun a b -> Ptime.compare (Page.date b) (Page.date a))
-            )
+            (Site.sections site
+            |> List.concat_map (fun sec ->
+                   Section.pages sec |> List.map (fun p -> (sec, p)))
+            |> List.sort (fun (_, a) (_, b) ->
+                   Ptime.compare (Page.date b) (Page.date a)))
           |> Dream.html);
       Dream.get "/static/**"
         (Dream.static "/Users/michael/Sites/mynameismwd.org/static/.");
@@ -194,7 +196,10 @@ let () =
             section_renderer sec |> Dream.html)
         :: Dream.get
              (Section.url sec ^ "index.xml")
-             (fun _ -> Rss.render_rss site (Section.pages sec) |> Dream.html)
+             (fun _ ->
+               Rss.render_rss site
+                 (Section.pages sec |> List.map (fun p -> (sec, p)))
+               |> Dream.html)
         :: routes_for_pages_in_section sec page_renderer thumbnail_loader
              retina_thumbnail_loader)
       (Site.sections site)

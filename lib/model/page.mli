@@ -1,8 +1,16 @@
 type t
 
-val of_file : ?titleimage_details:bool -> base:Fpath.t -> Fpath.t -> t
+val v : Fpath.t -> Frontmatter.t -> string -> t
+val of_file : ?titleimage_details:bool -> Fpath.t -> t
+val url_name : t -> string
+(* Pages don't have absolute URLs, as they may occur in virtual sections. The
+   page's URL will be [site domain]/[section url name]/[page url name].
+
+   To preserve compatibility with Hugo, we put pages that have the name
+   index.md into a name based on their parent folder, and other markdown files
+   into a folder based on their name without the extension. *)
+
 val title : t -> string
-val url : t -> string
 val date : t -> Ptime.t
 val synopsis : t -> string option
 val titleimage : t -> Frontmatter.image option

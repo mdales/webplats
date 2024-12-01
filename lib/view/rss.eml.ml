@@ -18,17 +18,17 @@ let render_rss site pages =
     <description>Recent content on my <%s Site.title site %></description>
     <generator>https://github.com/mdales/webplats/</generator>
     <language>en-us</language>
-% (match pages with hd :: _ -> 
+% (match pages with (_, hd) :: _ -> 
     <lastBuildDate><%s Ptime.to_rfc3339 (Page.date hd) %></lastBuildDate>
 % | [] -> ());
     <atom:link href="https://mynameismwd.org/index.xml" rel="self" type="application/rss+xml" />
-% (List.iter (fun page ->
+% (List.iter (fun (sec, page) ->
         <item>
           <title><%s Page.title page %></title>
-          <link>https://mynameismwd.org<%s Page.url page %></link>
+          <link>https://mynameismwd.org<%s Section.url ~page sec %></link>
           <pubDate><%s Ptime.to_rfc3339 (Page.date page) %></pubDate>
           
-          <guid>https://mynameismwd.org<%s Page.url page %></guid>
+          <guid>https://mynameismwd.org<%s Section.url ~page sec %></guid>
           <description>
           	<%s Renderer.render_body page %>
           </description>

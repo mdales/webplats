@@ -87,14 +87,14 @@ let render_section sec =
                     <span><%s Page.title page %></span>
                   </div>
                   <div class="tagcellinner">
-                    <a href="<%s Page.url page %>">
+                    <a href="<%s Section.url ~page sec %>">
                       <div class="tagcellimg">
                         <figure>
                           <img
                             loading="lazy"
 % (match (Page.titleimage page) with Some i ->
-                            src="<%s Page.url page %>thumbnail.jpg"
-                            srcset="<%s Page.url page %>thumbnail@2x.jpg 2x, <%s Page.url page %>thumbnail.jpg 1x"
+                            src="<%s Section.url ~page sec %>thumbnail.jpg"
+                            srcset="<%s Section.url ~page sec %>thumbnail@2x.jpg 2x, <%s Section.url ~page sec %>thumbnail.jpg 1x"
 % (match (i.description) with Some desc ->
                             alt="<%s desc %>"
 % | None -> ());
@@ -145,8 +145,8 @@ let render_page sec previous_page page next_page =
                    <div class="snapshotitem single">
                      <figure class="single">
                        <img
-                          src="<%s Page.url page %><%s i.filename %>"
-                          srcset="<%s Page.url page %><%s retina_filename %> 2x, <%s Page.url page %><%s i.filename %> 1x"
+                          src="<%s Section.url ~page sec %><%s i.filename %>"
+                          srcset="<%s Section.url ~page sec %><%s retina_filename %> 2x, <%s Section.url ~page sec %><%s i.filename %> 1x"
 % (match (i.description) with Some desc ->
                           alt="<%s desc %>"
 % | None -> ());
@@ -162,11 +162,11 @@ let render_page sec previous_page page next_page =
                 
                 <div class="postscript">
                   <ul>
-% (match previous_page with Some p -> 
-                    <li><strong>Next</strong>: <a href="<%s Page.url p %>"><%s Page.title p %></a></li>
+% (match previous_page with Some page -> 
+                    <li><strong>Next</strong>: <a href="<%s Section.url sec ~page %>/"><%s Page.title page %></a></li>
 % | None -> ());
-% (match next_page with Some p -> 
-                    <li><strong>Previous</strong>: <a href="<%s Page.url p %>"><%s Page.title p %></a></li>
+% (match next_page with Some page -> 
+                    <li><strong>Previous</strong>: <a href="<%s Section.url ~page sec %>/"><%s Page.title page %></a></li>
 % | None -> ());
                   </ul>
                 </div>
