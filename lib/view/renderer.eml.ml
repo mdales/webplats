@@ -6,12 +6,12 @@ let render_head title =
   <title><%s title %></title>
   </head>
   
-let render_header title = 
+let render_header sec = 
   <div class="header stripes">
     <header role="banner">
       <a ref="home">
-        <h1>my name is mwd</h1>
-        <h2>the <%s title %> of Michael Winston Dales</h2>
+        <h1><a href="/">my name is mwd</a></h1>
+        <h2>the <a href="<%s Section.url sec %>"><%s Section.title sec %></a> of Michael Winston Dales</h2>
       </a>
     </header>
   </div>
@@ -80,7 +80,7 @@ let render_section sec =
   <%s! (render_head (Section.title sec)) %>
   <body>
     <div class="almostall">
-      <%s! render_header (Section.title sec) %>
+      <%s! render_header sec %>
     
     <ul>
 % (Section.pages sec) |> List.iter begin fun (page) ->
@@ -117,7 +117,7 @@ let render_page sec previous_page page next_page =
   <%s! (render_head (Page.title page)) %>
   <body>
     <div class="almostall">
-      <%s! render_header (Section.title sec) %>
+      <%s! render_header sec %>
       <div id="container">
         <div class="content">
           <section role="main">

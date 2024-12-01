@@ -52,12 +52,12 @@ let camera_info page =
     Printf.sprintf "%s%s" camera lens
   )
 
-let render_header title = 
+let render_header sec = 
   <div class="miniheader">
     <div class="miniheadertitle">
       <header role="banner">
         <a ref="home">
-          <h1>my name is mwd: <%s title %></h1>
+          <h1>my name is mwd: <%s Section.title sec %></h1>
         </a>
       </header>
     </div>
@@ -68,7 +68,7 @@ let render_section sec =
   <%s! (Renderer.render_head (Section.title sec)) %>
   <body>
     <div class="almostall">
-      <%s! render_header (Section.title sec) %>
+      <%s! render_header sec %>
       
       <div id="container">
         <div class="gallery">
@@ -125,7 +125,7 @@ let render_page sec previous_page page next_page =
   <%s! (Renderer.render_head (Page.title page)) %>
   <body>
     <div class="almostall">
-      <%s! render_header (Section.title sec) %>
+      <%s! render_header sec %>
       <div id="container">
        <div class="article galoveride">
        <article>

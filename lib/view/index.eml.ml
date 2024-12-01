@@ -9,7 +9,7 @@ let render_index site =
   <%s! (Renderer.render_head (Site.title site)) %>
   <body>
     <div class="almostall">
-      <%s! Renderer.render_header (Site.title site) %>
+      <%s! Renderer.render_header (Site.toplevel site) %>
       
       <div id="container">
         <div class="content">

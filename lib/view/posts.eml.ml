@@ -11,7 +11,7 @@ let render_section sec =
   <%s! (Renderer.render_head (Section.title sec)) %>
   <body>
     <div class="almostall">
-      <%s! Renderer.render_header (Section.title sec) %>
+      <%s! Renderer.render_header sec %>
       
       <div id="container">
         <div class="content">
