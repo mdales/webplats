@@ -40,9 +40,17 @@ date: "a long time ago"
   let fm = Frontmatter.of_string body in
   assert_equal ~msg:"Date" Ptime.epoch (Frontmatter.date fm)
 
-let test_get_invalud_custom_key_string _ =
+let test_get_invalid_custom_key_string _ =
   let body = {|
 title: "This is a test"
+|} in
+  let fm = Frontmatter.of_string body in
+  let custom_value = Frontmatter.get_key_as_string fm "something" in
+  assert_equal ~msg:"custom value" None custom_value
+
+let test_get_empty_custom_key_string _ =
+  let body = {|
+something:
 |} in
   let fm = Frontmatter.of_string body in
   let custom_value = Frontmatter.get_key_as_string fm "something" in
@@ -56,7 +64,7 @@ something: "This is a test"
   let custom_value = Frontmatter.get_key_as_string fm "something" in
   assert_equal ~msg:"custom value" (Some "This is a test") custom_value
 
-let test_get_invalud_custom_key_date _ =
+let test_get_invalid_custom_key_date _ =
   let body = {|
 title: "This is a test"
 |} in
@@ -73,6 +81,44 @@ something: "2024-11-18 20:25:56"
   let expected = Ptime.of_date_time ((2024, 11, 18), ((20, 25, 56), 0)) in
   assert_equal ~msg:"custom value" expected custom_value
 
+let test_get_empty_custom_key_date _ =
+  let body = {|
+something:
+|} in
+  let fm = Frontmatter.of_string body in
+  let custom_value = Frontmatter.get_key_as_date fm "something" in
+  assert_equal ~msg:"custom value" None custom_value
+
+let test_get_custom_key_string_list _ =
+  let body = {|
+tags:
+- here
+- are
+- some
+- entries
+|} in
+  let fm = Frontmatter.of_string body in
+  let custom_value = Frontmatter.get_key_as_string_list fm "tags" in
+  assert_equal ~msg:"custom value"
+    [ "here"; "are"; "some"; "entries" ]
+    custom_value
+
+let test_get_invalid_custom_key_string_list _ =
+  let body = {|
+title: "This is a test"
+|} in
+  let fm = Frontmatter.of_string body in
+  let custom_value = Frontmatter.get_key_as_string_list fm "tags" in
+  assert_equal ~msg:"custom value" [] custom_value
+
+let test_get_empty_custom_key_string_list _ =
+  let body = {|
+tags:
+|} in
+  let fm = Frontmatter.of_string body in
+  let custom_value = Frontmatter.get_key_as_string_list fm "tags" in
+  assert_equal ~msg:"custom value" [] custom_value
+
 let suite =
   "Frontmatter tests"
   >::: [
@@ -81,10 +127,16 @@ let suite =
          "RFC3339 date" >:: test_rfc3339_date;
          "Simple date" >:: test_simple_date;
          "Invalid date" >:: test_invalid_date;
-         "Invalid custom string value" >:: test_get_invalud_custom_key_string;
+         "Invalid custom string value" >:: test_get_invalid_custom_key_string;
+         "Empty custom string value" >:: test_get_empty_custom_key_string;
          "Custom string value" >:: test_get_custom_key_string;
-         "Invalid custom date value" >:: test_get_invalud_custom_key_date;
+         "Invalid custom date value" >:: test_get_invalid_custom_key_date;         
+         "Empty custom date value" >:: test_get_empty_custom_key_date;
          "Custom date value" >:: test_get_custom_key_date;
+         "Custom string list" >:: test_get_custom_key_string_list;
+         "Invalid custom string list"
+         >:: test_get_invalid_custom_key_string_list;
+         "Empty custom string list" >:: test_get_empty_custom_key_string_list
        ]
 
 let () = run_test_tt_main suite

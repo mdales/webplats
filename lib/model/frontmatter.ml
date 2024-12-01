@@ -131,3 +131,4 @@ let tags t = t.tags
 let images t = t.images
 let get_key_as_string t key = yaml_dict_to_string t.raw key
 let get_key_as_date t key = yaml_dict_to_date t.raw key
+let get_key_as_string_list t key = yaml_dict_to_string_list t.raw key
