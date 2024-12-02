@@ -1,10 +1,30 @@
-type t = { path : Fpath.t; sections : Section.t list; toplevel : Section.t }
+type t = { sections : Section.t list; toplevel : Section.t; config : Config.t }
 
 let of_directory path =
+  let config =
+    List.fold_left
+      (fun acc fname ->
+        match acc with
+        | Some _ -> acc
+        | None -> (
+            let config_path = Fpath.add_seg path fname in
+            try
+              Printf.printf "%s\n" (Fpath.to_string config_path);
+              Some (Config.of_file config_path)
+            with Sys_error _ -> None))
+      None
+      [ "hugo.yml"; "hugo.yaml"; "config.yml"; "config.yaml" ]
+  in
+  let config =
+    match config with None -> failwith "Failed to find config" | Some c -> c
+  in
+
+  let content_path = Fpath.add_seg path "content" in
+
   let root_listing =
-    Sys.readdir (Fpath.to_string path)
+    Sys.readdir (Fpath.to_string content_path)
     |> Array.to_list
-    |> List.map (fun p -> Fpath.append path (Fpath.v p))
+    |> List.map (fun p -> Fpath.append content_path (Fpath.v p))
   in
 
   let sections =
@@ -30,9 +50,8 @@ let of_directory path =
 
   let toplevel = Section.v "website" "/" root_pages in
 
-  { path; sections; toplevel }
+  { sections; toplevel; config }
 
 let sections t = t.toplevel :: t.sections
-let path t = t.path
-let title t = Fpath.basename t.path
+let title t = Config.title t.config
 let toplevel t = t.toplevel

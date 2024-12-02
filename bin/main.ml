@@ -132,9 +132,13 @@ let routes_for_pages_in_section sec page_renderer thumbnail_loader
       loop None hd tl
 
 let () =
-  let site =
-    Site.of_directory (Fpath.v "/Users/michael/Sites/mynameismwd.org/content")
+  let website_dir =
+    match Array.to_list Sys.argv with
+    | [ _; path ] -> Fpath.v path
+    | _ -> failwith "Expected one arg, your website dir"
   in
+
+  let site = Site.of_directory website_dir in
 
   let toplevel =
     [
