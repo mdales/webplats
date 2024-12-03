@@ -1,3 +1,4 @@
+open Fpath
 open Webplats
 
 let thumbnail_loader page thumbnail_size _root _path _request =
@@ -152,7 +153,7 @@ let () =
                    Ptime.compare (Page.date b) (Page.date a)))
           |> Dream.html);
       Dream.get "/static/**"
-        (Dream.static "/Users/michael/Sites/mynameismwd.org/static/.");
+        (Dream.static (Fpath.to_string (website_dir / "static" / ".")));
       Dream.get "/css/**"
         (Dream.static "/Users/michael/Sites/mynameismwd.org/public/css/.");
       Dream.get "/face/**"
