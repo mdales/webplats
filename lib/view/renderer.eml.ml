@@ -2,7 +2,7 @@ open Astring
 
 let render_head title = 
   <head>
-  <link rel="stylesheet" href="/css/base.min.1baad36ee4ee027cab80c240d7d6f3bd25a6b673801984ba90cb19fd0c96c0c35914a8be655c092babd943d87ce43c99874d9415f746837ae01492338478ab7b.css" integrity="sha512-G6rTbuTuAnyrgMJA19bzvSWmtnOAGYS6kMsZ/QyWwMNZFKi+ZVwJK6vZQ9h85DyZh02UFfdGg3rgFJIzhHirew==" type="text/css" media="screen">
+  <link rel="stylesheet" href="/css/base.css" type="text/css" media="screen">
   <title><%s title %></title>
   </head>
   

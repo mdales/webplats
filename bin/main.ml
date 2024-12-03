@@ -178,8 +178,6 @@ let () =
           |> Dream.html);
       Dream.get "/static/**"
         (Dream.static (Fpath.to_string (website_dir / "static" / ".")));
-      Dream.get "/css/**"
-        (Dream.static "/Users/michael/Sites/mynameismwd.org/public/css/.");
     ]
     @ collect_static_routes site
   in
