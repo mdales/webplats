@@ -1,4 +1,9 @@
-type t = { sections : Section.t list; toplevel : Section.t; config : Config.t }
+type t = {
+  sections : Section.t list;
+  toplevel : Section.t;
+  config : Config.t;
+  path : Fpath.t;
+}
 
 let of_directory path =
   let config =
@@ -50,8 +55,10 @@ let of_directory path =
 
   let toplevel = Section.v "website" "/" root_pages in
 
-  { sections; toplevel; config }
+  { sections; toplevel; config; path }
 
 let sections t = t.toplevel :: t.sections
 let title t = Config.title t.config
 let toplevel t = t.toplevel
+let path t = t.path
+let hugo_theme t = Config.hugo_theme t.config

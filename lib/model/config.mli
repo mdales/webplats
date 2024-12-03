@@ -4,3 +4,4 @@ val of_file : Fpath.t -> t
 val title : t -> string
 val base_url : t -> string
 val taxonomies : t -> string list
+val hugo_theme : t -> string

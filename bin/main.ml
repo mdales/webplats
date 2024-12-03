@@ -132,6 +132,30 @@ let routes_for_pages_in_section sec page_renderer thumbnail_loader
       in
       loop None hd tl
 
+let collect_static_routes site =
+  let website_dir = Site.path site in
+  let theme_static_dir =
+    website_dir / "themes" / Site.hugo_theme site / "static"
+  in
+
+  let theme_things_to_be_published =
+    Sys.readdir (Fpath.to_string theme_static_dir)
+    |> Array.to_list
+    |> List.map (fun n -> theme_static_dir / n)
+  in
+
+  List.map
+    (fun path ->
+      let basename = Fpath.basename path in
+      match Sys.is_directory (Fpath.to_string path) with
+      | true ->
+          Dream.get
+            (Printf.sprintf "/%s/**" basename)
+            (Dream.static (Fpath.to_string (path / ".")))
+      | false ->
+          Dream.get ("/" ^ basename) (Dream.static (Fpath.to_string path)))
+    theme_things_to_be_published
+
 let () =
   let website_dir =
     match Array.to_list Sys.argv with
@@ -156,11 +180,8 @@ let () =
         (Dream.static (Fpath.to_string (website_dir / "static" / ".")));
       Dream.get "/css/**"
         (Dream.static "/Users/michael/Sites/mynameismwd.org/public/css/.");
-      Dream.get "/face/**"
-        (Dream.static "/Users/michael/Sites/mynameismwd.org/public/face/.");
-      Dream.get "/img/**"
-        (Dream.static "/Users/michael/Sites/mynameismwd.org/public/img/.");
     ]
+    @ collect_static_routes site
   in
 
   let sections =
