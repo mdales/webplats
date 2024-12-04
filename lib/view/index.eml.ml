@@ -6,10 +6,10 @@ let ptime_to_str (t : Ptime.t) : string =
   
 let render_index site =
   <html>
-  <%s! (Renderer.render_head (Site.title site)) %>
+  <%s! Renderer.render_head (Site.title site) %>
   <body>
     <div class="almostall">
-      <%s! Renderer.render_header (Site.toplevel site) %>
+      <%s! Renderer.render_header (Section.url (Site.toplevel site)) (Section.title (Site.toplevel site)) %>
       
       <div id="container">
         <div class="content">

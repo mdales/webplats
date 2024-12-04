@@ -6,12 +6,12 @@ let render_head title =
   <title><%s title %></title>
   </head>
   
-let render_header sec = 
+let render_header url title = 
   <div class="header stripes">
     <header role="banner">
       <a ref="home">
         <h1><a href="/">my name is mwd</a></h1>
-        <h2>the <a href="<%s Section.url sec %>"><%s Section.title sec %></a> of Michael Winston Dales</h2>
+        <h2>the <a href="<%s url %>"><%s title %></a> of Michael Winston Dales</h2>
       </a>
     </header>
   </div>
@@ -80,7 +80,7 @@ let render_section sec =
   <%s! (render_head (Section.title sec)) %>
   <body>
     <div class="almostall">
-      <%s! render_header sec %>
+      <%s! render_header (Section.url sec) (Section.title sec) %>
     
     <ul>
 % (Section.pages sec) |> List.iter begin fun (page) ->
@@ -123,7 +123,7 @@ let render_error site _error _debug_info suggested_response =
     <%s! (render_head (Printf.sprintf "%d - %s" code reason)) %>
     <body>
       <div class="almostall">
-        <%s! render_header (Site.toplevel site) %>
+        <%s! render_header (Section.url (Site.toplevel site)) (Section.title (Site.toplevel site)) %>
         <div id="container">
           <div class="content">
             <section role="main">
@@ -146,7 +146,7 @@ let render_page sec previous_page page next_page =
   <%s! (render_head (Page.title page)) %>
   <body>
     <div class="almostall">
-      <%s! render_header sec %>
+      <%s! render_header (Section.url sec) (Section.title sec) %>
       <div id="container">
         <div class="content">
           <section role="main">
@@ -180,5 +180,27 @@ let render_page sec previous_page page next_page =
       </div>
       <%s! render_footer () %>   
     </div>
+  </body>
+  </html>
+  
+let render_taxonomy taxonomy =
+  <html>
+  <%s! (render_head (Taxonomy.title taxonomy)) %>
+  <body>
+    <div class="almostall">
+      <%s! render_header (Taxonomy.url taxonomy) (Taxonomy.title taxonomy) %>
+    
+    <ul>
+% (Taxonomy.sections taxonomy) |> List.iter begin fun (sec) ->
+      <li>
+      <a href="<%s Section.url sec %>/">
+          <%s Section.title sec %>
+        </a> - <%d List.length (Section.pages sec) %> items
+      </li>
+% end;
+    
+    </ul>
+    
+    <%s! render_footer () %>
   </body>
   </html>

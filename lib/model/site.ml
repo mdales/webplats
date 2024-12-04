@@ -9,7 +9,7 @@ type t = {
 let build_taxonomy taxonomy_name (pages : Page.t list) =
   Dream.log "Building taxonomy %s" taxonomy_name;
   List.fold_left (fun acc page ->
-    let sl = Page.get_key_as_string_list page taxonomy_name in
+    let sl = Page.get_key_as_string_list page taxonomy_name |> List.map String.lowercase_ascii in
     List.fold_left (fun acc term -> 
       match List.assoc_opt term acc with 
       | None -> (term, Section.v ~synthetic:true term (Printf.sprintf "/%s/%s/" taxonomy_name term) [page]) :: acc
@@ -19,7 +19,6 @@ let build_taxonomy taxonomy_name (pages : Page.t list) =
     ) acc sl
   ) [] pages
   |> List.map (fun (_, v) -> v)
-
 
 let of_directory path =
   let config =
@@ -75,7 +74,7 @@ let of_directory path =
     (* Super inefficient, but hopefully works and we can optimise later... *)
     let pages = List.concat_map Section.pages sections in
     let sections = build_taxonomy tag pages in
-    (tag, Taxonomy.v name sections)
+    (tag, Taxonomy.v tag name sections)
   ) (Config.taxonomies config) in
 
   { sections; toplevel; config; path ;taxonomies}

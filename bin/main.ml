@@ -167,7 +167,7 @@ let routes_for_section site sec =
         (fun p -> thumbnail_loader p 300),
         fun p -> thumbnail_loader p 600 )
   | _ ->
-      ( Renderer.render_section,
+      ( Snapshots.render_section,
         Renderer.render_page,
         (fun p -> thumbnail_loader p 300),
         fun p -> thumbnail_loader p 600 )
@@ -188,6 +188,9 @@ let routes_for_taxonomies site =
   let taxonomies = Site.taxonomies site in
   List.concat_map (fun (name, taxonomy) ->
     Dream.log "Taxonomy %s: %d terms" name (List.length (Taxonomy.sections taxonomy));
+    
+    Dream.get (Taxonomy.url taxonomy) (fun _ -> Renderer.render_taxonomy taxonomy |> Dream.html) ::
+    
     List.concat_map (fun sec ->
       routes_for_section site sec
     ) (Taxonomy.sections taxonomy)

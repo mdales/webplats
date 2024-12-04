@@ -72,7 +72,7 @@ let render_section sec =
   <%s! (Renderer.render_head (Section.title sec)) %>
   <body>
     <div class="almostall">
-      <%s! Renderer.render_header sec %>
+      <%s! Renderer.render_header (Section.url sec) (Section.title sec) %>
       
       <div id="container">
         <div class="content">
@@ -123,7 +123,7 @@ let render_page sec previous_page page next_page =
   <%s! (Renderer.render_head (Page.title page)) %>
   <body>
     <div class="almostall">
-      <%s! Renderer.render_header sec %>
+      <%s! Renderer.render_header (Section.url sec) (Section.title sec) %>
       <div id="container">
         <div class="content">
           <section role="main">
