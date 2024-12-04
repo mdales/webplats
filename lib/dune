@@ -9,6 +9,7 @@
   astring
   metadata
   yaml
+  uri
   camlimages.core
   camlimages.jpeg
   camlimages.png
