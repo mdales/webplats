@@ -7,9 +7,10 @@ title: test
 |} in
   let body = {|Hello, world|} in
   let page =
-    Page.v (Fpath.v "/home/test/site/section/page/index.md") frontmatter body
+    Page.v "section" (Fpath.v "/home/test/site/section/page/index.md") frontmatter body
   in
   assert_equal ~msg:"Title" "test" (Page.title page);
+  assert_equal ~msg:"section" "section" (Page.original_section page);
   assert_equal ~msg:"body" "Hello, world" (Page.body page);
   assert_equal ~msg:"shortcodes" [] (Page.shortcodes page);
   assert_equal ~msg:"url name" "page" (Page.url_name page)
@@ -20,7 +21,7 @@ title: test
 |} in
   let body = {|Hello, world|} in
   let page =
-    Page.v (Fpath.v "/home/test/site/section/page/about.md") frontmatter body
+    Page.v "section" (Fpath.v "/home/test/site/section/page/about.md") frontmatter body
   in
   assert_equal ~msg:"url name" "about" (Page.url_name page)
 

@@ -1,7 +1,7 @@
 type t
 
-val v : Fpath.t -> Frontmatter.t -> string -> t
-val of_file : ?titleimage_details:bool -> Fpath.t -> t
+val v : string -> Fpath.t -> Frontmatter.t -> string -> t
+val of_file : ?titleimage_details:bool -> string -> Fpath.t -> t
 val url_name : t -> string
 (* Pages don't have absolute URLs, as they may occur in virtual sections. The
    page's URL will be [site domain]/[section url name]/[page url name].
@@ -10,6 +10,7 @@ val url_name : t -> string
    index.md into a name based on their parent folder, and other markdown files
    into a folder based on their name without the extension. *)
 
+val original_section : t -> string
 val title : t -> string
 val date : t -> Ptime.t
 val synopsis : t -> string option

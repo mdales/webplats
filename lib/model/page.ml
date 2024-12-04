@@ -1,4 +1,5 @@
 type t = {
+  original_section : string ;
   frontmatter : Frontmatter.t;
   body : string;
   path : Fpath.t;
@@ -38,11 +39,11 @@ let image_with_dimensions path (img : Frontmatter.image option) =
 
 (* --- public interface --- *)
 
-let v path frontmatter body =
+let v original_section path frontmatter body =
   let shortcodes = Shortcode.find_shortcodes body in
-  { frontmatter; body; path; shortcodes }
+  { original_section ; frontmatter; body; path; shortcodes }
 
-let of_file ?(titleimage_details = false) path =
+let of_file ?(titleimage_details = false) original_section path =
   let frontmatter, body =
     try read_frontmatter path
     with Not_found | Invalid_argument _ ->
@@ -57,7 +58,7 @@ let of_file ?(titleimage_details = false) path =
           (image_with_dimensions (Fpath.parent path)
              (Frontmatter.titleimage frontmatter))
   in
-  v path frontmatter body
+  v original_section path frontmatter body
 
 let title t =
   match Frontmatter.title t.frontmatter with Some t -> t | None -> "Untitled"
@@ -65,7 +66,8 @@ let title t =
 let url_name t =
   let basename = Fpath.basename (Fpath.rem_ext t.path) in
   match basename with "index" -> Fpath.basename (Fpath.parent t.path) | x -> x
-
+  
+let original_section t = t.original_section
 let date t = Frontmatter.date t.frontmatter
 let synopsis t = Frontmatter.synopsis t.frontmatter
 let titleimage t = Frontmatter.titleimage t.frontmatter

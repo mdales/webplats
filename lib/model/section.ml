@@ -21,18 +21,20 @@ let of_directory ~base path =
     | None -> failwith "base is not parent directory"
   in
 
+  let title = (Fpath.basename path) in
+
   let paths =
     find_markdown_files path
     |> List.filter (fun p -> Fpath.basename p = "index.md")
   in
   let pages =
     List.map
-      (Page.of_file ~titleimage_details:(Fpath.basename path = "photos"))
+      (Page.of_file ~titleimage_details:(Fpath.basename path = "photos") title)
       paths
     |> List.filter (fun p -> not (Page.draft p))
     |> List.sort (fun a b -> Ptime.compare (Page.date b) (Page.date a))
   in
-  v ~synthetic:false (Fpath.basename path) url pages
+  v ~synthetic:false title url pages
 
 let title t = t.title
 let pages t = t.pages

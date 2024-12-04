@@ -17,7 +17,8 @@ let build_taxonomy taxonomy_name (pages : Page.t list) =
         (term, Section.updated_with_page section page) :: (List.remove_assoc term acc)
       )
     ) acc sl
-  ) [] pages
+  ) [] (List.sort (fun a b -> Ptime.compare (Page.date a) (Page.date b)) pages)
+  (* The above sort is backwards as when we build the list per tag it'll be reversed again. *)
   |> List.map (fun (_, v) -> v)
 
 let of_directory path =
@@ -64,7 +65,7 @@ let of_directory path =
   let root_pages =
     List.filter_map
       (fun p ->
-        match Fpath.get_ext p with ".md" -> Some (Page.of_file p) | _ -> None)
+        match Fpath.get_ext p with ".md" -> Some (Page.of_file "root" p) | _ -> None)
       root_listing
   in
 
