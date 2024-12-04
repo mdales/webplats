@@ -6,3 +6,4 @@ val title : t -> string
 val toplevel : t -> Section.t
 val path : t -> Fpath.t
 val hugo_theme : t -> string
+val taxonomies : t -> (string * Taxonomy.t) list

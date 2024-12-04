@@ -36,8 +36,6 @@ let routes_for_titleimage sec page thumbnail_loader retina_thumbnail_loader =
       | "photos" ->
           let name, ext = Fpath.split_ext (Fpath.v img.filename) in
           let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
-          Dream.log "%s -> %s" (page_url ^ img.filename)
-            (Fpath.to_string (Fpath.add_seg (Page.path page) img.filename));
           [
             Dream.get
               (page_url ^ "scrn_" ^ img.filename)
@@ -143,6 +141,58 @@ let routes_for_pages_in_section sec page_renderer thumbnail_loader
       in
       loop None hd tl
 
+let routes_for_section site sec =
+  let ( section_renderer,
+      page_renderer,
+      thumbnail_loader,
+      retina_thumbnail_loader ) =
+  match Section.title sec with
+  | "posts" ->
+      ( Posts.render_section,
+        Renderer.render_page,
+        (fun p -> thumbnail_loader p 300),
+        fun p -> thumbnail_loader p 600 )
+  | "photos" ->
+      ( Photos.render_section,
+        Photos.render_page,
+        (fun p ->
+          let i = Option.get (Page.titleimage p) in
+          snapshot_image_loader p i.filename (640, 350)),
+        fun p ->
+          let i = Option.get (Page.titleimage p) in
+          snapshot_image_loader p i.filename (1280, 700) )
+  | "sounds" | "snapshots" ->
+      ( Snapshots.render_section,
+        Snapshots.render_page,
+        (fun p -> thumbnail_loader p 300),
+        fun p -> thumbnail_loader p 600 )
+  | _ ->
+      ( Renderer.render_section,
+        Renderer.render_page,
+        (fun p -> thumbnail_loader p 300),
+        fun p -> thumbnail_loader p 600 )
+  in
+  
+  Dream.get (Section.url sec) (fun _ ->
+      section_renderer sec |> Dream.html)
+  :: Dream.get
+       (Section.url sec ^ "index.xml")
+       (fun _ ->
+         Rss.render_rss site
+           (Section.pages sec |> List.map (fun p -> (sec, p)))
+         |> Dream.html)
+  :: routes_for_pages_in_section sec page_renderer thumbnail_loader
+       retina_thumbnail_loader
+
+let routes_for_taxonomies site =
+  let taxonomies = Site.taxonomies site in
+  List.concat_map (fun (name, taxonomy) ->
+    Dream.log "Taxonomy %s: %d terms" name (List.length (Taxonomy.sections taxonomy));
+    List.concat_map (fun sec ->
+      routes_for_section site sec
+    ) (Taxonomy.sections taxonomy)
+  ) taxonomies
+
 let collect_static_routes site =
   let website_dir = Site.path site in
   let theme_static_dir =
@@ -193,53 +243,9 @@ let () =
     @ collect_static_routes site
   in
 
-  let sections =
-    List.concat_map
-      (fun sec ->
-        let ( section_renderer,
-              page_renderer,
-              thumbnail_loader,
-              retina_thumbnail_loader ) =
-          match Section.title sec with
-          | "posts" ->
-              ( Posts.render_section,
-                Renderer.render_page,
-                (fun p -> thumbnail_loader p 300),
-                fun p -> thumbnail_loader p 600 )
-          | "photos" ->
-              ( Photos.render_section,
-                Photos.render_page,
-                (fun p ->
-                  let i = Option.get (Page.titleimage p) in
-                  snapshot_image_loader p i.filename (640, 350)),
-                fun p ->
-                  let i = Option.get (Page.titleimage p) in
-                  snapshot_image_loader p i.filename (1280, 700) )
-          | "sounds" | "snapshots" ->
-              ( Snapshots.render_section,
-                Snapshots.render_page,
-                (fun p -> thumbnail_loader p 300),
-                fun p -> thumbnail_loader p 600 )
-          | _ ->
-              ( Renderer.render_section,
-                Renderer.render_page,
-                (fun p -> thumbnail_loader p 300),
-                fun p -> thumbnail_loader p 600 )
-        in
-
-        Dream.get (Section.url sec) (fun _ ->
-            section_renderer sec |> Dream.html)
-        :: Dream.get
-             (Section.url sec ^ "index.xml")
-             (fun _ ->
-               Rss.render_rss site
-                 (Section.pages sec |> List.map (fun p -> (sec, p)))
-               |> Dream.html)
-        :: routes_for_pages_in_section sec page_renderer thumbnail_loader
-             retina_thumbnail_loader)
-      (Site.sections site)
-  in
-  Dream.log "Adding %d routes" (List.length (toplevel @ sections));
+  let sections = List.concat_map (routes_for_section site) (Site.sections site) in
+  let taxonomies = routes_for_taxonomies site in
+  Dream.log "Adding %d routes" (List.length (toplevel @ sections @ taxonomies));
   Dream.run ~error_handler:(Dream.error_template (Renderer.render_error site))
   @@ Dream.logger
-  @@ Dream.router (toplevel @ sections)
+  @@ Dream.router (toplevel @ sections @ taxonomies)

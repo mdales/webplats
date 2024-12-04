@@ -11,6 +11,8 @@ let rec find_markdown_files path =
 
 let v ?(synthetic = true) title url pages = { title; pages; url; synthetic }
 
+let updated_with_page t p = { t with pages = p :: t.pages}
+
 let of_directory ~base path =
   let url = Fpath.rem_prefix base path in
   let url =

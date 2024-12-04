@@ -14,6 +14,21 @@ let yaml_dict_to_string_list a k =
             lst
       | _ -> [])
 
+let yaml_dict_to_string_dict a k = 
+  match List.assoc_opt k a with
+  | None -> []
+  | Some v -> (
+    match v with
+    | `O assoc -> (
+      List.filter_map (fun (k, v) -> 
+        match v with
+        | `String s -> Some (k, s)
+        | _ -> None
+      ) assoc
+    )
+    | _ -> []
+  )
+
 let yaml_dict_to_bool a k =
   match List.assoc_opt k a with
   | None -> None

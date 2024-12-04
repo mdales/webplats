@@ -3,7 +3,23 @@ type t = {
   toplevel : Section.t;
   config : Config.t;
   path : Fpath.t;
+  taxonomies : (string * Taxonomy.t) list;
 }
+
+let build_taxonomy taxonomy_name (pages : Page.t list) =
+  Dream.log "Building taxonomy %s" taxonomy_name;
+  List.fold_left (fun acc page ->
+    let sl = Page.get_key_as_string_list page taxonomy_name in
+    List.fold_left (fun acc term -> 
+      match List.assoc_opt term acc with 
+      | None -> (term, Section.v ~synthetic:true term (Printf.sprintf "/%s/%s/" taxonomy_name term) [page]) :: acc
+      | Some section -> (
+        (term, Section.updated_with_page section page) :: (List.remove_assoc term acc)
+      )
+    ) acc sl
+  ) [] pages
+  |> List.map (fun (_, v) -> v)
+
 
 let of_directory path =
   let config =
@@ -54,11 +70,19 @@ let of_directory path =
   in
 
   let toplevel = Section.v "website" "/" root_pages in
+  
+  let taxonomies = List.map (fun (tag, name) -> 
+    (* Super inefficient, but hopefully works and we can optimise later... *)
+    let pages = List.concat_map Section.pages sections in
+    let sections = build_taxonomy tag pages in
+    (tag, Taxonomy.v name sections)
+  ) (Config.taxonomies config) in
 
-  { sections; toplevel; config; path }
+  { sections; toplevel; config; path ;taxonomies}
 
 let sections t = t.toplevel :: t.sections
 let title t = Config.title t.config
 let toplevel t = t.toplevel
 let path t = t.path
 let hugo_theme t = Config.hugo_theme t.config
+let taxonomies t = t.taxonomies

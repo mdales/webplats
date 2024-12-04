@@ -77,3 +77,4 @@ let shortcodes t = t.shortcodes
 let images t = Frontmatter.images t.frontmatter
 let get_key_as_string t key = Frontmatter.get_key_as_string t.frontmatter key
 let get_key_as_date t key = Frontmatter.get_key_as_date t.frontmatter key
+let get_key_as_string_list t key = Frontmatter.get_key_as_string_list t.frontmatter key
