@@ -141,8 +141,8 @@ let render_page sec previous_page page next_page =
             <div class="galleryimage">
                <img
                   loading="lazy"
-                  src="<%s Section.url ~page sec %><%s i.filename %>"
-                  srcset="<%s Section.url sec ~page %>/<%s retina_filename %> 2x, <%s Section.url ~page sec %><%s i.filename %> 1x"
+                  src="<%s Section.url ~page sec %>scrn_<%s i.filename %>"
+                  srcset="<%s Section.url sec ~page %>scrn_<%s retina_filename %> 2x, <%s Section.url ~page sec %>scrn_<%s i.filename %> 1x"
                   title="<%s Page.title page %>"
                   width="<%d width %>"
                   height="<%d height %>"
@@ -170,7 +170,8 @@ let render_page sec previous_page page next_page =
 % (match (Page.get_key_as_string page "Caption") with Some caption ->
                 <%s caption %> film <br/>
 % | None -> ());
-                <a href="https://creativecommons.org/licenses/by-nc/4.0/">License CC BY-NC</a><br/>
+                <a href="https://creativecommons.org/licenses/by-nc/4.0/">License CC BY-NC</a>
+                - <a href="<%s i.filename %>" download>Download</a><br/>
               </div>              
               <div class="photo">
                 <div class="headerflex">

@@ -11,6 +11,11 @@ let snapshot_image_loader page image bounds _root _path _request =
   Dream.respond
     (In_channel.with_open_bin path (fun ic -> In_channel.input_all ic))
 
+let direct_loader page filename _root _path _request =
+  let path = Fpath.to_string (Fpath.add_seg (Page.path page) filename) in
+  Dream.respond
+    (In_channel.with_open_bin path (fun ic -> In_channel.input_all ic))
+
 let routes_for_titleimage sec page thumbnail_loader retina_thumbnail_loader =
   let page_url = Section.url ~page sec in
   match Page.titleimage page with
@@ -31,15 +36,21 @@ let routes_for_titleimage sec page thumbnail_loader retina_thumbnail_loader =
       | "photos" ->
           let name, ext = Fpath.split_ext (Fpath.v img.filename) in
           let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
+          Dream.log "%s -> %s" (page_url ^ img.filename)
+            (Fpath.to_string (Fpath.add_seg (Page.path page) img.filename));
           [
-            Dream.get (page_url ^ img.filename)
+            Dream.get
+              (page_url ^ "scrn_" ^ img.filename)
               (Dream.static
                  ~loader:(snapshot_image_loader page img.filename (1008, 800))
                  "");
-            Dream.get (page_url ^ retina_name)
+            Dream.get
+              (page_url ^ "scrn_" ^ retina_name)
               (Dream.static
                  ~loader:(snapshot_image_loader page img.filename (2016, 1600))
                  "");
+            Dream.get (page_url ^ img.filename)
+              (Dream.static ~loader:(direct_loader page img.filename) "");
           ]
       | _ -> [])
 

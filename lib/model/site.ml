@@ -39,7 +39,7 @@ let of_directory path =
         | false -> None
         | true -> Some (Fpath.to_dir_path p))
       root_listing
-    |> List.map (fun p -> Section.of_directory ~base:path p)
+    |> List.map (fun p -> Section.of_directory ~base:content_path p)
     |> List.sort (fun a b ->
            Ptime.compare
              (Page.date (List.hd (Section.pages b)))
