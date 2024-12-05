@@ -30,7 +30,11 @@ let render_rss site pages =
           
           <guid><%s Uri.to_string (Uri.with_uri ~path:(Some (Section.url ~page sec)) (Site.url site)) %></guid>
           <description>
-          	<%s Renderer.render_body page %>
+% (match Page.original_section page with "photos" ->
+% let img = Option.get (Page.titleimage page) in
+             <%s Shortcodes.render_image ((Section.url ~page sec) ^ img.filename) img.description None %>
+% | _ -> ());
+             <%s Renderer.render_body page %>
           </description>
         </item>
 % ) (recent_pages pages));

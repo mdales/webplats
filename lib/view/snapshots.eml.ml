@@ -1,12 +1,23 @@
 
+let cache_dir () = 
+  let p = match Sys.getenv_opt "WEBPLATS_CACHE_DIR" with
+  | Some x -> x
+  | None -> (
+    match Sys.getenv_opt "TMPDIR" with
+    | Some x -> x
+    | None -> "/tmp"
+  ) in
+  Fpath.v p
+
 let render_thumbnail page thumbnail_size = 
   match (Page.titleimage page) with
   | None -> failwith "blah"
   | Some titleimg -> (
     let imgpath = Fpath.add_seg (Page.path page) titleimg.filename in
-    let targetname = Printf.sprintf "/tmp/thumbnail_%d_%s" thumbnail_size titleimg.filename  in
-    match Sys.file_exists targetname with
-    | true -> targetname
+    let targetname = Printf.sprintf "thumbnail_%d_%s" thumbnail_size titleimg.filename  in
+    let target_path = Fpath.to_string (Fpath.add_seg (cache_dir ()) targetname) in 
+    match Sys.file_exists target_path with
+    | true -> target_path
     | false -> (
       let img = Images.load (Fpath.to_string imgpath) [] in
       let width, height = Images.size img in
@@ -28,16 +39,17 @@ let render_thumbnail page thumbnail_size =
       | _ -> failwith "unexpcted image format"
       in
       
-      Images.save targetname None [] resultimg;
-      targetname
+      Images.save target_path None [] resultimg;
+      target_path
     )
    )
 
 let render_image_fit page filename (max_width, max_height) =
   let imgpath = Fpath.add_seg (Page.path page) filename in
-    let targetname = Printf.sprintf "/tmp/image_%dx%d_%s" max_width max_height filename  in
-    match Sys.file_exists targetname with
-    | true -> targetname
+    let targetname = Printf.sprintf "image_%dx%d_%s" max_width max_height filename  in
+    let target_path = Fpath.to_string (Fpath.add_seg (cache_dir ()) targetname) in 
+    match Sys.file_exists target_path with
+    | true -> target_path
     | false -> (
       let img = Images.load (Fpath.to_string imgpath) [] in
       let width, height = Images.size img in
@@ -62,8 +74,8 @@ let render_image_fit page filename (max_width, max_height) =
         )
         | _ -> failwith "unexpcted image format"
         in
-        Images.save targetname None [] resultimg;
-        targetname
+        Images.save target_path None [] resultimg;
+        target_path
       )
     )
   
