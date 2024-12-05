@@ -9,7 +9,7 @@ let shortcode_printer (sc : Shortcode.t) =
   | Youtube a -> Printf.sprintf "Youtube(%s)" a
   | Video (a, _b) -> Printf.sprintf "Video(%s, _)" a
   | _ -> "Other"
-  
+
 let assert_equal_sc = assert_equal ~printer:shortcode_printer
 let assert_equal_int = assert_equal ~printer:string_of_int
 
@@ -29,7 +29,9 @@ let test_invalid_shortcode _ =
   let (loc, len), code = List.hd codes in
   assert_equal_int ~msg:"Code offset" 1 loc;
   assert_equal_int ~msg:"Code length" 22 len;
-  assert_equal_sc ~msg:"Code" (Shortcode.Unknown [ "boop"; "the"; "snoot" ]) code
+  assert_equal_sc ~msg:"Code"
+    (Shortcode.Unknown [ "boop"; "the"; "snoot" ])
+    code
 
 let test_simple_image_shortcode _ =
   let body = {| {{< img test.jpg >}} |} in
@@ -47,7 +49,9 @@ let test_multi_ext_image_shortcode _ =
   let (loc, len), code = List.hd codes in
   assert_equal_int ~msg:"Code offset" 1 loc;
   assert_equal_int ~msg:"Code length" 32 len;
-  assert_equal_sc ~msg:"Code" (Shortcode.Image ("GetPhoto-2.ashx.jpeg", None, None)) code
+  assert_equal_sc ~msg:"Code"
+    (Shortcode.Image ("GetPhoto-2.ashx.jpeg", None, None))
+    code
 
 let test_simple_image_shortcode_with_space _ =
   let body = {| {{< img "a test.jpg" >}} |} in
@@ -144,7 +148,9 @@ let test_simple_video_shortcode_with_thumbnail _ =
   let (loc, len), code = List.hd codes in
   assert_equal_int ~msg:"Code offset" 1 loc;
   assert_equal_int ~msg:"Code length" 32 len;
-  assert_equal_sc ~msg:"Code" (Shortcode.Video ("test.mp4", Some "thumb.jpg")) code
+  assert_equal_sc ~msg:"Code"
+    (Shortcode.Video ("test.mp4", Some "thumb.jpg"))
+    code
 
 let suite =
   "Shortcode tests"

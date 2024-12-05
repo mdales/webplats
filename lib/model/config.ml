@@ -12,9 +12,13 @@ let of_file path =
       match In_channel.input_all ic |> Yaml.of_string_exn with
       | `O assoc ->
           let title = Option.get (yaml_dict_to_string assoc "title")
-          and base_url = Uri.of_string (Option.get (yaml_dict_to_string assoc "baseURL"))
+          and base_url =
+            Uri.of_string (Option.get (yaml_dict_to_string assoc "baseURL"))
           and hugo_theme = Option.get (yaml_dict_to_string assoc "theme")
-          and taxonomies = yaml_dict_to_string_dict assoc "taxonomies" |> List.map (fun (k, v) -> (k ^ "s"), v) in
+          and taxonomies =
+            yaml_dict_to_string_dict assoc "taxonomies"
+            |> List.map (fun (k, v) -> (k ^ "s", v))
+          in
           { title; base_url; taxonomies; hugo_theme }
       | _ -> failwith "Failed to load config")
 

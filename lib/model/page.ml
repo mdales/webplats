@@ -1,5 +1,5 @@
 type t = {
-  original_section : string ;
+  original_section : string;
   frontmatter : Frontmatter.t;
   body : string;
   path : Fpath.t;
@@ -41,7 +41,7 @@ let image_with_dimensions path (img : Frontmatter.image option) =
 
 let v original_section path frontmatter body =
   let shortcodes = Shortcode.find_shortcodes body in
-  { original_section ; frontmatter; body; path; shortcodes }
+  { original_section; frontmatter; body; path; shortcodes }
 
 let of_file ?(titleimage_details = false) original_section path =
   let frontmatter, body =
@@ -66,7 +66,7 @@ let title t =
 let url_name t =
   let basename = Fpath.basename (Fpath.rem_ext t.path) in
   match basename with "index" -> Fpath.basename (Fpath.parent t.path) | x -> x
-  
+
 let original_section t = t.original_section
 let date t = Frontmatter.date t.frontmatter
 let synopsis t = Frontmatter.synopsis t.frontmatter
@@ -79,4 +79,6 @@ let shortcodes t = t.shortcodes
 let images t = Frontmatter.images t.frontmatter
 let get_key_as_string t key = Frontmatter.get_key_as_string t.frontmatter key
 let get_key_as_date t key = Frontmatter.get_key_as_date t.frontmatter key
-let get_key_as_string_list t key = Frontmatter.get_key_as_string_list t.frontmatter key
+
+let get_key_as_string_list t key =
+  Frontmatter.get_key_as_string_list t.frontmatter key
