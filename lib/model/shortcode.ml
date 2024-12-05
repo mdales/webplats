@@ -21,7 +21,7 @@ let find_raw_shortcodes body =
   List.rev (loop 0 [])
 
 let find_shortcodes body =
-  let rex = Pcre2.regexp {|"[^"]+"|[\w\.]+|} in
+  let rex = Pcre2.regexp {|"[^"]+"|[\w\.\-]+|} in
   find_raw_shortcodes body
   |> List.map (fun (r, loc) ->
          ( loc,
