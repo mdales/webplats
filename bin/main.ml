@@ -208,7 +208,13 @@ let collect_static_routes site =
             (Printf.sprintf "/%s/**" basename)
             (Dream.static (Fpath.to_string (path / ".")))
       | false ->
-          Dream.get ("/" ^ basename) (Dream.static (Fpath.to_string path)))
+          Dream.get ("/" ^ basename)
+            (Dream.static
+               ~loader:(fun _root _path _request ->
+                 Dream.respond
+                   (In_channel.with_open_bin (Fpath.to_string path) (fun ic ->
+                        In_channel.input_all ic)))
+               ""))
     things_to_be_published
 
 let () =
