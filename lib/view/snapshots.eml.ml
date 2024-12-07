@@ -132,6 +132,7 @@ let render_section sec =
 
 
 let render_page sec previous_page page next_page =
+  <html>
   <%s! (Renderer.render_head (Page.title page)) %>
   <body>
     <div class="almostall">

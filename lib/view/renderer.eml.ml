@@ -120,6 +120,7 @@ let render_error site _error _debug_info suggested_response =
 
   Dream.set_header suggested_response "Content-Type" Dream.text_html;
   Dream.set_body suggested_response begin
+    <html>
     <%s! (render_head (Printf.sprintf "%d - %s" code reason)) %>
     <body>
       <div class="almostall">
@@ -143,6 +144,7 @@ let render_error site _error _debug_info suggested_response =
   Lwt.return suggested_response
 
 let render_page sec previous_page page next_page =
+  <html>
   <%s! (render_head (Page.title page)) %>
   <body>
     <div class="almostall">
