@@ -1,3 +1,4 @@
+
 type t = {
   sections : Section.t list;
   toplevel : Section.t;
@@ -17,12 +18,16 @@ let build_taxonomy taxonomy_name (pages : Page.t list) =
       List.fold_left
         (fun acc term ->
           match List.assoc_opt term acc with
-          | None ->
-              ( term,
+          | None -> (
+            let term_for_url = String.map (fun c -> 
+              match c with
+              | ' ' -> '-'
+              | x -> x
+            ) term in            
+             ( term,
                 Section.v ~synthetic:true term
-                  (Printf.sprintf "/%s/%s/" taxonomy_name term)
-                  [ page ] )
-              :: acc
+                  (Printf.sprintf "/%s/%s/" taxonomy_name term_for_url)
+                  [ page ] ) :: acc)
           | Some section ->
               (term, Section.updated_with_page section page)
               :: List.remove_assoc term acc)

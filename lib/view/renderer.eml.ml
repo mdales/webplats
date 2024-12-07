@@ -195,7 +195,7 @@ let render_taxonomy taxonomy =
     <ul>
 % (Taxonomy.sections taxonomy) |> List.iter begin fun (sec) ->
       <li>
-      <a href="<%s Section.url sec %>/">
+      <a href="<%s Section.url sec %>">
           <%s Section.title sec %>
         </a> - <%d List.length (Section.pages sec) %> items
       </li>
