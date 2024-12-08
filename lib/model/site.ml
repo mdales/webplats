@@ -80,7 +80,7 @@ let of_directory path =
     List.filter_map
       (fun p ->
         match Fpath.get_ext p with
-        | ".md" -> Some (Page.of_file "root" p)
+        | ".md" -> Some (Page.of_file "root" "/" p)
         | _ -> None)
       root_listing
   in

@@ -94,7 +94,7 @@ let render_section sec =
               <div class="tagcellholder">
     
 % (Section.pages sec) |> List.iter begin fun (page) ->
-                <div class="tagcell colour-<%s Page.original_section page %>">
+                <div class="tagcell colour-<%s Page.original_section_title page %>">
                   <div class="tagcelllabel">
                     <span><%s Page.title page %></span>
                   </div>

@@ -52,14 +52,20 @@ let camera_info page =
     Printf.sprintf "%s%s" camera lens
   )
 
-let render_header sec = 
+let render_header title = 
   <div class="miniheader">
     <div class="miniheadertitle">
       <header role="banner">
         <a ref="home">
-          <h1>my name is mwd: <%s Section.title sec %></h1>
+          <h1>my name is mwd: <%s title %></h1>
         </a>
       </header>
+    </div>
+    <div class="miniheadernav">
+      <ul>
+        <li><a href="/photos/">Latest</a></li>
+        <li><a href="/albums/">Albums</a></li>
+      </ul>
     </div>
   </div>
 
@@ -68,7 +74,7 @@ let render_section sec =
   <%s! (Renderer.render_head (Section.title sec)) %>
   <body>
     <div class="almostall">
-      <%s! render_header sec %>
+      <%s! render_header (Section.title sec) %>
       
       <div id="container">
         <div class="gallery">
@@ -126,7 +132,7 @@ let render_page sec previous_page page next_page =
   <%s! (Renderer.render_head (Page.title page)) %>
   <body>
     <div class="almostall">
-      <%s! render_header sec %>
+      <%s! render_header (Section.title sec) %>
       <div id="container">
        <div class="article galoveride">
        <article>
@@ -173,7 +179,14 @@ let render_page sec previous_page page next_page =
 % | None -> ());
                 <a href="https://creativecommons.org/licenses/by-nc/4.0/">License CC BY-NC</a>
                 - <a href="<%s i.filename %>" download>Download</a><br/>
-              </div>              
+% let albums = Page.get_key_as_string_list page "albums" in
+% (match albums with _hd :: _tl ->
+                <br/>Appears in:<br/>
+% | [] -> ());
+% albums |> List.iter begin fun (album) ->
+                <a href="/albums/<%s String.lowercase_ascii album |> String.map (fun c -> match c with ' ' -> '-' | x -> x) %>/">• <%s album %></a><br/>
+% end; 
+              </div>                     
               <div class="photo">
                 <div class="headerflex">
 % (match previous_page with Some page -> 
@@ -194,4 +207,60 @@ let render_page sec previous_page page next_page =
     </div>
   </body>
   </html>
-  
+
+let rec take n l = 
+  match n with
+  | 0 -> []
+  | _ -> (
+    match l with 
+    | [] -> []
+    | hd :: tl -> hd :: (take (n - 1) tl)
+  )
+
+let render_taxonomy taxonomy =
+  <html>
+    <%s! (Renderer.render_head (Taxonomy.title taxonomy)) %>
+    <body>
+      <div class="almostall">
+        <%s! render_header (Taxonomy.title taxonomy) %>
+        <div id="container">
+          <div class="gallery">  
+% (Taxonomy.sections taxonomy) |> List.iter begin fun (sec) ->
+            <div class="galleryitem gallerylandscape album">
+              <a href="<%s Section.url sec %>">
+                <div class="albumstack">
+% (Section.pages sec) |> take 3 |> List.iter begin fun (page) ->
+% let i = Option.get (Page.titleimage page) in
+% (match (i.dimensions) with Some (width, height) ->
+% let layout = match width > height with true -> "Y" | false -> "X" in
+% let rot = Random.int_in_range ~min:(-5) ~max:5 in
+% let shift = Random.int_in_range ~min:(-7) ~max:7 in
+% let name, ext = Fpath.split_ext (Fpath.v i.filename) in
+% let retina_filename = Printf.sprintf "%s@2x%s" (Fpath.to_string name) ext in
+                  <div 
+                    class="galleryimage"
+                    style="transform: rotate(<%d rot %>deg) translate<%s layout %>(<%d shift %>px);"
+                  >
+                    <img
+                      loading="lazy"
+                      src="<%s Page.original_section_url page %><%s Page.url_name page %>/album_<%s i.filename %>"
+                      srcset="<%s Page.original_section_url page %><%s Page.url_name page %>/album_<%s retina_filename %> 2x, <%s Page.original_section_url page %><%s Page.url_name page %>/album_<%s i.filename %> 1x"
+% (match (i.description) with Some desc ->
+                      alt="<%s desc %>"
+% | None -> ());
+                    />
+                  </div>
+% | None -> ());
+% end;
+                </div>
+              </a>
+              <div class="gallerycard albumcard">
+                <p><a href="<%s Section.url sec %>"><%s Section.title sec %></a><br><%d List.length (Section.pages sec) %> photos</p>
+              </div>
+            </div>
+% end;
+          </div>
+        </div>
+      </div>
+    </body>
+  </html>

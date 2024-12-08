@@ -28,7 +28,9 @@ let of_directory ~base path =
   in
   let pages =
     List.map
-      (Page.of_file ~titleimage_details:(Fpath.basename path = "photos") title)
+      (Page.of_file
+         ~titleimage_details:(Fpath.basename path = "photos")
+         title url)
       paths
     |> List.filter (fun p -> not (Page.draft p))
     |> List.sort (fun a b -> Ptime.compare (Page.date b) (Page.date a))

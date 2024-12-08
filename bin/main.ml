@@ -16,7 +16,7 @@ let direct_loader page filename _root _path _request =
     (In_channel.with_open_bin path (fun ic -> In_channel.input_all ic))
 
 let general_thumbnail_loader ~retina page =
-  match Page.original_section page with
+  match Page.original_section_title page with
   | "photos" ->
       let i = Option.get (Page.titleimage page) in
       snapshot_image_loader page i.filename
@@ -29,8 +29,13 @@ let section_render sec =
   | "photos" -> Photos.render_section
   | _ -> Snapshots.render_section
 
+let taxonomy_section_renderer taxonomy _sec =
+  match Taxonomy.title taxonomy with
+  | "albums" -> Photos.render_section
+  | _ -> Snapshots.render_section
+
 let page_render page =
-  match Page.original_section page with
+  match Page.original_section_title page with
   | "photos" -> Photos.render_page
   | "sounds" | "snapshots" -> Snapshots.render_page
   | _ -> Renderer.render_page
@@ -51,7 +56,7 @@ let routes_for_titleimage sec page thumbnail_loader =
       ]
       @
       (* The photos images are also in the title image *)
-      match Section.title sec with
+      match Page.original_section_title page with
       | "photos" ->
           let name, ext = Fpath.split_ext (Fpath.v img.filename) in
           let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
@@ -66,9 +71,23 @@ let routes_for_titleimage sec page thumbnail_loader =
               (Dream.static
                  ~loader:(snapshot_image_loader page img.filename (2016, 1600))
                  "");
+            (* This is the direct full resolution download *)
             Dream.get (page_url ^ img.filename)
               (Dream.static ~loader:(direct_loader page img.filename) "");
           ]
+          @ [
+              (* This is the album thumbnails *)
+              Dream.get
+                (page_url ^ "album_" ^ img.filename)
+                (Dream.static
+                   ~loader:(snapshot_image_loader page img.filename (300, 300))
+                   "");
+              Dream.get
+                (page_url ^ "album_" ^ retina_name)
+                (Dream.static
+                   ~loader:(snapshot_image_loader page img.filename (600, 600))
+                   "");
+            ]
       | _ -> [])
 
 let routes_for_snapshot_images sec page image_loader =
@@ -165,8 +184,8 @@ let routes_for_section ~section_renderer ~page_renderer ~thumbnail_loader
          |> Dream.html)
   :: routes_for_pages_in_section sec page_renderer thumbnail_loader image_loader
 
-let routes_for_taxonomies ~section_renderer ~page_renderer ~thumbnail_loader
-    ~image_loader site =
+let routes_for_taxonomies ~taxonomy_section_renderer ~page_renderer
+    ~thumbnail_loader ~image_loader site =
   let taxonomies = Site.taxonomies site in
   List.concat_map
     (fun (name, taxonomy) ->
@@ -174,11 +193,17 @@ let routes_for_taxonomies ~section_renderer ~page_renderer ~thumbnail_loader
         (List.length (Taxonomy.sections taxonomy));
 
       Dream.get (Taxonomy.url taxonomy) (fun _ ->
-          Renderer.render_taxonomy taxonomy |> Dream.html)
+          let render_taxonomy =
+            match Taxonomy.title taxonomy with
+            | "albums" -> Photos.render_taxonomy
+            | _ -> Renderer.render_taxonomy
+          in
+          render_taxonomy taxonomy |> Dream.html)
       :: List.concat_map
            (fun sec ->
-             routes_for_section ~section_renderer ~page_renderer
-               ~thumbnail_loader ~image_loader site sec)
+             routes_for_section
+               ~section_renderer:(taxonomy_section_renderer taxonomy)
+               ~page_renderer ~thumbnail_loader ~image_loader site sec)
            (Taxonomy.sections taxonomy))
     taxonomies
 
@@ -215,7 +240,7 @@ let () =
   in
   let taxonomies =
     routes_for_taxonomies ~thumbnail_loader:general_thumbnail_loader
-      ~image_loader:snapshot_image_loader ~section_renderer:section_render
+      ~image_loader:snapshot_image_loader ~taxonomy_section_renderer
       ~page_renderer:page_render site
   in
   Dream.log "Adding %d routes" (List.length (toplevel @ sections @ taxonomies));
