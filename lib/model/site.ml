@@ -70,6 +70,8 @@ let of_directory path =
         | true -> Some (Fpath.to_dir_path p))
       root_listing
     |> List.map (fun p -> Section.of_directory ~base:content_path p)
+    |> List.filter_map (fun s ->
+           match Section.pages s with [] -> None | _ -> Some s)
     |> List.sort (fun a b ->
            Ptime.compare
              (Page.date (List.hd (Section.pages b)))
