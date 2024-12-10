@@ -228,8 +228,9 @@ let () =
                    Ptime.compare (Page.date b) (Page.date a)))
           |> Dream.html);
     ]
-    @ Router.collect_static_routes site
   in
+
+  let static = Router.collect_static_routes site in
 
   let sections =
     List.concat_map
@@ -243,7 +244,7 @@ let () =
       ~image_loader:snapshot_image_loader ~taxonomy_section_renderer
       ~page_renderer:page_render site
   in
-  Dream.log "Adding %d routes" (List.length (toplevel @ sections @ taxonomies));
+  Dream.log "Adding %d routes" (List.length (toplevel @ sections @ taxonomies @ static));
   Dream.run ~error_handler:(Dream.error_template (Renderer.render_error site))
   @@ Dream.logger
-  @@ Dream.router (toplevel @ sections @ taxonomies)
+  @@ Dream.router (toplevel @ sections @ taxonomies @ static)
