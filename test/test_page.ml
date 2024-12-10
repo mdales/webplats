@@ -30,11 +30,28 @@ title: test
   in
   assert_equal ~msg:"url name" "about" (Page.url_name page)
 
+let test_path_with_base _ =
+  let frontmatter = Frontmatter.of_string {|
+title: test
+|} in
+  let body = {|Hello, world|} in
+  let page =
+    Page.v
+      ~base:(Some (Fpath.v "/home/test/site/section/"))
+      "section" "/section/"
+      (Fpath.v "/home/test/site/section/page/with/parts/index.md")
+      frontmatter body
+  in
+  assert_equal
+    ~printer:(fun x -> x)
+    ~msg:"url name" "page/with/parts/" (Page.url_name page)
+
 let suite =
   "Page tests"
   >::: [
          "Simple page" >:: test_simple_page;
          "Non index name" >:: test_non_index_name;
+         "Page with base" >:: test_path_with_base;
        ]
 
 let () = run_test_tt_main suite
