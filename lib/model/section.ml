@@ -28,7 +28,7 @@ let of_directory ~base path =
   in
   let pages =
     List.map
-      (Page.of_file
+      (Page.of_file ~base:(Some path)
          ~titleimage_details:(Fpath.basename path = "photos")
          title url)
       paths

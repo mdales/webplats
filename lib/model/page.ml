@@ -4,6 +4,7 @@ type t = {
   frontmatter : Frontmatter.t;
   body : string;
   path : Fpath.t;
+  base : Fpath.t option;
   shortcodes : ((int * int) * Shortcode.t) list;
 }
 
@@ -40,7 +41,8 @@ let image_with_dimensions path (img : Frontmatter.image option) =
 
 (* --- public interface --- *)
 
-let v original_section_title original_section_url path frontmatter body =
+let v ?(base = None) original_section_title original_section_url path
+    frontmatter body =
   let shortcodes = Shortcode.find_shortcodes body in
   {
     original_section_title;
@@ -48,10 +50,11 @@ let v original_section_title original_section_url path frontmatter body =
     frontmatter;
     body;
     path;
+    base;
     shortcodes;
   }
 
-let of_file ?(titleimage_details = false) original_section_title
+let of_file ?(titleimage_details = false) ?(base = None) original_section_title
     original_section_url path =
   let frontmatter, body =
     try read_frontmatter path
@@ -67,17 +70,24 @@ let of_file ?(titleimage_details = false) original_section_title
           (image_with_dimensions (Fpath.parent path)
              (Frontmatter.titleimage frontmatter))
   in
-  v original_section_title original_section_url path frontmatter body
+  v ~base original_section_title original_section_url path frontmatter body
 
 let title t =
   match Frontmatter.title t.frontmatter with Some t -> t | None -> "Untitled"
 
 let url_name t =
-  let basename = Fpath.basename (Fpath.rem_ext t.path) in
   let raw =
-    match basename with
-    | "index" -> Fpath.basename (Fpath.parent t.path)
-    | x -> x
+    match t.base with
+    | None -> (
+        let basename = Fpath.basename (Fpath.rem_ext t.path) in
+        match basename with
+        | "index" -> Fpath.basename (Fpath.parent t.path)
+        | x -> x)
+    | Some base -> (
+        let p = Option.get (Fpath.rem_prefix base t.path) in
+        match Fpath.basename t.path with
+        | "index.md" -> Fpath.to_string (Fpath.parent p)
+        | _ -> Fpath.to_string (Fpath.rem_ext p))
   in
   let lower_raw = String.lowercase_ascii raw in
   String.fold_left
