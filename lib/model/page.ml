@@ -34,10 +34,15 @@ let image_with_dimensions path (img : Frontmatter.image option) =
         let width = int_of_string (List.assoc "width" metadata)
         and height = int_of_string (List.assoc "height" metadata) in
         Some { img with dimensions = Some (width, height) }
-      with Failure _ ->
-        Dream.log "Failed to parse %s"
-          (Fpath.to_string (Fpath.add_seg path img.filename));
-        Some img)
+      with
+      | Failure _ ->
+          Dream.log "Failed to parse %s"
+            (Fpath.to_string (Fpath.add_seg path img.filename));
+          Some img
+      | Metadata.Invalid ->
+          Dream.log "Error reading metadata %s"
+            (Fpath.to_string (Fpath.add_seg path img.filename));
+          Some img)
 
 (* --- public interface --- *)
 
@@ -54,8 +59,7 @@ let v ?(base = None) original_section_title original_section_url path
     shortcodes;
   }
 
-let of_file ?(titleimage_details = false) ?(base = None) original_section_title
-    original_section_url path =
+let of_file ?(base = None) original_section_title original_section_url path =
   let frontmatter, body =
     try read_frontmatter path
     with Not_found | Invalid_argument _ ->
@@ -63,12 +67,9 @@ let of_file ?(titleimage_details = false) ?(base = None) original_section_title
         (Printf.sprintf "Failed to find key in %s" (Fpath.to_string path))
   in
   let frontmatter =
-    match titleimage_details with
-    | false -> frontmatter
-    | true ->
-        Frontmatter.update_titleimage frontmatter
-          (image_with_dimensions (Fpath.parent path)
-             (Frontmatter.titleimage frontmatter))
+    Frontmatter.update_titleimage frontmatter
+      (image_with_dimensions (Fpath.parent path)
+         (Frontmatter.titleimage frontmatter))
   in
   v ~base original_section_title original_section_url path frontmatter body
 

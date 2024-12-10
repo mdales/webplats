@@ -9,14 +9,7 @@ val v :
   string ->
   t
 
-val of_file :
-  ?titleimage_details:bool ->
-  ?base:Fpath.t option ->
-  string ->
-  string ->
-  Fpath.t ->
-  t
-
+val of_file : ?base:Fpath.t option -> string -> string -> Fpath.t -> t
 val url_name : t -> string
 (* Pages don't have absolute URLs, as they may occur in virtual sections. The
    page's URL will be [site domain]/[section url name]/[page url name].
