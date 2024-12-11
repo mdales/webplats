@@ -84,11 +84,14 @@ let url_name t =
         match basename with
         | "index" -> Fpath.basename (Fpath.parent t.path)
         | x -> x)
-    | Some base -> (
+    | Some base ->
         let p = Option.get (Fpath.rem_prefix base t.path) in
-        match Fpath.basename t.path with
-        | "index.md" -> Fpath.to_string (Fpath.parent p)
-        | _ -> Fpath.to_string (Fpath.rem_ext p))
+        let dirpath =
+          match Fpath.basename t.path with
+          | "index.md" -> Fpath.parent p
+          | _ -> Fpath.rem_ext p
+        in
+        Fpath.to_string (Fpath.rem_empty_seg dirpath)
   in
   let lower_raw = String.lowercase_ascii raw in
   String.fold_left
