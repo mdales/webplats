@@ -1,5 +1,46 @@
 open Fpath
 
+type image_loader_t =
+  Page.t -> string -> int * int -> string -> string -> Dream.handler
+
+let routes_for_image_shortcodes sec page (image_loader : image_loader_t) =
+  List.concat_map
+    (fun (_, sc) ->
+      match sc with
+      | Shortcode.Image (filename, _, _) ->
+          [
+            Dream.get
+              (Section.url ~page sec ^ filename)
+              (Dream.static ~loader:(image_loader page filename (800, 600)) "");
+            (let name, ext = Fpath.split_ext (Fpath.v filename) in
+             let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
+             Dream.get
+               (Section.url ~page sec ^ retina_name)
+               (Dream.static
+                  ~loader:(image_loader page filename (800 * 2, 600 * 2))
+                  ""));
+          ]
+      | _ -> [])
+    (Page.shortcodes page)
+
+let routes_for_direct_shortcodes sec page =
+  List.concat_map
+    (fun (_, sc) ->
+      match sc with
+      | Shortcode.Video (r, None) -> [ r ]
+      | Shortcode.Video (r, Some t) -> [ r; t ]
+      | Shortcode.Audio r -> [ r ]
+      | _ -> [])
+    (Page.shortcodes page)
+  |> List.map (fun filename ->
+         Dream.get
+           (Section.url ~page sec ^ filename)
+           (fun _ ->
+             Dream.respond
+               (In_channel.with_open_bin
+                  (Fpath.to_string (Fpath.add_seg (Page.path page) filename))
+                  (fun ic -> In_channel.input_all ic))))
+
 let collect_static_routes site =
   let website_dir = Site.path site in
   let website_static_dir = website_dir / "static" in

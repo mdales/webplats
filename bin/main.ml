@@ -109,52 +109,14 @@ let routes_for_snapshot_images sec page image_loader =
       ])
     (Page.images page)
 
-let routes_for_image_shortcodes sec page image_loader =
-  List.concat_map
-    (fun (_, sc) ->
-      match sc with
-      | Shortcode.Image (filename, _, _) ->
-          [
-            Dream.get
-              (Section.url ~page sec ^ filename)
-              (Dream.static ~loader:(image_loader page filename (800, 600)) "");
-            (let name, ext = Fpath.split_ext (Fpath.v filename) in
-             let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
-             Dream.get
-               (Section.url ~page sec ^ retina_name)
-               (Dream.static
-                  ~loader:(image_loader page filename (800 * 2, 600 * 2))
-                  ""));
-          ]
-      | _ -> [])
-    (Page.shortcodes page)
-
-let routes_for_direct_shortcodes sec page =
-  List.concat_map
-    (fun (_, sc) ->
-      match sc with
-      | Shortcode.Video (r, None) -> [ r ]
-      | Shortcode.Video (r, Some t) -> [ r; t ]
-      | Shortcode.Audio r -> [ r ]
-      | _ -> [])
-    (Page.shortcodes page)
-  |> List.map (fun filename ->
-         Dream.get
-           (Section.url ~page sec ^ filename)
-           (fun _ ->
-             Dream.respond
-               (In_channel.with_open_bin
-                  (Fpath.to_string (Fpath.add_seg (Page.path page) filename))
-                  (fun ic -> In_channel.input_all ic))))
-
 let routes_for_page sec previous_page page next_page page_renderer
     thumbnail_loader image_loader =
   Dream.get (Section.url ~page sec) (fun _ ->
       (page_renderer page) sec previous_page page next_page |> Dream.html)
   :: (routes_for_titleimage sec page thumbnail_loader
      @ routes_for_snapshot_images sec page image_loader
-     @ routes_for_image_shortcodes sec page image_loader
-     @ routes_for_direct_shortcodes sec page)
+     @ Router.routes_for_image_shortcodes sec page image_loader
+     @ Router.routes_for_direct_shortcodes sec page)
 
 let routes_for_pages_in_section sec page_renderer thumbnail_loader image_loader
     : Dream.route list =
