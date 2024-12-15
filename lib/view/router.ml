@@ -3,6 +3,25 @@ open Fpath
 type image_loader_t =
   Page.t -> string -> int * int -> string -> string -> Dream.handler
 
+let routes_for_frontmatter_image_list sec page (image_loader : image_loader_t) =
+  List.concat_map
+    (fun (i : Frontmatter.image) ->
+      [
+        (* non retina *)
+        Dream.get
+          (Section.url ~page sec ^ i.filename)
+          (Dream.static ~loader:(image_loader page i.filename (720, 1200)) "");
+        (* retina *)
+        (let name, ext = Fpath.split_ext (Fpath.v i.filename) in
+         let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
+         Dream.get
+           (Section.url ~page sec ^ retina_name)
+           (Dream.static
+              ~loader:(image_loader page i.filename (720 * 2, 1200 * 2))
+              ""));
+      ])
+    (Page.images page)
+
 let routes_for_image_shortcodes sec page (image_loader : image_loader_t) =
   List.concat_map
     (fun (_, sc) ->

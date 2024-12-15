@@ -1,6 +1,9 @@
 type image_loader_t =
   Page.t -> string -> int * int -> string -> string -> Dream.handler
 
+val routes_for_frontmatter_image_list :
+  Section.t -> Page.t -> image_loader_t -> Dream.route list
+
 val routes_for_image_shortcodes :
   Section.t -> Page.t -> image_loader_t -> Dream.route list
 
