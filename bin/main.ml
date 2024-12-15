@@ -1,14 +1,16 @@
 open Webplats
 
 let thumbnail_loader page thumbnail_size _root _path _request =
-  let path = Snapshots.render_thumbnail page thumbnail_size in
+  let path = Image.render_thumbnail page thumbnail_size in
   Dream.respond
-    (In_channel.with_open_bin path (fun ic -> In_channel.input_all ic))
+    (In_channel.with_open_bin (Fpath.to_string path) (fun ic ->
+         In_channel.input_all ic))
 
 let snapshot_image_loader page image bounds _root _path _request =
-  let path = Snapshots.render_image_fit page image bounds in
+  let path = Image.render_image page image Fit bounds in
   Dream.respond
-    (In_channel.with_open_bin path (fun ic -> In_channel.input_all ic))
+    (In_channel.with_open_bin (Fpath.to_string path) (fun ic ->
+         In_channel.input_all ic))
 
 let direct_loader page filename _root _path _request =
   let path = Fpath.to_string (Fpath.add_seg (Page.path page) filename) in
