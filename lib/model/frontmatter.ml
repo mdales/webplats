@@ -76,7 +76,7 @@ let yaml_to_struct y =
         draft =
           (match yaml_dict_to_bool assoc "draft" with
           | Some b -> b
-          | None -> true);
+          | None -> false);
         tags = yaml_dict_to_string_list assoc "tags";
         images = yaml_dict_to_image_list assoc "images";
         raw = assoc;
