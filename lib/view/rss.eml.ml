@@ -35,6 +35,21 @@ let render_rss site pages =
              <%s Shortcodes.render_image ((Section.url ~page sec) ^ img.filename) img.description None %>
 % | _ -> ());
              <%s Renderer.render_body page %>
+% (List.iter (fun (i : Frontmatter.image) ->
+%   let name, ext = Fpath.split_ext (Fpath.v i.filename) in
+%   let retina_filename = Printf.sprintf "%s@2x%s" (Fpath.to_string name) ext in
+           <div class="snapshotitem single">
+             <figure class="single">
+               <img
+                  src="<%s Section.url ~page sec %><%s i.filename %>"
+                  srcset="<%s Section.url ~page sec %><%s retina_filename %> 2x, <%s Section.url ~page sec %><%s i.filename %> 1x"
+% (match (i.description) with Some desc ->
+                  alt="<%s desc %>"
+% | None -> ());
+               />
+             </figure>
+            </div>
+% ) (Page.images page));
           </description>
         </item>
 % ) (recent_pages pages));
