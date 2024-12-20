@@ -110,6 +110,7 @@ let body t = t.body
 let tags t = Frontmatter.tags t.frontmatter
 let shortcodes t = t.shortcodes
 let images t = Frontmatter.images t.frontmatter
+let aliases t = Frontmatter.aliases t.frontmatter
 let get_key_as_string t key = Frontmatter.get_key_as_string t.frontmatter key
 let get_key_as_date t key = Frontmatter.get_key_as_date t.frontmatter key
 

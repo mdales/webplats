@@ -6,16 +6,7 @@ type image = {
   dimensions : (int * int) option;
 }
 
-type t = {
-  title : string option;
-  date : Ptime.t;
-  synopsis : string option;
-  titleimage : image option;
-  draft : bool;
-  tags : string list;
-  images : image list;
-  raw : (string * Yaml.value) list;
-}
+type t = { titleimage : image option; raw : (string * Yaml.value) list }
 
 let yaml_dict_to_image a k =
   match List.assoc_opt k a with
@@ -65,35 +56,27 @@ let yaml_dict_to_image_list a k =
 let yaml_to_struct y =
   match y with
   | `O assoc ->
-      {
-        title = yaml_dict_to_string assoc "title";
-        date =
-          (match yaml_dict_to_date assoc "date" with
-          | Some d -> d
-          | None -> Ptime.epoch);
-        synopsis = yaml_dict_to_string assoc "synopsis";
-        titleimage = yaml_dict_to_image assoc "titleimage";
-        draft =
-          (match yaml_dict_to_bool assoc "draft" with
-          | Some b -> b
-          | None -> false);
-        tags = yaml_dict_to_string_list assoc "tags";
-        images = yaml_dict_to_image_list assoc "images";
-        raw = assoc;
-      }
+      { titleimage = yaml_dict_to_image assoc "titleimage"; raw = assoc }
   | _ -> failwith "malformed yaml"
 
 let of_string raw_string =
   String.trim raw_string |> Yaml.of_string_exn |> yaml_to_struct
 
 let update_titleimage t titleimage = { t with titleimage }
-let title t = t.title
-let date t = t.date
-let synopsis t = t.synopsis
+let title t = yaml_dict_to_string t.raw "title"
+
+let date t =
+  match yaml_dict_to_date t.raw "date" with Some d -> d | None -> Ptime.epoch
+
+let synopsis t = yaml_dict_to_string t.raw "synopsis"
 let titleimage t = t.titleimage
-let draft t = t.draft
-let tags t = t.tags
-let images t = t.images
+
+let draft t =
+  match yaml_dict_to_bool t.raw "draft" with Some b -> b | None -> false
+
+let tags t = yaml_dict_to_string_list t.raw "tags"
+let images t = yaml_dict_to_image_list t.raw "images"
+let aliases t = yaml_dict_to_string_list t.raw "aliases"
 let get_key_as_string t key = yaml_dict_to_string t.raw key
 let get_key_as_date t key = yaml_dict_to_date t.raw key
 let get_key_as_string_list t key = yaml_dict_to_string_list t.raw key
