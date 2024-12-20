@@ -16,6 +16,7 @@ title: test
   assert_equal ~msg:"section url" "/section/" (Page.original_section_url page);
   assert_equal ~msg:"body" "Hello, world" (Page.body page);
   assert_equal ~msg:"shortcodes" [] (Page.shortcodes page);
+  assert_equal ~msg:"aliases" [] (Page.aliases page);
   assert_equal ~msg:"url name" "page" (Page.url_name page)
 
 let test_non_index_name _ =
@@ -62,6 +63,23 @@ title: test
     ~printer:(fun x -> x)
     ~msg:"url name" "page/with/parts/about" (Page.url_name page)
 
+let test_file_path_with_aliases _ =
+  let frontmatter =
+    Frontmatter.of_string {|
+title: test
+aliases:
+- /blog/stories/551.html
+|}
+  in
+  let body = {|Hello, world|} in
+  let page =
+    Page.v "section" "/section/"
+      (Fpath.v "/home/test/site/section/page/with/parts/about.md")
+      frontmatter body
+  in
+  let aliases = Page.aliases page in
+  assert_equal ~msg:"aliases" [ "/blog/stories/551.html" ] aliases
+
 let suite =
   "Page tests"
   >::: [
@@ -69,6 +87,7 @@ let suite =
          "Non index name" >:: test_non_index_name;
          "Index.md page with base" >:: test_dir_path_with_base;
          "Named.md page with base" >:: test_file_path_with_base;
+         "Page with aliases" >:: test_file_path_with_aliases;
        ]
 
 let () = run_test_tt_main suite

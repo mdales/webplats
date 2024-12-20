@@ -93,3 +93,17 @@ let collect_static_routes site =
                         In_channel.input_all ic)))
                ""))
     things_to_be_published
+
+let routes_for_aliases site =
+  List.concat_map
+    (fun sec ->
+      List.concat_map
+        (fun page ->
+          List.map
+            (fun alias ->
+              Dream.get alias (fun r ->
+                  Dream.redirect ~status:`Moved_Permanently r
+                    (Section.url ~page sec)))
+            (Page.aliases page))
+        (Section.pages sec))
+    (Site.sections site)

@@ -184,13 +184,17 @@ let () =
          ~page_renderer:page_render site)
       (Site.sections site)
   in
+
   let taxonomies =
     routes_for_taxonomies ~thumbnail_loader:general_thumbnail_loader
       ~image_loader:snapshot_image_loader ~taxonomy_section_renderer
       ~page_renderer:page_render site
   in
+
+  let aliases = Router.routes_for_aliases site in
+
   Dream.log "Adding %d routes"
-    (List.length (toplevel @ sections @ taxonomies @ static));
+    (List.length (toplevel @ sections @ taxonomies @ aliases @ static));
   Dream.run ~error_handler:(Dream.error_template (Renderer.render_error site))
   @@ Dream.logger
-  @@ Dream.router (toplevel @ sections @ taxonomies @ static)
+  @@ Dream.router (toplevel @ sections @ taxonomies @ aliases @ static)

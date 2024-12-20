@@ -9,3 +9,4 @@ val routes_for_image_shortcodes :
 
 val routes_for_direct_shortcodes : Section.t -> Page.t -> Dream.route list
 val collect_static_routes : Site.t -> Dream.route list
+val routes_for_aliases : Site.t -> Dream.route list
