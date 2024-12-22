@@ -17,7 +17,8 @@ title: test
   assert_equal ~msg:"body" "Hello, world" (Page.body page);
   assert_equal ~msg:"shortcodes" [] (Page.shortcodes page);
   assert_equal ~msg:"aliases" [] (Page.aliases page);
-  assert_equal ~msg:"url name" "page" (Page.url_name page)
+  assert_equal ~msg:"url name" "page" (Page.url_name page);
+  assert_equal ~msg:"videos" [] (Page.videos page)
 
 let test_non_index_name _ =
   let frontmatter = Frontmatter.of_string {|

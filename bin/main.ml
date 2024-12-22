@@ -98,6 +98,7 @@ let routes_for_page sec previous_page page next_page page_renderer
       (page_renderer page) sec previous_page page next_page |> Dream.html)
   :: (routes_for_titleimage sec page thumbnail_loader
      @ Router.routes_for_frontmatter_image_list sec page image_loader
+     @ Router.routes_for_frontmatter_video_list sec page
      @ Router.routes_for_image_shortcodes sec page image_loader
      @ Router.routes_for_direct_shortcodes sec page)
 

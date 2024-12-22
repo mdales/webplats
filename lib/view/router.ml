@@ -22,6 +22,18 @@ let routes_for_frontmatter_image_list sec page (image_loader : image_loader_t) =
       ])
     (Page.images page)
 
+let routes_for_frontmatter_video_list sec page =
+  List.map
+    (fun filename ->
+      Dream.get
+        (Section.url ~page sec ^ filename)
+        (fun _ ->
+          Dream.respond
+            (In_channel.with_open_bin
+               (Fpath.to_string (Fpath.add_seg (Page.path page) filename))
+               (fun ic -> In_channel.input_all ic))))
+    (Page.videos page)
+
 let routes_for_image_shortcodes sec page (image_loader : image_loader_t) =
   List.concat_map
     (fun (_, sc) ->

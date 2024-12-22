@@ -91,6 +91,14 @@ let render_page sec previous_page page next_page =
                      <div class="holder holder-bottom-right"></div>
                    </div>
 % ) (Page.images page);
+% List.iter (fun (filename :string) ->
+                    <div class="video">
+                      <video controls>
+                        <source src="<%s filename %>" type="video/mp4"/>
+                        Your browser does not support the video element.
+                      </video>
+                    </div>
+% ) (Page.videos page);
                 </div>
                 
                 <div class="postscript">

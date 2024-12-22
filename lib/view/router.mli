@@ -4,6 +4,8 @@ type image_loader_t =
 val routes_for_frontmatter_image_list :
   Section.t -> Page.t -> image_loader_t -> Dream.route list
 
+val routes_for_frontmatter_video_list : Section.t -> Page.t -> Dream.route list
+
 val routes_for_image_shortcodes :
   Section.t -> Page.t -> image_loader_t -> Dream.route list
 
