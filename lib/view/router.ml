@@ -1,3 +1,4 @@
+open Astring
 open Fpath
 
 type image_loader_t =
@@ -119,3 +120,16 @@ let routes_for_aliases site =
             (Page.aliases page))
         (Section.pages sec))
     (Site.sections site)
+
+let routes_for_redirect_for_sans_slash sec page =
+  let page_url = Section.url ~page sec in
+  match String.is_suffix ~affix:"/" page_url with
+  | false -> []
+  | true ->
+      let sans_slash =
+        String.with_range ~len:(String.length page_url - 1) page_url
+      in
+      [
+        Dream.get sans_slash (fun r ->
+            Dream.redirect ~status:`Moved_Permanently r page_url);
+      ]
