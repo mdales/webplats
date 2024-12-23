@@ -6,9 +6,9 @@ let ptime_to_str (t : Ptime.t) : string =
   let ((year, month, day), _) = Ptime.to_date_time t in
   Printf.sprintf "%d %s %d" day months.(month - 1) year
   
-let render_section sec = 
+let render_section site sec = 
   <html>
-  <%s! (Renderer.render_head (Section.title sec)) %>
+  <%s! (Renderer.render_head ~site ~sec ()) %>
   <body>
     <div class="almostall">
       <%s! Renderer.render_header (Section.url sec) (Section.title sec) %>

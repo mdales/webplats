@@ -1,7 +1,7 @@
   
-let render_section sec = 
+let render_section site sec = 
   <html>
-  <%s! (Renderer.render_head (Section.title sec)) %>
+  <%s! (Renderer.render_head ~site ~sec ()) %>
   <body>
     <div class="almostall">
       <%s! Renderer.render_header (Section.url sec) (Section.title sec) %>
@@ -51,9 +51,9 @@ let render_section sec =
   </html>
 
 
-let render_page sec previous_page page next_page =
+let render_page site sec previous_page page next_page =
   <html>
-  <%s! (Renderer.render_head (Page.title page)) %>
+  <%s! (Renderer.render_head ~site ~sec ~page ()) %>
   <body>
     <div class="almostall">
       <%s! Renderer.render_header (Section.url sec) (Section.title sec) %>

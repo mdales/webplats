@@ -69,9 +69,9 @@ let render_header title =
     </div>
   </div>
 
-let render_section sec = 
+let render_section site sec = 
   <html>
-  <%s! (Renderer.render_head (Section.title sec)) %>
+  <%s! (Renderer.render_head ~site ~sec ()) %>
   <body>
     <div class="almostall">
       <%s! render_header (Section.title sec) %>
@@ -127,9 +127,9 @@ let render_section sec =
   </html>
   
  
-let render_page sec previous_page page next_page =
+let render_page site sec previous_page page next_page =
   <html>
-  <%s! (Renderer.render_head (Page.title page)) %>
+  <%s! (Renderer.render_head ~site ~sec ~page ()) %>
   <body>
     <div class="almostall">
       <%s! render_header (Section.title sec) %>
@@ -217,9 +217,9 @@ let rec take n l =
     | hd :: tl -> hd :: (take (n - 1) tl)
   )
 
-let render_taxonomy taxonomy =
+let render_taxonomy site taxonomy =
   <html>
-    <%s! (Renderer.render_head (Taxonomy.title taxonomy)) %>
+    <%s! (Renderer.render_head ~site ()) %>
     <body>
       <div class="almostall">
         <%s! render_header (Taxonomy.title taxonomy) %>

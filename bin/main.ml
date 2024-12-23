@@ -55,6 +55,10 @@ let routes_for_titleimage sec page thumbnail_loader =
         Dream.get
           (page_url ^ "thumbnail@2x.jpg")
           (Dream.static ~loader:(thumbnail_loader ~retina:true page) "");
+        Dream.get (page_url ^ "preview.jpg")
+          (Dream.static
+             ~loader:(snapshot_image_loader page img.filename (2048, 2048))
+             "");
       ]
       @
       (* The photos images are also in the title image *)
@@ -92,10 +96,10 @@ let routes_for_titleimage sec page thumbnail_loader =
             ]
       | _ -> [])
 
-let routes_for_page sec previous_page page next_page page_renderer
+let routes_for_page site sec previous_page page next_page page_renderer
     thumbnail_loader image_loader =
   Dream.get (Section.url ~page sec) (fun _ ->
-      (page_renderer page) sec previous_page page next_page |> Dream.html)
+      (page_renderer page) site sec previous_page page next_page |> Dream.html)
   :: (Router.routes_for_redirect_for_sans_slash sec page
      @ routes_for_titleimage sec page thumbnail_loader
      @ Router.routes_for_frontmatter_image_list sec page image_loader
@@ -103,8 +107,8 @@ let routes_for_page sec previous_page page next_page page_renderer
      @ Router.routes_for_image_shortcodes sec page image_loader
      @ Router.routes_for_direct_shortcodes sec page)
 
-let routes_for_pages_in_section sec page_renderer thumbnail_loader image_loader
-    : Dream.route list =
+let routes_for_pages_in_section site sec page_renderer thumbnail_loader
+    image_loader : Dream.route list =
   let pages = Section.pages sec in
   match pages with
   | [] -> []
@@ -112,7 +116,7 @@ let routes_for_pages_in_section sec page_renderer thumbnail_loader image_loader
       let rec loop prev current rest =
         let nextpage = match rest with [] -> None | hd :: _ -> Some hd in
         let routes =
-          routes_for_page sec prev current nextpage page_renderer
+          routes_for_page site sec prev current nextpage page_renderer
             thumbnail_loader image_loader
         in
         routes
@@ -123,13 +127,14 @@ let routes_for_pages_in_section sec page_renderer thumbnail_loader image_loader
 let routes_for_section ~section_renderer ~page_renderer ~thumbnail_loader
     ~image_loader site sec =
   Dream.get (Section.url sec) (fun _ ->
-      (section_renderer sec) sec |> Dream.html)
+      (section_renderer sec) site sec |> Dream.html)
   :: Dream.get
        (Section.url sec ^ "index.xml")
        (fun _ ->
          Rss.render_rss site (Section.pages sec |> List.map (fun p -> (sec, p)))
          |> Dream.html)
-  :: routes_for_pages_in_section sec page_renderer thumbnail_loader image_loader
+  :: routes_for_pages_in_section site sec page_renderer thumbnail_loader
+       image_loader
 
 let routes_for_taxonomies ~taxonomy_section_renderer ~page_renderer
     ~thumbnail_loader ~image_loader site =
@@ -145,7 +150,7 @@ let routes_for_taxonomies ~taxonomy_section_renderer ~page_renderer
             | "albums" -> Photos.render_taxonomy
             | _ -> Renderer.render_taxonomy
           in
-          render_taxonomy taxonomy |> Dream.html)
+          render_taxonomy site taxonomy |> Dream.html)
       :: List.concat_map
            (fun sec ->
              routes_for_section
