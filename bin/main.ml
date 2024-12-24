@@ -12,11 +12,6 @@ let snapshot_image_loader page image bounds _root _path _request =
     (In_channel.with_open_bin (Fpath.to_string path) (fun ic ->
          In_channel.input_all ic))
 
-let direct_loader page filename _root _path _request =
-  let path = Fpath.to_string (Fpath.add_seg (Page.path page) filename) in
-  Dream.respond
-    (In_channel.with_open_bin path (fun ic -> In_channel.input_all ic))
-
 let general_thumbnail_loader ~retina page =
   match Page.original_section_title page with
   | "photos" ->
@@ -42,66 +37,12 @@ let page_render page =
   | "sounds" | "snapshots" -> Snapshots.render_page
   | _ -> Renderer.render_page
 
-let routes_for_titleimage sec page thumbnail_loader =
-  let page_url = Section.url ~page sec in
-  match Page.titleimage page with
-  | None -> []
-  | Some img -> (
-      (* Basic thumbnails *)
-      [
-        Dream.get
-          (page_url ^ "thumbnail.jpg")
-          (Dream.static ~loader:(thumbnail_loader ~retina:false page) "");
-        Dream.get
-          (page_url ^ "thumbnail@2x.jpg")
-          (Dream.static ~loader:(thumbnail_loader ~retina:true page) "");
-        Dream.get (page_url ^ "preview.jpg")
-          (Dream.static
-             ~loader:(snapshot_image_loader page img.filename (2048, 2048))
-             "");
-      ]
-      @
-      (* The photos images are also in the title image *)
-      match Page.original_section_title page with
-      | "photos" ->
-          let name, ext = Fpath.split_ext (Fpath.v img.filename) in
-          let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
-          [
-            Dream.get
-              (page_url ^ "scrn_" ^ img.filename)
-              (Dream.static
-                 ~loader:(snapshot_image_loader page img.filename (1008, 800))
-                 "");
-            Dream.get
-              (page_url ^ "scrn_" ^ retina_name)
-              (Dream.static
-                 ~loader:(snapshot_image_loader page img.filename (2016, 1600))
-                 "");
-            (* This is the direct full resolution download *)
-            Dream.get (page_url ^ img.filename)
-              (Dream.static ~loader:(direct_loader page img.filename) "");
-          ]
-          @ [
-              (* This is the album thumbnails *)
-              Dream.get
-                (page_url ^ "album_" ^ img.filename)
-                (Dream.static
-                   ~loader:(snapshot_image_loader page img.filename (300, 300))
-                   "");
-              Dream.get
-                (page_url ^ "album_" ^ retina_name)
-                (Dream.static
-                   ~loader:(snapshot_image_loader page img.filename (600, 600))
-                   "");
-            ]
-      | _ -> [])
-
 let routes_for_page site sec previous_page page next_page page_renderer
     thumbnail_loader image_loader =
   Dream.get (Section.url ~page sec) (fun _ ->
       (page_renderer page) site sec previous_page page next_page |> Dream.html)
   :: (Router.routes_for_redirect_for_sans_slash sec page
-     @ routes_for_titleimage sec page thumbnail_loader
+     @ Router.routes_for_titleimage sec page thumbnail_loader image_loader
      @ Router.routes_for_frontmatter_image_list sec page image_loader
      @ Router.routes_for_frontmatter_video_list sec page
      @ Router.routes_for_image_shortcodes sec page image_loader
