@@ -28,7 +28,14 @@ let render_youtube code =
     </div>
   </div>
 
-let render_image filename alt klass _dims =
+let is_image_retina dims = 
+  match dims with
+  | None -> true
+  | Some (width, height) -> (
+    (width > (800 * 2)) && (height > (600 * 2))
+  )
+
+let render_image filename alt klass dims =
   <div class="listimage">
     <div>
       <figure>
@@ -39,8 +46,10 @@ let render_image filename alt klass _dims =
           class="rounded"
           src="<%s filename %>"
 % let name, ext = Fpath.split_ext (Fpath.v filename) in
+% (match (is_image_retina dims) with true -> 
 % let retina_filename = Printf.sprintf "%s@2x%s" (Fpath.to_string name) ext in
           srcset="<%s retina_filename %> 2x, <%s filename %> 1x"
+% | false -> ());
 % (match (alt) with Some desc ->
           alt="<%s desc %>"
 % | None -> ());       
