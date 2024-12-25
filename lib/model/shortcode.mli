@@ -1,6 +1,6 @@
 type t =
   | Video of string * string option
-  | Image of string * string option * string option
+  | Image of string * string option * string option * (int * int) option
   | Audio of string
   | Photo of string
   | Youtube of string

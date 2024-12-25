@@ -32,7 +32,7 @@ let render_rss site pages =
           <description>
 % (match Page.original_section_title page with "photos" ->
 % let img = Option.get (Page.titleimage page) in
-             <%s Shortcodes.render_image ((Section.url ~page sec) ^ img.filename) img.description None %>
+             <%s Shortcodes.render_image ((Section.url ~page sec) ^ img.filename) img.description None None %>
 % | _ -> ());
              <%s Renderer.render_body page %>
 % (List.iter (fun (i : Frontmatter.image) ->

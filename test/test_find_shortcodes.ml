@@ -3,7 +3,7 @@ open Webplats
 
 let shortcode_printer (sc : Shortcode.t) =
   match sc with
-  | Image (a, _b, _c) -> Printf.sprintf "Image(%s, _, _)" a
+  | Image (a, _b, _c, _d) -> Printf.sprintf "Image(%s, _, _, _)" a
   | Audio a -> Printf.sprintf "Audio(%s)" a
   | Photo a -> Printf.sprintf "Photo(%s)" a
   | Youtube a -> Printf.sprintf "Youtube(%s)" a
@@ -40,7 +40,9 @@ let test_simple_image_shortcode _ =
   let (loc, len), code = List.hd codes in
   assert_equal_int ~msg:"Code offset" 1 loc;
   assert_equal_int ~msg:"Code length" 20 len;
-  assert_equal_sc ~msg:"Code" (Shortcode.Image ("test.jpg", None, None)) code
+  assert_equal_sc ~msg:"Code"
+    (Shortcode.Image ("test.jpg", None, None, None))
+    code
 
 let test_multi_ext_image_shortcode _ =
   let body = {| {{< img GetPhoto-2.ashx.jpeg >}} |} in
@@ -50,7 +52,7 @@ let test_multi_ext_image_shortcode _ =
   assert_equal_int ~msg:"Code offset" 1 loc;
   assert_equal_int ~msg:"Code length" 32 len;
   assert_equal_sc ~msg:"Code"
-    (Shortcode.Image ("GetPhoto-2.ashx.jpeg", None, None))
+    (Shortcode.Image ("GetPhoto-2.ashx.jpeg", None, None, None))
     code
 
 let test_simple_image_shortcode_with_space _ =
@@ -60,7 +62,9 @@ let test_simple_image_shortcode_with_space _ =
   let (loc, len), code = List.hd codes in
   assert_equal_int ~msg:"Code offset" 1 loc;
   assert_equal_int ~msg:"Code length" 24 len;
-  assert_equal_sc ~msg:"Code" (Shortcode.Image ("a test.jpg", None, None)) code
+  assert_equal_sc ~msg:"Code"
+    (Shortcode.Image ("a test.jpg", None, None, None))
+    code
 
 let test_image_shortcode_with_alt _ =
   let body = {| {{< img test.jpg "Something else">}} |} in
@@ -70,7 +74,7 @@ let test_image_shortcode_with_alt _ =
   assert_equal_int ~msg:"Code offset" 1 loc;
   assert_equal_int ~msg:"Code length" 36 len;
   assert_equal_sc ~msg:"Code"
-    (Shortcode.Image ("test.jpg", Some "Something else", None))
+    (Shortcode.Image ("test.jpg", Some "Something else", None, None))
     code
 
 let test_image_shortcode_with_alt_and_css_hint _ =
@@ -81,7 +85,7 @@ let test_image_shortcode_with_alt_and_css_hint _ =
   assert_equal_int ~msg:"Code offset" 1 loc;
   assert_equal_int ~msg:"Code length" 47 len;
   assert_equal_sc ~msg:"Code"
-    (Shortcode.Image ("test.jpg", Some "Something else", Some "unrounded"))
+    (Shortcode.Image ("test.jpg", Some "Something else", Some "unrounded", None))
     code
 
 let test_invalid_image_shortcode_with_extra_param _ =

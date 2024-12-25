@@ -44,11 +44,40 @@ let image_with_dimensions path (img : Frontmatter.image option) =
             (Fpath.to_string (Fpath.add_seg path img.filename));
           Some img)
 
+let image_shortcode_with_dimensions path filename alt code =
+  try
+    let metadata =
+      Metadata.Image.parse_file (Fpath.to_string (Fpath.add_seg path filename))
+    in
+    let width = int_of_string (List.assoc "width" metadata)
+    and height = int_of_string (List.assoc "height" metadata) in
+    Shortcode.Image (filename, alt, code, Some (width, height))
+  with
+  | Failure _ ->
+      Dream.log "Failed to parse %s"
+        (Fpath.to_string (Fpath.add_seg path filename));
+      Shortcode.Image (filename, alt, code, None)
+  | Metadata.Invalid ->
+      Dream.log "Error reading metadata %s"
+        (Fpath.to_string (Fpath.add_seg path filename));
+      Shortcode.Image (filename, alt, code, None)
+
+let update_shortcodes dir sl =
+  List.map
+    (fun (pos, sc) ->
+      match sc with
+      | Shortcode.Image (fn, alt, code, _) ->
+          (pos, image_shortcode_with_dimensions dir fn alt code)
+      | x -> (pos, x))
+    sl
+
 (* --- public interface --- *)
 
 let v ?(base = None) original_section_title original_section_url path
     frontmatter body =
-  let shortcodes = Shortcode.find_shortcodes body in
+  let shortcodes =
+    Shortcode.find_shortcodes body |> update_shortcodes (Fpath.parent path)
+  in
   {
     original_section_title;
     original_section_url;

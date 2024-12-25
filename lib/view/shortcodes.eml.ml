@@ -28,7 +28,7 @@ let render_youtube code =
     </div>
   </div>
 
-let render_image filename alt klass =
+let render_image filename alt klass _dims =
   <div class="listimage">
     <div>
       <figure>
@@ -57,6 +57,6 @@ let render_shortcode shortcode =
   | Shortcode.Video (filename, thumb_opt) -> render_video filename thumb_opt
   | Shortcode.Audio (filename) -> render_audio filename
   | Shortcode.Youtube (code) -> render_youtube code
-  | Shortcode.Image (filename, alt, klass) -> render_image filename alt klass
+  | Shortcode.Image (filename, alt, klass, dims) -> render_image filename alt klass dims
   | Shortcode.Photo (reference) -> render_photo reference
   | _ -> ""

@@ -1,6 +1,6 @@
 type t =
   | Video of string * string option
-  | Image of string * string option * string option
+  | Image of string * string option * string option * (int * int) option
   | Audio of string
   | Photo of string
   | Youtube of string
@@ -36,9 +36,10 @@ let find_shortcodes body =
            match sl with
            | [ "video"; arg1 ] -> Video (arg1, None)
            | [ "video"; arg1; arg2 ] -> Video (arg1, Some arg2)
-           | [ "img"; arg1 ] -> Image (arg1, None, None)
-           | [ "img"; arg1; arg2 ] -> Image (arg1, Some arg2, None)
-           | [ "img"; arg1; arg2; arg3 ] -> Image (arg1, Some arg2, Some arg3)
+           | [ "img"; arg1 ] -> Image (arg1, None, None, None)
+           | [ "img"; arg1; arg2 ] -> Image (arg1, Some arg2, None, None)
+           | [ "img"; arg1; arg2; arg3 ] ->
+               Image (arg1, Some arg2, Some arg3, None)
            | [ "audio"; arg1 ] -> Audio arg1
            | [ "photo"; arg1 ] -> Photo arg1
            | [ "youtube"; arg1 ] -> Youtube arg1
