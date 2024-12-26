@@ -52,7 +52,7 @@ let render_image filename alt klass dims =
 % | false -> ());
 % (match (alt) with Some desc ->
           alt="<%s desc %>"
-% | None -> ());       
+% | None -> ()); 
         />
       </figure>
     </div>

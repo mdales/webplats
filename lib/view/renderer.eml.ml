@@ -229,6 +229,14 @@ let render_page site sec previous_page page next_page =
 % (match next_page with Some page -> 
                     <li><strong>Previous</strong>: <a href="<%s Section.url ~page sec %>"><%s Page.title page %></a></li>
 % | None -> ());
+% (match (Page.tags page) with [] -> () | tags ->
+% let count = (List.length tags) - 1 in
+                    <li><strong>Tags</strong>:
+% (List.iteri (fun i tag ->
+% let term_for_url = String.map (fun c -> match c with ' ' -> '-' | x -> x) tag in
+% let seperator = if (i < count) then "," else "" in
+                    <a href="/tags/<%s term_for_url %>/"><%s tag %></a><%s seperator %>
+% ) tags));
                   </ul>
                 </div>
                 
