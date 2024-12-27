@@ -37,69 +37,6 @@ let page_render page =
   | "sounds" | "snapshots" -> Snapshots.render_page
   | _ -> Renderer.render_page
 
-let routes_for_page site sec previous_page page next_page page_renderer
-    thumbnail_loader image_loader =
-  Dream.get (Section.url ~page sec) (fun _ ->
-      (page_renderer page) site sec previous_page page next_page |> Dream.html)
-  :: (Router.routes_for_redirect_for_sans_slash sec page
-     @ Router.routes_for_titleimage sec page thumbnail_loader image_loader
-     @ Router.routes_for_frontmatter_image_list sec page image_loader
-     @ Router.routes_for_frontmatter_video_list sec page
-     @ Router.routes_for_image_shortcodes sec page image_loader
-     @ Router.routes_for_direct_shortcodes sec page)
-
-let routes_for_pages_in_section site sec page_renderer thumbnail_loader
-    image_loader : Dream.route list =
-  let pages = Section.pages sec in
-  match pages with
-  | [] -> []
-  | hd :: tl ->
-      let rec loop prev current rest =
-        let nextpage = match rest with [] -> None | hd :: _ -> Some hd in
-        let routes =
-          routes_for_page site sec prev current nextpage page_renderer
-            thumbnail_loader image_loader
-        in
-        routes
-        @ match rest with [] -> [] | hd :: tl -> loop (Some current) hd tl
-      in
-      loop None hd tl
-
-let routes_for_section ~section_renderer ~page_renderer ~thumbnail_loader
-    ~image_loader site sec =
-  Dream.get (Section.url sec) (fun _ ->
-      (section_renderer sec) site sec |> Dream.html)
-  :: Dream.get
-       (Section.url sec ^ "index.xml")
-       (fun _ ->
-         Rss.render_rss site (Section.pages sec |> List.map (fun p -> (sec, p)))
-         |> Dream.html)
-  :: routes_for_pages_in_section site sec page_renderer thumbnail_loader
-       image_loader
-
-let routes_for_taxonomies ~taxonomy_section_renderer ~page_renderer
-    ~thumbnail_loader ~image_loader site =
-  let taxonomies = Site.taxonomies site in
-  List.concat_map
-    (fun (name, taxonomy) ->
-      Dream.log "Taxonomy %s: %d terms" name
-        (List.length (Taxonomy.sections taxonomy));
-
-      Dream.get (Taxonomy.url taxonomy) (fun _ ->
-          let render_taxonomy =
-            match Taxonomy.title taxonomy with
-            | "albums" -> Photos.render_taxonomy
-            | _ -> Renderer.render_taxonomy
-          in
-          render_taxonomy site taxonomy |> Dream.html)
-      :: List.concat_map
-           (fun sec ->
-             routes_for_section
-               ~section_renderer:(taxonomy_section_renderer taxonomy)
-               ~page_renderer ~thumbnail_loader ~image_loader site sec)
-           (Taxonomy.sections taxonomy))
-    taxonomies
-
 let () =
   let website_dir =
     match Array.to_list Sys.argv with
@@ -127,14 +64,14 @@ let () =
 
   let sections =
     List.concat_map
-      (routes_for_section ~thumbnail_loader:general_thumbnail_loader
+      (Router.routes_for_section ~thumbnail_loader:general_thumbnail_loader
          ~image_loader:snapshot_image_loader ~section_renderer:section_render
          ~page_renderer:page_render site)
       (Site.sections site)
   in
 
   let taxonomies =
-    routes_for_taxonomies ~thumbnail_loader:general_thumbnail_loader
+    Router.routes_for_taxonomies ~thumbnail_loader:general_thumbnail_loader
       ~image_loader:snapshot_image_loader ~taxonomy_section_renderer
       ~page_renderer:page_render site
   in

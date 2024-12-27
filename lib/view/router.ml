@@ -7,6 +7,14 @@ type thumbnail_loader_t =
 type image_loader_t =
   Page.t -> string -> int * int -> string -> string -> Dream.handler
 
+type page_renderer_t =
+  Site.t -> Section.t -> Page.t option -> Page.t -> Page.t option -> string
+
+type meta_page_renderer_t = Page.t -> page_renderer_t
+type section_renderer_t = Site.t -> Section.t -> string
+type meta_section_renderer_t = Section.t -> section_renderer_t
+type meta_taxonomy_renderer_t = Taxonomy.t -> Section.t -> section_renderer_t
+
 let direct_loader page filename _root _path _request =
   let path = Fpath.to_string (Fpath.add_seg (Page.path page) filename) in
   Dream.respond
@@ -195,3 +203,66 @@ let routes_for_redirect_for_sans_slash sec page =
         Dream.get sans_slash (fun r ->
             Dream.redirect ~status:`Moved_Permanently r page_url);
       ]
+
+let routes_for_page site sec previous_page page next_page page_renderer
+    thumbnail_loader image_loader =
+  Dream.get (Section.url ~page sec) (fun _ ->
+      (page_renderer page) site sec previous_page page next_page |> Dream.html)
+  :: (routes_for_redirect_for_sans_slash sec page
+     @ routes_for_titleimage sec page thumbnail_loader image_loader
+     @ routes_for_frontmatter_image_list sec page image_loader
+     @ routes_for_frontmatter_video_list sec page
+     @ routes_for_image_shortcodes sec page image_loader
+     @ routes_for_direct_shortcodes sec page)
+
+let routes_for_pages_in_section site sec page_renderer thumbnail_loader
+    image_loader =
+  let pages = Section.pages sec in
+  match pages with
+  | [] -> []
+  | hd :: tl ->
+      let rec loop prev current rest =
+        let nextpage = match rest with [] -> None | hd :: _ -> Some hd in
+        let routes =
+          routes_for_page site sec prev current nextpage page_renderer
+            thumbnail_loader image_loader
+        in
+        routes
+        @ match rest with [] -> [] | hd :: tl -> loop (Some current) hd tl
+      in
+      loop None hd tl
+
+let routes_for_section ~section_renderer ~page_renderer ~thumbnail_loader
+    ~image_loader site sec =
+  Dream.get (Section.url sec) (fun _ ->
+      (section_renderer sec) site sec |> Dream.html)
+  :: Dream.get
+       (Section.url sec ^ "index.xml")
+       (fun _ ->
+         Rss.render_rss site (Section.pages sec |> List.map (fun p -> (sec, p)))
+         |> Dream.html)
+  :: routes_for_pages_in_section site sec page_renderer thumbnail_loader
+       image_loader
+
+let routes_for_taxonomies ~taxonomy_section_renderer ~page_renderer
+    ~thumbnail_loader ~image_loader site =
+  let taxonomies = Site.taxonomies site in
+  List.concat_map
+    (fun (name, taxonomy) ->
+      Dream.log "Taxonomy %s: %d terms" name
+        (List.length (Taxonomy.sections taxonomy));
+
+      Dream.get (Taxonomy.url taxonomy) (fun _ ->
+          let render_taxonomy =
+            match Taxonomy.title taxonomy with
+            | "albums" -> Photos.render_taxonomy
+            | _ -> Renderer.render_taxonomy
+          in
+          render_taxonomy site taxonomy |> Dream.html)
+      :: List.concat_map
+           (fun sec ->
+             routes_for_section
+               ~section_renderer:(taxonomy_section_renderer taxonomy)
+               ~page_renderer ~thumbnail_loader ~image_loader site sec)
+           (Taxonomy.sections taxonomy))
+    taxonomies
