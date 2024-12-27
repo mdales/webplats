@@ -46,7 +46,7 @@ let camera_info page =
       | None -> ""
       | Some info -> (
         let lensmake = match (Page.get_key_as_string page "LensMake") with None -> "" | Some m -> m in
-        Printf.sprintf "with a %s %s lens" lensmake info
+        Printf.sprintf " with a %s %s lens" lensmake info
       )
     in
     Printf.sprintf "%s%s" camera lens
