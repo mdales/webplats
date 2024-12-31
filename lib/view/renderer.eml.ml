@@ -40,10 +40,15 @@ let render_head_page sec page =
   <meta itemprop="description" content="<%s syn %>"/>
   <meta property="twitter:description" content="<%s syn %>"/>
 % | None -> ());
-% (match (Page.titleimage page) with Some _ ->
+% (match (Page.titleimage page) with Some i ->
   <meta property="og:image" content="preview.jpg"/>
   <meta itemprop="image" content="preview.jpg"/>
   <meta property="twitter:image" content="preview.jpg"/>
+% (match i.description with Some desc -> 
+  <meta property="og:image:alt" content="<%s desc %>"/>
+  <meta property="image:alt" content="<%s desc %>"/>
+  <meta property="twitter:image:alt" content="<%s desc %>"/>
+% | None -> ()); 
 % | None -> ());
 
 let render_head_unknown site =
