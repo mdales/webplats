@@ -6,7 +6,7 @@ type image = {
   dimensions : (int * int) option;
 }
 
-type t = { titleimage : image option; raw : (string * Yaml.value) list }
+type t = { titleimage : image option; images : image list ; raw : (string * Yaml.value) list }
 
 let yaml_dict_to_image a k =
   match List.assoc_opt k a with
@@ -56,13 +56,17 @@ let yaml_dict_to_image_list a k =
 let yaml_to_struct y =
   match y with
   | `O assoc ->
-      { titleimage = yaml_dict_to_image assoc "titleimage"; raw = assoc }
+      { titleimage = yaml_dict_to_image assoc "titleimage"; 
+      images = yaml_dict_to_image_list assoc "images";
+      raw = assoc }
   | _ -> failwith "malformed yaml"
 
 let of_string raw_string =
   String.trim raw_string |> Yaml.of_string_exn |> yaml_to_struct
 
 let update_titleimage t titleimage = { t with titleimage }
+let update_images t images = {t with images}
+
 let title t = yaml_dict_to_string t.raw "title"
 
 let date t =
@@ -75,7 +79,7 @@ let draft t =
   match yaml_dict_to_bool t.raw "draft" with Some b -> b | None -> false
 
 let tags t = yaml_dict_to_string_list t.raw "tags"
-let images t = yaml_dict_to_image_list t.raw "images"
+let images t = t.images
 let aliases t = yaml_dict_to_string_list t.raw "aliases"
 let get_key_as_string t key = yaml_dict_to_string t.raw key
 let get_key_as_date t key = yaml_dict_to_date t.raw key

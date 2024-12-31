@@ -50,6 +50,12 @@ let render_section site sec =
   </body>
   </html>
 
+let is_image_retina dims = 
+  match dims with
+  | None -> true
+  | Some (width, height) -> (
+    (width > (720 * 2)) && (height > (1200 * 2))
+  )
 
 let render_page site sec previous_page page next_page =
   <html>
@@ -73,13 +79,15 @@ let render_page site sec previous_page page next_page =
                 <%s! Renderer.render_body page %>
                 <div class="snapshotlist">
 % List.iter (fun (i : Frontmatter.image) ->
-%   let name, ext = Fpath.split_ext (Fpath.v i.filename) in
-%   let retina_filename = Printf.sprintf "%s@2x%s" (Fpath.to_string name) ext in
+% let name, ext = Fpath.split_ext (Fpath.v i.filename) in
+% let retina_filename = Printf.sprintf "%s@2x%s" (Fpath.to_string name) ext in
                    <div class="snapshotitem single">
                      <figure class="single">
                        <img
                           src="<%s Section.url ~page sec %><%s i.filename %>"
+% (match (is_image_retina i.dimensions) with true -> 
                           srcset="<%s Section.url ~page sec %><%s retina_filename %> 2x, <%s Section.url ~page sec %><%s i.filename %> 1x"
+% | false -> ());
 % (match (i.description) with Some desc ->
                           alt="<%s desc %>"
 % | None -> ());

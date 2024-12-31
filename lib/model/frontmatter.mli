@@ -8,6 +8,7 @@ type t
 
 val of_string : string -> t
 val update_titleimage : t -> image option -> t
+val update_images : t -> image list -> t
 val title : t -> string option
 val date : t -> Ptime.t
 val tags : t -> string list
