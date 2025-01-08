@@ -10,7 +10,10 @@ type page_renderer_t =
 type meta_page_renderer_t = Page.t -> page_renderer_t
 type section_renderer_t = Site.t -> Section.t -> string
 type meta_section_renderer_t = Section.t -> section_renderer_t
-type meta_taxonomy_renderer_t = Taxonomy.t -> Section.t -> section_renderer_t
+type meta_taxonomy_section_renderer_t = Taxonomy.t -> Section.t -> section_renderer_t
+
+type taxonomy_renderer_t = Site.t -> Taxonomy.t -> string
+type meta_taxonomy_renderer_t = Taxonomy.t -> taxonomy_renderer_t
 
 val routes_for_frontmatter_image_list :
   Section.t -> Page.t -> image_loader_t -> Dream.route list
@@ -61,7 +64,8 @@ val routes_for_section :
   Dream.route list
 
 val routes_for_taxonomies :
-  taxonomy_section_renderer:meta_taxonomy_renderer_t ->
+  taxonomy_renderer:meta_taxonomy_renderer_t ->
+  taxonomy_section_renderer:meta_taxonomy_section_renderer_t ->
   page_renderer:meta_page_renderer_t ->
   thumbnail_loader:thumbnail_loader_t ->
   image_loader:image_loader_t ->

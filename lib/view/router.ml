@@ -13,7 +13,10 @@ type page_renderer_t =
 type meta_page_renderer_t = Page.t -> page_renderer_t
 type section_renderer_t = Site.t -> Section.t -> string
 type meta_section_renderer_t = Section.t -> section_renderer_t
-type meta_taxonomy_renderer_t = Taxonomy.t -> Section.t -> section_renderer_t
+type meta_taxonomy_section_renderer_t = Taxonomy.t -> Section.t -> section_renderer_t
+
+type taxonomy_renderer_t = Site.t -> Taxonomy.t -> string
+type meta_taxonomy_renderer_t = Taxonomy.t -> taxonomy_renderer_t
 
 let direct_loader page filename _root _path _request =
   let path = Fpath.to_string (Fpath.add_seg (Page.path page) filename) in
@@ -244,7 +247,7 @@ let routes_for_section ~section_renderer ~page_renderer ~thumbnail_loader
   :: routes_for_pages_in_section site sec page_renderer thumbnail_loader
        image_loader
 
-let routes_for_taxonomies ~taxonomy_section_renderer ~page_renderer
+let routes_for_taxonomies ~taxonomy_renderer ~taxonomy_section_renderer ~page_renderer
     ~thumbnail_loader ~image_loader site =
   let taxonomies = Site.taxonomies site in
   List.concat_map
@@ -253,10 +256,7 @@ let routes_for_taxonomies ~taxonomy_section_renderer ~page_renderer
         (List.length (Taxonomy.sections taxonomy));
 
       Dream.get (Taxonomy.url taxonomy) (fun _ ->
-          let render_taxonomy =
-            match Taxonomy.title taxonomy with
-            | "albums" -> Photos.render_taxonomy
-            | _ -> Renderer.render_taxonomy
+          let render_taxonomy = taxonomy_renderer taxonomy
           in
           render_taxonomy site taxonomy |> Dream.html)
       :: List.concat_map

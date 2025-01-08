@@ -1,3 +1,27 @@
+(rule
+ (targets index.ml)
+ (deps index.eml.ml)
+ (action
+  (run dream_eml %{deps} --workspace %{workspace_root})))
+
+(rule
+ (targets photos.ml)
+ (deps photos.eml.ml)
+ (action
+  (run dream_eml %{deps} --workspace %{workspace_root})))
+
+(rule
+ (targets posts.ml)
+ (deps posts.eml.ml)
+ (action
+  (run dream_eml %{deps} --workspace %{workspace_root})))
+
+(rule
+ (targets snapshots.ml)
+ (deps snapshots.eml.ml)
+ (action
+  (run dream_eml %{deps} --workspace %{workspace_root})))
+
 (executable
  (public_name webplats)
  (name main)

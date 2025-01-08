@@ -30,6 +30,11 @@ let taxonomy_section_renderer taxonomy _sec =
   match Taxonomy.title taxonomy with
   | "albums" -> Photos.render_section
   | _ -> Snapshots.render_section
+  
+let taxonomy_renderer taxonomy = 
+  match Taxonomy.title taxonomy with
+  | "albums" -> Photos.render_taxonomy
+  | _ -> Renderer.render_taxonomy
 
 let page_render page =
   match Page.original_section_title page with
@@ -72,7 +77,7 @@ let () =
 
   let taxonomies =
     Router.routes_for_taxonomies ~thumbnail_loader:general_thumbnail_loader
-      ~image_loader:snapshot_image_loader ~taxonomy_section_renderer
+      ~image_loader:snapshot_image_loader ~taxonomy_renderer ~taxonomy_section_renderer
       ~page_renderer:page_render site
   in
 
