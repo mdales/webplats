@@ -34,7 +34,7 @@ let render_rss site pages =
 % let img = Option.get (Page.titleimage page) in
              <%s Shortcodes.render_image ((Section.url ~page sec) ^ img.filename) img.description None None %>
 % | _ -> ());
-             <%s Renderer.render_body page %>
+             <%s Render.render_body page %>
 % (List.iter (fun (i : Frontmatter.image) ->
 %   let name, ext = Fpath.split_ext (Fpath.v i.filename) in
 %   let retina_filename = Printf.sprintf "%s@2x%s" (Fpath.to_string name) ext in

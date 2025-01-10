@@ -22,6 +22,12 @@
  (action
   (run dream_eml %{deps} --workspace %{workspace_root})))
 
+(rule
+ (targets renderer.ml)
+ (deps renderer.eml.ml)
+ (action
+  (run dream_eml %{deps} --workspace %{workspace_root})))
+
 (executable
  (public_name webplats)
  (name main)

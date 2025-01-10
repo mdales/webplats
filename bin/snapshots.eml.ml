@@ -2,7 +2,7 @@ open Webplats
   
 let render_section site sec = 
   <html>
-  <%s! (Renderer.render_head ~site ~sec ()) %>
+  <%s! (Render.render_head ~site ~sec ()) %>
   <body>
     <div class="almostall">
       <%s! Renderer.render_header (Section.url sec) (Section.title sec) %>
@@ -60,7 +60,7 @@ let is_image_retina dims =
 
 let render_page site sec previous_page page next_page =
   <html>
-  <%s! (Renderer.render_head ~site ~sec ~page ()) %>
+  <%s! (Render.render_head ~site ~sec ~page ()) %>
   <body>
     <div class="almostall">
       <%s! Renderer.render_header (Section.url sec) (Section.title sec) %>
@@ -77,7 +77,7 @@ let render_page site sec previous_page page next_page =
                     <p><%s Renderer.ptime_to_str (Page.date page) %></p>
                   </div>
                 </div>
-                <%s! Renderer.render_body page %>
+                <%s! Render.render_body page %>
                 <div class="snapshotlist">
 % List.iter (fun (i : Frontmatter.image) ->
 % let name, ext = Fpath.split_ext (Fpath.v i.filename) in

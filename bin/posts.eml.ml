@@ -8,7 +8,7 @@ let ptime_to_str (t : Ptime.t) : string =
   
 let render_section site sec = 
   <html>
-  <%s! (Renderer.render_head ~site ~sec ()) %>
+  <%s! (Render.render_head ~site ~sec ()) %>
   <body>
     <div class="almostall">
       <%s! Renderer.render_header (Section.url sec) (Section.title sec) %>
