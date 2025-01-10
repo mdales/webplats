@@ -2,6 +2,7 @@
 
 (library
  (name webplats)
+ (public_name webplats)
  (libraries
   fpath
   dream

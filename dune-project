@@ -7,19 +7,29 @@
 (source
  (github mdales/webplats))
 
-(authors "Michael Dales")
+(authors "Michael Dales <michael@digitalflapjack.com>")
 
-(maintainers "Michael Dales")
+(maintainers "Michael Dales <michael@digitalflapjack.com>")
 
-(license LICENSE)
+(license EUPL)
 
 (documentation https://url/to/documentation)
 
 (package
  (name webplats)
- (synopsis "A short synopsis")
- (description "A longer description")
- (depends ocaml dune)
+ (synopsis "An opinionated dynamic version of a static site generator.")
+ (description "An opinionated dynamic version of a static site generator, which takes markdown+frontmatter files and renders them on demand.")
+ (depends ocaml
+  dune
+  fpath
+  dream
+  cmarkit
+  astring
+  metadata
+  yaml
+  uri
+  camlimages
+  pcre2)
  (tags
   (topics "to describe" your project)))
 
