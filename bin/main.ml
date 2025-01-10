@@ -31,7 +31,7 @@ let taxonomy_section_renderer taxonomy _sec =
   | "albums" -> Photos.render_section
   | _ -> Snapshots.render_section
   
-let taxonomy_renderer taxonomy = 
+let taxonomy_renderer taxonomy =
   match Taxonomy.title taxonomy with
   | "albums" -> Photos.render_taxonomy
   | _ -> Renderer.render_taxonomy
