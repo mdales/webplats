@@ -157,3 +157,5 @@ let get_key_as_date t key = Frontmatter.get_key_as_date t.frontmatter key
 
 let get_key_as_string_list t key =
   Frontmatter.get_key_as_string_list t.frontmatter key
+
+let get_key_as_string_dict t key = Frontmatter.get_key_as_string_dict t.frontmatter key

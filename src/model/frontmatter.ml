@@ -85,3 +85,4 @@ let get_key_as_bool t key = yaml_dict_to_bool t.raw key
 let get_key_as_string t key = yaml_dict_to_string t.raw key
 let get_key_as_date t key = yaml_dict_to_date t.raw key
 let get_key_as_string_list t key = yaml_dict_to_string_list t.raw key
+let get_key_as_string_dict t key = yaml_dict_to_string_dict t.raw key
