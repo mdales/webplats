@@ -80,6 +80,13 @@ let routes_for_titleimage sec page thumbnail_loader image_loader =
   | None -> []
   | Some img -> (
       (* Basic thumbnails *)
+      let _, ext = Fpath.split_ext (Fpath.v img.filename) in
+      match ext with
+      | ".svg" -> [
+        Dream.get
+          (page_url ^ "thumbnail.svg")
+          (Dream.static ~loader:(direct_loader page img.filename) "")]
+      | _ ->
       [
         Dream.get
           (page_url ^ "thumbnail.jpg")
@@ -209,6 +216,7 @@ let routes_for_redirect_for_sans_slash sec page =
 
 let routes_for_page site sec previous_page page next_page page_renderer
     thumbnail_loader image_loader =
+  match (Page.content page) with false -> [] | true ->
   Dream.get (Section.url ~page sec) (fun _ ->
       (page_renderer page) site sec previous_page page next_page |> Dream.html)
   :: (routes_for_redirect_for_sans_slash sec page

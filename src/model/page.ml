@@ -142,9 +142,16 @@ let path t = Fpath.parent t.path
 let body t = t.body
 let tags t = Frontmatter.tags t.frontmatter
 let shortcodes t = t.shortcodes
+
+let content t =
+  match (Frontmatter.get_key_as_bool t.frontmatter "content") with
+  | Some x -> x
+  | None -> true
+
 let images t = Frontmatter.images t.frontmatter
 let videos t = Frontmatter.get_key_as_string_list t.frontmatter "videos"
 let aliases t = Frontmatter.aliases t.frontmatter
+let get_key_as_bool t key = Frontmatter.get_key_as_bool t.frontmatter key
 let get_key_as_string t key = Frontmatter.get_key_as_string t.frontmatter key
 let get_key_as_date t key = Frontmatter.get_key_as_date t.frontmatter key
 

@@ -17,6 +17,7 @@ val synopsis : t -> string option
 val draft : t -> bool
 val images : t -> image list
 val aliases : t -> string list
+val get_key_as_bool : t -> string -> bool option
 val get_key_as_string : t -> string -> string option
 val get_key_as_date : t -> string -> Ptime.t option
 val get_key_as_string_list : t -> string -> string list
