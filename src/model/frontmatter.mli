@@ -22,3 +22,4 @@ val get_key_as_string : t -> string -> string option
 val get_key_as_date : t -> string -> Ptime.t option
 val get_key_as_string_list : t -> string -> string list
 val get_key_as_string_dict : t -> string -> (string * string) list
+val get_key_as_yaml : t -> string -> Yaml.value option

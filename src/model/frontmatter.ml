@@ -86,3 +86,4 @@ let get_key_as_string t key = yaml_dict_to_string t.raw key
 let get_key_as_date t key = yaml_dict_to_date t.raw key
 let get_key_as_string_list t key = yaml_dict_to_string_list t.raw key
 let get_key_as_string_dict t key = yaml_dict_to_string_dict t.raw key
+let get_key_as_yaml t key = List.assoc_opt key t.raw
