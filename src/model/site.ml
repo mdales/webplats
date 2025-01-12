@@ -67,7 +67,12 @@ let of_directory path =
       (fun p ->
         match Sys.is_directory (Fpath.to_string p) with
         | false -> None
-        | true -> Some (Fpath.to_dir_path p))
+        | true -> (
+          match (Sys.file_exists (Fpath.to_string (Fpath.add_seg p "index.md"))) with
+          | false -> Some (Fpath.to_dir_path p)
+          | true -> None
+        )
+        )
       root_listing
     |> List.map (fun p -> Section.of_directory ~base:content_path p)
     |> List.filter_map (fun s ->
@@ -83,7 +88,12 @@ let of_directory path =
       (fun p ->
         match Fpath.get_ext p with
         | ".md" -> Some (Page.of_file "root" "/" p)
-        | _ -> None)
+        | _ -> (
+          let root_dir_path = Fpath.add_seg p "index.md" in
+          match (Sys.file_exists (Fpath.to_string root_dir_path)) with
+          | true -> Some (Page.of_file "root" "/" root_dir_path)
+          | false -> None
+        ))
       root_listing
   in
 
