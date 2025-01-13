@@ -118,3 +118,4 @@ let path t = t.path
 let hugo_theme t = Config.hugo_theme t.config
 let taxonomies t = t.taxonomies
 let url t = Config.base_url t.config
+let port t = Config.port t.config

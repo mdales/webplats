@@ -8,3 +8,4 @@ val path : t -> Fpath.t
 val hugo_theme : t -> string
 val taxonomies : t -> (string * Taxonomy.t) list
 val url : t -> Uri.t
+val port: t -> int

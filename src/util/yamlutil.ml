@@ -3,6 +3,11 @@ let yaml_dict_to_string a k =
   | None -> None
   | Some v -> ( match v with `String str -> Some str | _ -> None)
 
+let yaml_dict_to_int a k =
+  match List.assoc_opt k a with
+  | None -> None
+  | Some v -> ( match v with `Float n -> Some (int_of_float n) | _ -> None)
+
 let yaml_dict_to_string_list a k =
   match List.assoc_opt k a with
   | None -> []
