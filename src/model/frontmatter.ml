@@ -78,6 +78,16 @@ let titleimage t = t.titleimage
 let draft t =
   match yaml_dict_to_bool t.raw "draft" with Some b -> b | None -> false
 
+let content t =
+  match yaml_dict_to_bool t.raw "content" with
+  | Some x -> x
+  | None -> true
+
+let in_feed t =
+  match yaml_dict_to_bool t.raw "in_feed" with
+  | Some x -> x
+  | None -> true
+
 let tags t = yaml_dict_to_string_list t.raw "tags"
 let images t = t.images
 let aliases t = yaml_dict_to_string_list t.raw "aliases"

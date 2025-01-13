@@ -5,7 +5,11 @@ let recent_pages pages =
 		| _ -> (
 			match pages with
 			| [] -> []
-			| hd :: tl -> hd :: (loop (count - 1) tl)
+			| (sec, page) :: tl -> (
+        match Page.in_feed page with
+        | true -> (sec, page) :: (loop (count - 1) tl)
+        | false -> loop count tl
+      )
 		)
 	in 
 	loop 10 pages
@@ -25,10 +29,14 @@ let render_rss site pages =
 % (List.iter (fun (sec, page) ->
         <item>
           <title><%s Page.title page %></title>
+% (match (Page.get_key_as_string page "source") with Some url ->
+          <link><%s url %></link>
+% | None -> (
           <link><%s Uri.to_string (Uri.with_uri ~path:(Some (Section.url ~page sec)) (Site.url site)) %></link>
+% ));
           <pubDate><%s Ptime.to_rfc3339 (Page.date page) %></pubDate>
-          
           <guid><%s Uri.to_string (Uri.with_uri ~path:(Some (Section.url ~page sec)) (Site.url site)) %></guid>
+          
           <description>
 % (match Page.original_section_title page with "photos" ->
 % let img = Option.get (Page.titleimage page) in

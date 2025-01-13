@@ -32,6 +32,7 @@ val body : t -> string
 val tags : t -> string list
 val shortcodes : t -> ((int * int) * Shortcode.t) list
 val content : t -> bool
+val in_feed : t -> bool
 val images : t -> Frontmatter.image list
 val videos : t -> string list
 val aliases : t -> string list

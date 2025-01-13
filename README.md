@@ -14,3 +14,4 @@ Frontmatter gives you a place to store extra information in the page, which you 
 | *content* | boolean | If this key exists and is marked false, then no route to the page will exist, but it will still be listed in the section. Makes it easy to build up sections where you want a list of things but those things shouldn't have a page. |
 | *tags* | list of strings | Tags associated with the page. |
 | *aliases* | list of strings | Alternative site relative URLs this page can be accessed via. These will generate 302 responses to the canonical version of the page. |
+| *in_feed* | boolean | If this key exists and is marked false, the page will not appear in the RSS feed. |
