@@ -251,7 +251,7 @@ let routes_for_section ~section_renderer ~page_renderer ~thumbnail_loader
        (Section.url sec ^ "index.xml")
        (fun _ ->
          Rss.render_rss site (Section.pages sec |> List.map (fun p -> (sec, p)))
-         |> Dream.html)
+         |> Dream.respond ~headers:[("Content-Type", "application/rss+xml")])
   :: routes_for_pages_in_section site sec page_renderer thumbnail_loader
        image_loader
 
