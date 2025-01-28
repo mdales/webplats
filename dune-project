@@ -24,6 +24,7 @@
   fpath
   dream
   cmarkit
+  hilite
   astring
   metadata
   yaml
