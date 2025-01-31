@@ -51,22 +51,22 @@ let image_shortcode_with_dimensions path filename alt code =
     in
     let width = int_of_string (List.assoc "width" metadata)
     and height = int_of_string (List.assoc "height" metadata) in
-    Shortcode.Image (filename, alt, code, Some (width, height))
+    Shortcode.Raster (filename, alt, code, Some (width, height))
   with
   | Failure _ ->
       Dream.log "Failed to parse %s"
         (Fpath.to_string (Fpath.add_seg path filename));
-      Shortcode.Image (filename, alt, code, None)
+      Shortcode.Raster (filename, alt, code, None)
   | Metadata.Invalid ->
       Dream.log "Error reading metadata %s"
         (Fpath.to_string (Fpath.add_seg path filename));
-      Shortcode.Image (filename, alt, code, None)
+      Shortcode.Raster (filename, alt, code, None)
 
 let update_shortcodes dir sl =
   List.map
     (fun (pos, sc) ->
       match sc with
-      | Shortcode.Image (fn, alt, code, _) ->
+      | Shortcode.Raster (fn, alt, code, _) ->
           (pos, image_shortcode_with_dimensions dir fn alt code)
       | x -> (pos, x))
     sl

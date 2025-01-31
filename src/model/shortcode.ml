@@ -1,6 +1,7 @@
 type t =
   | Video of string * string option
-  | Image of string * string option * string option * (int * int) option
+  | Raster of string * string option * string option * (int * int) option
+  | Vector of string * string option * string option
   | Audio of string
   | Photo of string
   | Youtube of string
@@ -20,6 +21,26 @@ let find_raw_shortcodes body =
   in
   List.rev (loop 0 [])
 
+let img_expansion args =
+  let filename = Fpath.v (List.hd args) in
+  let _, ext = Fpath.split_ext filename in
+  match ext with
+    | ".svg" -> (
+      match args with
+      | [ arg1 ] -> Vector (arg1, None, None)
+      | [ arg1; arg2 ] -> Vector (arg1, Some arg2, None)
+      | [ arg1; arg2; arg3 ] -> Vector (arg1, Some arg2, Some arg3)
+      | _ -> Unknown args
+    )
+    | _ -> (
+    match args with
+     | [ arg1 ] -> Raster (arg1, None, None, None)
+     | [ arg1; arg2 ] -> Raster (arg1, Some arg2, None, None)
+     | [ arg1; arg2; arg3 ] ->
+         Raster (arg1, Some arg2, Some arg3, None)
+     | _ -> Unknown args
+    )
+
 let find_shortcodes body =
   let rex = Pcre2.regexp {|"[^"]+"|[\w\.\-]+|} in
   find_raw_shortcodes body
@@ -36,10 +57,7 @@ let find_shortcodes body =
            match sl with
            | [ "video"; arg1 ] -> Video (arg1, None)
            | [ "video"; arg1; arg2 ] -> Video (arg1, Some arg2)
-           | [ "img"; arg1 ] -> Image (arg1, None, None, None)
-           | [ "img"; arg1; arg2 ] -> Image (arg1, Some arg2, None, None)
-           | [ "img"; arg1; arg2; arg3 ] ->
-               Image (arg1, Some arg2, Some arg3, None)
+           | "img" :: args -> img_expansion args
            | [ "audio"; arg1 ] -> Audio arg1
            | [ "photo"; arg1 ] -> Photo arg1
            | [ "youtube"; arg1 ] -> Youtube arg1

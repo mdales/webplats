@@ -3,7 +3,8 @@ open Webplats
 
 let shortcode_printer (sc : Shortcode.t) =
   match sc with
-  | Image (a, _b, _c, _d) -> Printf.sprintf "Image(%s, _, _, _)" a
+  | Raster (a, _b, _c, _d) -> Printf.sprintf "Raster(%s, _, _, _)" a
+  | Vector (a, _b  _c) -> Printf.sprintf "Vector(%s, _, _)" a
   | Audio a -> Printf.sprintf "Audio(%s)" a
   | Photo a -> Printf.sprintf "Photo(%s)" a
   | Youtube a -> Printf.sprintf "Youtube(%s)" a
@@ -33,7 +34,7 @@ let test_invalid_shortcode _ =
     (Shortcode.Unknown [ "boop"; "the"; "snoot" ])
     code
 
-let test_simple_image_shortcode _ =
+let test_simple_raster_shortcode _ =
   let body = {| {{< img test.jpg >}} |} in
   let codes = Shortcode.find_shortcodes body in
   assert_equal_int ~msg:"Code count" 1 (List.length codes);
@@ -41,7 +42,18 @@ let test_simple_image_shortcode _ =
   assert_equal_int ~msg:"Code offset" 1 loc;
   assert_equal_int ~msg:"Code length" 20 len;
   assert_equal_sc ~msg:"Code"
-    (Shortcode.Image ("test.jpg", None, None, None))
+    (Shortcode.Raster ("test.jpg", None, None, None))
+    code
+
+let test_simple_vector_shortcode _ =
+  let body = {| {{< img test.svg >}} |} in
+  let codes = Shortcode.find_shortcodes body in
+  assert_equal_int ~msg:"Code count" 1 (List.length codes);
+  let (loc, len), code = List.hd codes in
+  assert_equal_int ~msg:"Code offset" 1 loc;
+  assert_equal_int ~msg:"Code length" 20 len;
+  assert_equal_sc ~msg:"Code"
+    (Shortcode.Vector ("test.svg", None, None))
     code
 
 let test_multi_ext_image_shortcode _ =
@@ -52,7 +64,7 @@ let test_multi_ext_image_shortcode _ =
   assert_equal_int ~msg:"Code offset" 1 loc;
   assert_equal_int ~msg:"Code length" 32 len;
   assert_equal_sc ~msg:"Code"
-    (Shortcode.Image ("GetPhoto-2.ashx.jpeg", None, None, None))
+    (Shortcode.Raster ("GetPhoto-2.ashx.jpeg", None, None, None))
     code
 
 let test_simple_image_shortcode_with_space _ =
@@ -63,7 +75,7 @@ let test_simple_image_shortcode_with_space _ =
   assert_equal_int ~msg:"Code offset" 1 loc;
   assert_equal_int ~msg:"Code length" 24 len;
   assert_equal_sc ~msg:"Code"
-    (Shortcode.Image ("a test.jpg", None, None, None))
+    (Shortcode.Raster ("a test.jpg", None, None, None))
     code
 
 let test_image_shortcode_with_alt _ =
@@ -74,7 +86,7 @@ let test_image_shortcode_with_alt _ =
   assert_equal_int ~msg:"Code offset" 1 loc;
   assert_equal_int ~msg:"Code length" 36 len;
   assert_equal_sc ~msg:"Code"
-    (Shortcode.Image ("test.jpg", Some "Something else", None, None))
+    (Shortcode.Raster ("test.jpg", Some "Something else", None, None))
     code
 
 let test_image_shortcode_with_alt_and_css_hint _ =
@@ -85,7 +97,7 @@ let test_image_shortcode_with_alt_and_css_hint _ =
   assert_equal_int ~msg:"Code offset" 1 loc;
   assert_equal_int ~msg:"Code length" 47 len;
   assert_equal_sc ~msg:"Code"
-    (Shortcode.Image ("test.jpg", Some "Something else", Some "unrounded", None))
+    (Shortcode.Raster ("test.jpg", Some "Something else", Some "unrounded", None))
     code
 
 let test_invalid_image_shortcode_with_extra_param _ =
@@ -161,7 +173,8 @@ let suite =
   >::: [
          "Test invalid empty shortcode" >:: test_invalid_empty_shortcode;
          "Test invalud shortcode" >:: test_invalid_shortcode;
-         "Test simple image shortcode" >:: test_simple_image_shortcode;
+         "Test simple raster shortcode" >:: test_simple_raster_shortcode;
+         "Test simple vector shortcode" >:: test_simple_vector_shortcode;
          "Test multi extention image" >:: test_multi_ext_image_shortcode;
          "Test simple image shortcode with space in filename"
          >:: test_simple_image_shortcode_with_space;

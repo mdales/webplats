@@ -58,7 +58,7 @@ let routes_for_image_shortcodes sec page (image_loader : image_loader_t) =
   List.concat_map
     (fun (_, sc) ->
       match sc with
-      | Shortcode.Image (filename, _, _, _) ->
+      | Shortcode.Raster (filename, _, _, _) ->
           [
             Dream.get
               (Section.url ~page sec ^ filename)
@@ -139,6 +139,7 @@ let routes_for_direct_shortcodes sec page =
   List.concat_map
     (fun (_, sc) ->
       match sc with
+      | Shortcode.Vector (r, _, _) -> [ r ]
       | Shortcode.Video (r, None) -> [ r ]
       | Shortcode.Video (r, Some t) -> [ r; t ]
       | Shortcode.Audio r -> [ r ]

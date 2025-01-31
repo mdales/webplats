@@ -1,5 +1,5 @@
-let recent_pages pages = 
-	let rec loop count pages = 
+let recent_pages pages =
+	let rec loop count pages =
 		match count with
 		| 0 -> []
 		| _ -> (
@@ -11,7 +11,7 @@ let recent_pages pages =
         | false -> loop count tl
       )
 		)
-	in 
+	in
 	loop 10 pages
 
 let render_rss site pages =
@@ -22,7 +22,7 @@ let render_rss site pages =
     <description>Recent content on my <%s Site.title site %></description>
     <generator>https://github.com/mdales/webplats/</generator>
     <language>en-us</language>
-% (match pages with (_, hd) :: _ -> 
+% (match pages with (_, hd) :: _ ->
     <lastBuildDate><%s Ptime.to_rfc3339 (Page.date hd) %></lastBuildDate>
 % | [] -> ());
     <atom:link href="<%s Uri.to_string (Uri.with_uri ~path:(Some {|index.xml|}) (Site.url site)) %>" rel="self" type="application/rss+xml" />
@@ -36,11 +36,11 @@ let render_rss site pages =
 % ));
           <pubDate><%s Ptime.to_rfc3339 (Page.date page) %></pubDate>
           <guid><%s Uri.to_string (Uri.with_uri ~path:(Some (Section.url ~page sec)) (Site.url site)) %></guid>
-          
+
           <description>
 % (match Page.original_section_title page with "photos" ->
 % let img = Option.get (Page.titleimage page) in
-             <%s Shortcodes.render_image ((Section.url ~page sec) ^ img.filename) img.description None None %>
+             <%s Shortcodes.render_raster ((Section.url ~page sec) ^ img.filename) img.description None None %>
 % | _ -> ());
              <%s Render.render_body page %>
 % (List.iter (fun (i : Frontmatter.image) ->
@@ -61,6 +61,6 @@ let render_rss site pages =
           </description>
         </item>
 % ) (recent_pages pages));
-    
+
     </channel>
   </rss>
