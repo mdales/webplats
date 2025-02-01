@@ -41,6 +41,29 @@ let img_expansion args =
      | _ -> Unknown args
     )
 
+let find_labels body =
+  let open Cmarkit in
+  let body = Cmarkit.Doc.of_string body in
+  let module String_set = Set.Make (String) in
+  let inline m acc = function
+  | Inline.Image (l, _) ->
+    let t = match (Inline.Link.text l) with
+    | Inline.Text (s, _) -> Some s
+    | _ -> None
+    in
+    let r = match (Inline.Link.reference l) with
+    | `Inline (link, _) -> (
+      let s, _ = Option.get (Link_definition.dest link) in s
+    )
+    | `Ref (_, _, _) -> "ref"
+    in
+    Folder.ret (Raster (r, t, None, None) :: acc)
+  | _ ->
+      Folder.default (* let the folder thread the fold *)
+  in
+  let folder = Folder.make ~inline () in
+  Folder.fold_doc folder [] body
+
 let find_shortcodes body =
   let rex = Pcre2.regexp {|"[^"]+"|[\w\.\-]+|} in
   find_raw_shortcodes body

@@ -8,3 +8,4 @@ type t =
   | Unknown of string list
 
 val find_shortcodes : string -> ((int * int) * t) list
+val find_labels : string -> t list

@@ -5,7 +5,7 @@ type t = {
   body : string;
   path : Fpath.t;
   base : Fpath.t option;
-  shortcodes : ((int * int) * Shortcode.t) list;
+  shortcodes : ((int * int) option * Shortcode.t) list;
 }
 
 let read_frontmatter path =
@@ -76,7 +76,13 @@ let update_shortcodes dir sl =
 let v ?(base = None) original_section_title original_section_url path
     frontmatter body =
   let shortcodes =
-    Shortcode.find_shortcodes body |> update_shortcodes (Fpath.parent path)
+    Shortcode.find_shortcodes body
+    |> List.map (fun (p, sc) -> (Some p, sc))
+    |> update_shortcodes (Fpath.parent path)
+  in
+  let markdown_codes = Shortcode.find_labels body
+  |> List.map (fun t -> (None, t))
+  |> update_shortcodes (Fpath.parent path)
   in
   {
     original_section_title;
@@ -85,7 +91,7 @@ let v ?(base = None) original_section_title original_section_url path
     body;
     path;
     base;
-    shortcodes;
+    shortcodes=shortcodes @ markdown_codes;
   }
 
 let of_file ?(base = None) original_section_title original_section_url path =

@@ -30,7 +30,7 @@ val draft : t -> bool
 val path : t -> Fpath.t
 val body : t -> string
 val tags : t -> string list
-val shortcodes : t -> ((int * int) * Shortcode.t) list
+val shortcodes : t -> ((int * int) option * Shortcode.t) list
 val content : t -> bool
 val in_feed : t -> bool
 val images : t -> Frontmatter.image list
