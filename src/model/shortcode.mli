@@ -9,3 +9,5 @@ type t =
 
 val find_shortcodes : string -> ((int * int) * t) list
 val find_labels : string -> t list
+
+val img_expansion : string list -> t

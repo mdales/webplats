@@ -57,7 +57,11 @@ let find_labels body =
     )
     | `Ref (_, _, _) -> "ref"
     in
-    Folder.ret (Raster (r, t, None, None) :: acc)
+    let args = match t with
+    | None -> [r]
+    | Some x -> [r ; x]
+    in
+    Folder.ret ((img_expansion args) :: acc)
   | _ ->
       Folder.default (* let the folder thread the fold *)
   in

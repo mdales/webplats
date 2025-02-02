@@ -15,7 +15,13 @@ let render_markdown_images doc =
       )
       | `Ref (_, _, _) -> "ref"
       in
-      let shortcode = Shortcode.Raster (r, t, None, None) in
+
+      let args = match t with
+      | None -> [r]
+      | Some x -> [r ; x]
+      in
+
+      let shortcode = Shortcode.img_expansion args in
       let html = Shortcodes.render_shortcode shortcode in
       Mapper.ret (Inline.Raw_html (Block_line.tight_list_of_string html, meta))
     )
