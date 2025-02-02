@@ -146,10 +146,11 @@ let routes_for_direct_shortcodes sec page =
       | _ -> [])
     (Page.shortcodes page)
   |> List.map (fun filename ->
+      let mimetype = Magic_mime.lookup filename in
          Dream.get
            (Section.url ~page sec ^ filename)
            (fun _ ->
-             Dream.respond
+             Dream.respond ~headers:[("Content-Type", mimetype)]
                (In_channel.with_open_bin
                   (Fpath.to_string (Fpath.add_seg (Page.path page) filename))
                   (fun ic -> In_channel.input_all ic))))

@@ -27,6 +27,7 @@
   hilite
   astring
   metadata
+  magic-mime
   yaml
   uri
   camlimages
