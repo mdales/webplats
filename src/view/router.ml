@@ -172,14 +172,9 @@ let routes_for_direct_shortcodes sec page =
       | _ -> [])
     (Page.shortcodes page)
   |> List.map (fun filename ->
-      let mimetype = Magic_mime.lookup filename in
          Dream.get
            (Section.url ~page sec ^ filename)
-           (fun _ ->
-             Dream.respond ~headers:[("Content-Type", mimetype)]
-               (In_channel.with_open_bin
-                  (Fpath.to_string (Fpath.add_seg (Page.path page) filename))
-                  (fun ic -> In_channel.input_all ic))))
+           (Dream.static ~loader:(direct_loader page filename) ""))
 
 let collect_static_routes site =
   let website_dir = Site.path site in
@@ -243,7 +238,11 @@ let routes_for_page site sec previous_page page next_page page_renderer
     thumbnail_loader image_loader =
   match (Page.content page) with false -> [] | true ->
   Dream.get (Section.url ~page sec) (fun _ ->
-      (page_renderer page) site sec previous_page page next_page |> Dream.html)
+    let stats = Unix.stat (Fpath.to_string (Page.path page)) in
+    let mtime = Option.get (Ptime.of_float_s (stats.st_mtime)) in
+    let last_modified = ptime_to_last_modiofied mtime in
+    let headers = [("Last-modified", last_modified)] in
+      (page_renderer page) site sec previous_page page next_page |> Dream.html ~headers)
   :: (routes_for_redirect_for_sans_slash sec page
      @ routes_for_titleimage sec page thumbnail_loader image_loader
      @ routes_for_frontmatter_image_list sec page image_loader
