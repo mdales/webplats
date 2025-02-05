@@ -18,10 +18,36 @@ type meta_taxonomy_section_renderer_t = Taxonomy.t -> Section.t -> section_rende
 type taxonomy_renderer_t = Site.t -> Taxonomy.t -> string
 type meta_taxonomy_renderer_t = Taxonomy.t -> taxonomy_renderer_t
 
-let direct_loader page filename _root _path _request =
-  let path = Fpath.to_string (Fpath.add_seg (Page.path page) filename) in
-  Dream.respond
-    (In_channel.with_open_bin path (fun ic -> In_channel.input_all ic))
+let days = [| "Sun"; "Mon"; "Tue"; "Wed"; "Thu"; "Fri"; "Sat"|]
+let months = [| "Jan" ; "Feb" ; "Mar" ; "Apr" ; "May" ; "Jun" ; "Jul" ; "Aug" ; "Sep" ; "Oct" ; "Nov"; "Dec" |]
+
+let ptime_to_last_modiofied (t : Ptime.t) : string =
+  (* TODO: convert to GMT *)
+  let dow = days.(Ptime.weekday_num t) in
+  let ((year, month, day), ((hours, mins, seconds), _tz)) = Ptime.to_date_time t in
+  Printf.sprintf "%s, %d %s %d %02d:%02d:%02d GMT" dow day months.(month - 1) year hours mins seconds
+
+let static_loader root path _request =
+  (* In dream the loader is called after the path has been validated,
+  which is why there is no path validation here *)
+  let root = match (Fpath.of_string root) with Ok x -> x | _ -> failwith "bad root" in
+  let path = match (Fpath.of_string path) with Ok x -> x | _ -> failwith "bad path" in
+  let full_path = Fpath.normalize (Fpath.append root path) in
+  let full_path = Fpath.to_string full_path in
+
+  let stats = Unix.stat full_path in
+  let mtime = Option.get (Ptime.of_float_s (stats.st_mtime)) in
+  let last_modified = ptime_to_last_modiofied mtime in
+
+  let content_type = Magic_mime.lookup full_path in
+  let headers = [("Content-type", content_type); ("Last-modified", last_modified)] in
+  Dream.respond ~headers
+   (In_channel.with_open_bin full_path (fun ic ->
+        In_channel.input_all ic))
+
+let direct_loader page filename _root _path request =
+  (* This wrapper just avoids the need to do reverse lookups based on how I mangle file names *)
+  static_loader (Fpath.to_string (Page.path page)) filename request
 
 let routes_for_frontmatter_image_list sec page (image_loader : image_loader_t) =
   List.concat_map
@@ -178,14 +204,11 @@ let collect_static_routes site =
       | true ->
           Dream.get
             (Printf.sprintf "/%s/**" basename)
-            (Dream.static (Fpath.to_string (path / ".")))
+            (Dream.static ~loader:static_loader (Fpath.to_string (path / ".")))
       | false ->
           Dream.get ("/" ^ basename)
             (Dream.static
-               ~loader:(fun _root _path _request ->
-                 Dream.respond
-                   (In_channel.with_open_bin (Fpath.to_string path) (fun ic ->
-                        In_channel.input_all ic)))
+               ~loader:static_loader
                ""))
     things_to_be_published
 
