@@ -32,6 +32,12 @@ let img_expansion args =
       | [ arg1; arg2; arg3 ] -> Vector (arg1, Some arg2, Some arg3)
       | _ -> Unknown args
     )
+    | ".mov" | ".mp4" -> (
+      match args with
+      | [ arg1 ] -> Video (arg1, None)
+      | [ arg1; arg2 ] -> Video (arg1, Some arg2)
+      | _ -> Unknown args
+    )
     | _ -> (
     match args with
      | [ arg1 ] -> Raster (arg1, None, None, None)
