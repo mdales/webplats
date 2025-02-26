@@ -11,6 +11,8 @@ Frontmatter gives you a place to store extra information in the page, which you 
 | *draft* | boolean | If both present and true then the page will not be included in routing. |
 | *titleimage* | dict | Must contain both an `image` key, which is a relative path for the image, and `alt` key which is the image description for accessibility. This image will be used for thumbnails in the header and in section lists. |
 | *synopsis* | string | A short description of the page's contents, typically for section lists. |
+| *scripts* | list of strings | List of paths to javascript files that should be loaded in the page |
+| *resources* | list of strings | Files besides the index.md that should be presented via URL |
 | *content* | boolean | If this key exists and is marked false, then no route to the page will exist, but it will still be listed in the section. Makes it easy to build up sections where you want a list of things but those things shouldn't have a page. |
 | *tags* | list of strings | Tags associated with the page. |
 | *aliases* | list of strings | Alternative site relative URLs this page can be accessed via. These will generate 302 responses to the canonical version of the page. |
