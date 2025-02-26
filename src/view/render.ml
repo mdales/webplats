@@ -48,7 +48,7 @@ let render_body page =
   ) unrendered_markdown ordered_shortcodes in
   Cmarkit.Doc.of_string ~strict:false body
   |> render_markdown_images
-  |> Hilite_markdown.transform
+  (* |> Hilite_markdown.transform *)
   |> Cmarkit_html.of_doc ~safe:false
 
 let render_head ~site ?sec ?page () =
