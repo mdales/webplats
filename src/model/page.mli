@@ -10,6 +10,8 @@ val v :
   t
 
 val of_file : ?base:Fpath.t option -> string -> string -> Fpath.t -> t
+(** of_file base_path original_section_title original_section_url path *)
+
 val url_name : t -> string
 (* Pages don't have absolute URLs, as they may occur in virtual sections. The
    page's URL will be [site domain]/[section url name]/[page url name].
@@ -30,6 +32,8 @@ val draft : t -> bool
 val path : t -> Fpath.t
 val body : t -> string
 val tags : t -> string list
+val resources : t -> string list
+val scripts : t -> string list
 val shortcodes : t -> ((int * int) option * Shortcode.t) list
 val content : t -> bool
 val in_feed : t -> bool

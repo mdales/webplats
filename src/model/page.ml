@@ -147,6 +147,8 @@ let draft t = Frontmatter.draft t.frontmatter
 let path t = Fpath.parent t.path
 let body t = t.body
 let tags t = Frontmatter.tags t.frontmatter
+let resources t = Frontmatter.get_key_as_string_list t.frontmatter "resources"
+let scripts t = Frontmatter.get_key_as_string_list t.frontmatter "scripts"
 let shortcodes t = t.shortcodes
 
 let content t = Frontmatter.content t.frontmatter

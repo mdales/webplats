@@ -1,5 +1,5 @@
 
-let render_head_generic site = 
+let render_head_generic site =
   <link rel="stylesheet" href="/css/base.css" type="text/css" media="screen">
   <link rel="icon" href="/img/favicon-32.png" sizes="32x32">
   <link rel="icon" href="/img/favicon-57.png" sizes="57x57">
@@ -15,7 +15,7 @@ let render_head_generic site =
 % ) (Site.sections site));
   <meta property="og:site_name" content="<%s Site.title site %>"/>
 
-let render_head_section sec = 
+let render_head_section sec =
   <meta property="og:type" content="website"/>
   <title><%s Section.title sec %></title>
   <meta property="og:title" content="<%s Section.title sec %>"/>
@@ -25,7 +25,7 @@ let render_head_section sec =
   <meta itemprop="url" content="<%s Section.url sec %>"/>
   <meta property="twitter:url" content="<%s Section.url sec %>"/>
 
-let render_head_page sec page = 
+let render_head_page sec page =
   <meta property="og:type" content="article"/>
   <title><%s Page.title page %></title>
   <meta property="og:title" content="<%s Page.title page %>"/>
@@ -43,12 +43,15 @@ let render_head_page sec page =
   <meta property="og:image" content="preview.jpg"/>
   <meta itemprop="image" content="preview.jpg"/>
   <meta property="twitter:image" content="preview.jpg"/>
-% (match i.description with Some desc -> 
+% (match i.description with Some desc ->
   <meta property="og:image:alt" content="<%s desc %>"/>
   <meta property="image:alt" content="<%s desc %>"/>
   <meta property="twitter:image:alt" content="<%s desc %>"/>
-% | None -> ()); 
 % | None -> ());
+% | None -> ());
+% List.iter (fun filename ->
+  <script type="module" src="<%s filename %>"></script>
+% ) (Page.scripts page);
 
 let render_head_unknown site =
   <meta property="og:type" content="website"/>

@@ -176,6 +176,13 @@ let routes_for_direct_shortcodes sec page =
            (Section.url ~page sec ^ filename)
            (Dream.static ~loader:(direct_loader page filename) ""))
 
+let routes_for_scripts_and_resources sec page =
+  (Page.resources page  @ Page.scripts page)|> List.map (fun filename ->
+   Dream.log "adding %s" (Section.url ~page sec ^ filename);
+   Dream.get
+     (Section.url ~page sec ^ filename)
+     (Dream.static ~loader:(direct_loader page filename) ""))
+
 let collect_static_routes site =
   let website_dir = Site.path site in
   let website_static_dir = website_dir / "static" in
@@ -248,7 +255,8 @@ let routes_for_page site sec previous_page page next_page page_renderer
      @ routes_for_frontmatter_image_list sec page image_loader
      @ routes_for_frontmatter_video_list sec page
      @ routes_for_image_shortcodes sec page image_loader
-     @ routes_for_direct_shortcodes sec page)
+     @ routes_for_direct_shortcodes sec page
+     @ routes_for_scripts_and_resources sec page )
 
 let routes_for_pages_in_section site sec page_renderer thumbnail_loader
     image_loader =
