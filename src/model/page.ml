@@ -53,6 +53,9 @@ let image_shortcode_with_dimensions path filename alt code =
     and height = int_of_string (List.assoc "height" metadata) in
     Shortcode.Raster (filename, alt, code, Some (width, height))
   with
+  | Invalid_argument _ ->
+    Dream.log "Failed to process path %s + %s" (Fpath.to_string path) filename;
+    Shortcode.Raster (filename, alt, code, None)
   | Failure _ ->
       Dream.log "Failed to parse %s"
         (Fpath.to_string (Fpath.add_seg path filename));
