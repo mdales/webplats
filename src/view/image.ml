@@ -106,7 +106,7 @@ let _render_image_fill page filename (max_width, max_height) =
         let ratio = max wratio hratio in
         let newwidth = int_of_float (ratio *. fwidth)
         and newheight = int_of_float (ratio *. fheight) in
-        let cmd = Printf.sprintf "convert %s -gravity center -resize %dx%d^ -extent %dx%d %s" (Fpath.to_string imgpath) newwidth newheight newwidth newheight target_path in
+        let cmd = Printf.sprintf "gm convert %s -gravity center -resize %dx%d^ -extent %dx%d %s" (Fpath.to_string imgpath) newwidth newheight newwidth newheight target_path in
         let _rc = Unix.system cmd in
         Fpath.v target_path
 
@@ -171,7 +171,7 @@ let render_image_fit page filename (max_width, max_height) =
       let ratio = min wratio hratio in
       let newwidth = int_of_float (ratio *. fwidth)
       and newheight = int_of_float (ratio *. fheight) in
-      let cmd = Printf.sprintf "convert %s -resize %dx%d %s" (Fpath.to_string imgpath) newwidth newheight target_path in
+      let cmd = Printf.sprintf "gm convert %s -resize %dx%d %s" (Fpath.to_string imgpath) newwidth newheight target_path in
       let _rc = Unix.system cmd in
       Fpath.v target_path
     )
