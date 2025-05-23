@@ -15,4 +15,5 @@
   camlimages.core
   camlimages.jpeg
   camlimages.png
-  pcre2))
+  pcre2)
+  (preprocess (pps lwt_ppx)))
