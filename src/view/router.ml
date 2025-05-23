@@ -18,6 +18,9 @@ type meta_taxonomy_section_renderer_t = Taxonomy.t -> Section.t -> section_rende
 type taxonomy_renderer_t = Site.t -> Taxonomy.t -> string
 type meta_taxonomy_renderer_t = Taxonomy.t -> taxonomy_renderer_t
 
+module Message = Dream_pure.Message
+module Stream = Dream_pure.Stream
+
 let days = [| "Sun"; "Mon"; "Tue"; "Wed"; "Thu"; "Fri"; "Sat"|]
 let months = [| "Jan" ; "Feb" ; "Mar" ; "Apr" ; "May" ; "Jun" ; "Jul" ; "Aug" ; "Sep" ; "Oct" ; "Nov"; "Dec" |]
 
@@ -41,9 +44,16 @@ let static_loader root path _request =
 
   let content_type = Magic_mime.lookup full_path in
   let headers = [("Content-type", content_type); ("Last-modified", last_modified)] in
-  Dream.respond ~headers
-   (In_channel.with_open_bin full_path (fun ic ->
-        In_channel.input_all ic))
+  Lwt.catch
+    (fun () ->
+    Lwt_io.(with_file ~mode:Input full_path) (fun channel ->
+      let%lwt content = Lwt_io.read channel in
+      Message.response
+        ~headers (Stream.string content) Stream.null
+      |> Lwt.return))
+  (fun _exn ->
+    Message.response ~status:`Not_Found Stream.empty Stream.null
+    |> Lwt.return)
 
 let direct_loader page filename _root _path request =
   (* This wrapper just avoids the need to do reverse lookups based on how I mangle file names *)
