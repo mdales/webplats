@@ -15,6 +15,8 @@ type meta_taxonomy_section_renderer_t = Taxonomy.t -> Section.t -> section_rende
 type taxonomy_renderer_t = Site.t -> Taxonomy.t -> string
 type meta_taxonomy_renderer_t = Taxonomy.t -> taxonomy_renderer_t
 
+val static_loader : string -> string -> Dream.handler
+
 val routes_for_frontmatter_image_list :
   Section.t -> Page.t -> image_loader_t -> Dream.route list
 
