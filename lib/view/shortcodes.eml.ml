@@ -1,7 +1,10 @@
 
-let render_video filename thumb_opt =
+let render_video filename thumb_opt looped =
   <div class="video">
     <video controls
+% (match looped with true ->
+  loop
+% | false -> ());
 % (match thumb_opt with Some t ->
     poster="<%s t %>"
 % | None -> ());
@@ -10,7 +13,7 @@ let render_video filename thumb_opt =
     Your browser does not support the video element.
     </video>
   </div>
-  
+
 let render_audio filename =
   <div class="listimage">
     <div>
@@ -20,15 +23,15 @@ let render_audio filename =
       </audio>
     </div>
   </div>
-  
-let render_youtube code = 
+
+let render_youtube code =
   <div class="listimage">
     <div>
       <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/<%s! code %>" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
     </div>
   </div>
 
-let is_image_retina dims = 
+let is_image_retina dims =
   match dims with
   | None -> true
   | Some (width, height) -> (
@@ -46,13 +49,13 @@ let render_image filename alt klass dims =
           class="rounded"
           src="<%s filename %>"
 % let name, ext = Fpath.split_ext (Fpath.v filename) in
-% (match (is_image_retina dims) with true -> 
+% (match (is_image_retina dims) with true ->
 % let retina_filename = Printf.sprintf "%s@2x%s" (Fpath.to_string name) ext in
           srcset="<%s retina_filename %> 2x, <%s filename %> 1x"
 % | false -> ());
 % (match (alt) with Some desc ->
           alt="<%s desc %>"
-% | None -> ()); 
+% | None -> ());
         />
       </figure>
     </div>
@@ -63,7 +66,7 @@ let render_photo reference =
 
 let render_shortcode shortcode =
   match shortcode with
-  | Shortcode.Video (filename, thumb_opt) -> render_video filename thumb_opt
+  | Shortcode.Video (filename, thumb_opt, looped) -> render_video filename thumb_opt looped
   | Shortcode.Audio (filename) -> render_audio filename
   | Shortcode.Youtube (code) -> render_youtube code
   | Shortcode.Image (filename, alt, klass, dims) -> render_image filename alt klass dims

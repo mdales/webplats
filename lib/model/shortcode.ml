@@ -1,5 +1,5 @@
 type t =
-  | Video of string * string option
+  | Video of string * string option * bool
   | Image of string * string option * string option * (int * int) option
   | Audio of string
   | Photo of string
@@ -34,8 +34,10 @@ let find_shortcodes body =
   |> List.map (fun (loc, sl) ->
          ( loc,
            match sl with
-           | [ "video"; arg1 ] -> Video (arg1, None)
-           | [ "video"; arg1; arg2 ] -> Video (arg1, Some arg2)
+           | [ "video"; arg1 ] -> Video (arg1, None, false)
+           | [ "video"; arg1; arg2 ] -> Video (arg1, Some arg2, false)
+           | [ "videoloop"; arg1 ] -> Video (arg1, None, true)
+           | [ "videoloop"; arg1; arg2 ] -> Video (arg1, Some arg2, true)
            | [ "img"; arg1 ] -> Image (arg1, None, None, None)
            | [ "img"; arg1; arg2 ] -> Image (arg1, Some arg2, None, None)
            | [ "img"; arg1; arg2; arg3 ] ->

@@ -13,7 +13,9 @@ type page_renderer_t =
 type meta_page_renderer_t = Page.t -> page_renderer_t
 type section_renderer_t = Site.t -> Section.t -> string
 type meta_section_renderer_t = Section.t -> section_renderer_t
-type meta_taxonomy_section_renderer_t = Taxonomy.t -> Section.t -> section_renderer_t
+
+type meta_taxonomy_section_renderer_t =
+  Taxonomy.t -> Section.t -> section_renderer_t
 
 type taxonomy_renderer_t = Site.t -> Taxonomy.t -> string
 type meta_taxonomy_renderer_t = Taxonomy.t -> taxonomy_renderer_t
@@ -132,8 +134,8 @@ let routes_for_direct_shortcodes sec page =
   List.concat_map
     (fun (_, sc) ->
       match sc with
-      | Shortcode.Video (r, None) -> [ r ]
-      | Shortcode.Video (r, Some t) -> [ r; t ]
+      | Shortcode.Video (r, None, _) -> [ r ]
+      | Shortcode.Video (r, Some t, _) -> [ r; t ]
       | Shortcode.Audio r -> [ r ]
       | _ -> [])
     (Page.shortcodes page)
@@ -247,8 +249,8 @@ let routes_for_section ~section_renderer ~page_renderer ~thumbnail_loader
   :: routes_for_pages_in_section site sec page_renderer thumbnail_loader
        image_loader
 
-let routes_for_taxonomies ~taxonomy_renderer ~taxonomy_section_renderer ~page_renderer
-    ~thumbnail_loader ~image_loader site =
+let routes_for_taxonomies ~taxonomy_renderer ~taxonomy_section_renderer
+    ~page_renderer ~thumbnail_loader ~image_loader site =
   let taxonomies = Site.taxonomies site in
   List.concat_map
     (fun (name, taxonomy) ->
@@ -256,8 +258,7 @@ let routes_for_taxonomies ~taxonomy_renderer ~taxonomy_section_renderer ~page_re
         (List.length (Taxonomy.sections taxonomy));
 
       Dream.get (Taxonomy.url taxonomy) (fun _ ->
-          let render_taxonomy = taxonomy_renderer taxonomy
-          in
+          let render_taxonomy = taxonomy_renderer taxonomy in
           render_taxonomy site taxonomy |> Dream.html)
       :: List.concat_map
            (fun sec ->

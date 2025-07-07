@@ -1,5 +1,5 @@
 type t =
-  | Video of string * string option
+  | Video of string * string option * bool
   | Image of string * string option * string option * (int * int) option
   | Audio of string
   | Photo of string

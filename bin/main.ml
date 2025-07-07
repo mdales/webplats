@@ -30,7 +30,7 @@ let taxonomy_section_renderer taxonomy _sec =
   match Taxonomy.title taxonomy with
   | "albums" -> Photos.render_section
   | _ -> Snapshots.render_section
-  
+
 let taxonomy_renderer taxonomy =
   match Taxonomy.title taxonomy with
   | "albums" -> Photos.render_taxonomy
@@ -77,8 +77,8 @@ let () =
 
   let taxonomies =
     Router.routes_for_taxonomies ~thumbnail_loader:general_thumbnail_loader
-      ~image_loader:snapshot_image_loader ~taxonomy_renderer ~taxonomy_section_renderer
-      ~page_renderer:page_render site
+      ~image_loader:snapshot_image_loader ~taxonomy_renderer
+      ~taxonomy_section_renderer ~page_renderer:page_render site
   in
 
   let aliases = Router.routes_for_aliases site in

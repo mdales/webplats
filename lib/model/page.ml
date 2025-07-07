@@ -95,9 +95,11 @@ let of_file ?(base = None) original_section_title original_section_url path =
       failwith
         (Printf.sprintf "Failed to find key in %s" (Fpath.to_string path))
   in
-  let updated_images = List.map ( fun i ->
-    Option.get (image_with_dimensions (Fpath.parent path) (Some  i))
-  ) (Frontmatter.images frontmatter) in
+  let updated_images =
+    List.map
+      (fun i -> Option.get (image_with_dimensions (Fpath.parent path) (Some i)))
+      (Frontmatter.images frontmatter)
+  in
   let frontmatter = Frontmatter.update_images frontmatter updated_images in
   let frontmatter =
     Frontmatter.update_titleimage frontmatter
