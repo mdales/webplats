@@ -82,32 +82,32 @@ aliases:
   let aliases = Page.aliases page in
   assert_equal ~msg:"aliases" [ "/blog/stories/551.html" ] aliases
 
-
 let test_content_true _ =
-    let frontmatter = Frontmatter.of_string {|
+  let frontmatter = Frontmatter.of_string {|
 title: test
 content: true
 |} in
-    let body = {|Hello, world|} in
-    let page =
-      Page.v "section" "/section/"
-        (Fpath.v "/home/test/site/section/page/index.md")
-        frontmatter body
-    in
-    assert_equal ~msg:"content" true (Page.content page)
+  let body = {|Hello, world|} in
+  let page =
+    Page.v "section" "/section/"
+      (Fpath.v "/home/test/site/section/page/index.md")
+      frontmatter body
+  in
+  assert_equal ~msg:"content" true (Page.content page)
 
 let test_content_false _ =
-    let frontmatter = Frontmatter.of_string {|
+  let frontmatter = Frontmatter.of_string {|
 title: test
 content: false
 |} in
-    let body = {|Hello, world|} in
-    let page =
-      Page.v "section" "/section/"
-        (Fpath.v "/home/test/site/section/page/index.md")
-        frontmatter body
-    in
-    assert_equal ~msg:"content" false (Page.content page)
+  let body = {|Hello, world|} in
+  let page =
+    Page.v "section" "/section/"
+      (Fpath.v "/home/test/site/section/page/index.md")
+      frontmatter body
+  in
+  assert_equal ~msg:"content" false (Page.content page)
+
 let suite =
   "Page tests"
   >::: [

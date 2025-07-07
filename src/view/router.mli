@@ -10,7 +10,9 @@ type page_renderer_t =
 type meta_page_renderer_t = Page.t -> page_renderer_t
 type section_renderer_t = Site.t -> Section.t -> string
 type meta_section_renderer_t = Section.t -> section_renderer_t
-type meta_taxonomy_section_renderer_t = Taxonomy.t -> Section.t -> section_renderer_t
+
+type meta_taxonomy_section_renderer_t =
+  Taxonomy.t -> Section.t -> section_renderer_t
 
 type taxonomy_renderer_t = Site.t -> Taxonomy.t -> string
 type meta_taxonomy_renderer_t = Taxonomy.t -> taxonomy_renderer_t

@@ -15,11 +15,10 @@ let of_file path =
           let title = Option.get (yaml_dict_to_string assoc "title")
           and base_url =
             Uri.of_string (Option.get (yaml_dict_to_string assoc "baseURL"))
-          and port = (
+          and port =
             match yaml_dict_to_int assoc "port" with
             | Some p -> p
             | None -> 8080
-          )
           and hugo_theme = Option.get (yaml_dict_to_string assoc "theme")
           and taxonomies =
             yaml_dict_to_string_dict assoc "taxonomies"
