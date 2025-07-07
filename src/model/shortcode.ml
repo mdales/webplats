@@ -1,5 +1,5 @@
 type t =
-  | Video of string * string option
+  | Video of string * string option * bool
   | Raster of string * string option * string option * (int * int) option
   | Vector of string * string option * string option
   | Audio of string
@@ -33,8 +33,8 @@ let img_expansion args =
       | _ -> Unknown args)
   | ".mov" | ".mp4" -> (
       match args with
-      | [ arg1 ] -> Video (arg1, None)
-      | [ arg1; arg2 ] -> Video (arg1, Some arg2)
+      | [ arg1 ] -> Video (arg1, None, false)
+      | [ arg1; arg2 ] -> Video (arg1, Some arg2, false)
       | _ -> Unknown args)
   | _ -> (
       match args with
@@ -47,7 +47,7 @@ let find_labels body =
   let open Cmarkit in
   let body = Cmarkit.Doc.of_string body in
   let module String_set = Set.Make (String) in
-  let inline m acc = function
+  let inline _m acc = function
     | Inline.Image (l, _) ->
         let t =
           match Inline.Link.text l with
@@ -82,8 +82,11 @@ let find_shortcodes body =
   |> List.map (fun (loc, sl) ->
          ( loc,
            match sl with
-           | [ "video"; arg1 ] -> Video (arg1, None)
-           | [ "video"; arg1; arg2 ] -> Video (arg1, Some arg2)
+              | [ "video"; arg1 ] -> Video (arg1, None, false)
+              | [ "video"; arg1; arg2 ] -> Video (arg1, Some arg2, false)
+               | [ "videoloop"; arg1 ] -> Video (arg1, None, true)
+               | [ "videoloop"; arg1; arg2 ] -> Video (arg1, Some arg2, true)
+            | ["img"] -> Unknown sl
            | "img" :: args -> img_expansion args
            | [ "audio"; arg1 ] -> Audio arg1
            | [ "photo"; arg1 ] -> Photo arg1

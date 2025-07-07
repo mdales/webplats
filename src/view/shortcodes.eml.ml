@@ -1,7 +1,10 @@
 
-let render_video filename thumb_opt =
+let render_video filename thumb_opt looped =
   <div class="video">
     <video controls
+% (match looped with true ->
+    loop
+% | false -> ());
 % (match thumb_opt with Some t ->
     poster="<%s t %>"
 % | None -> ());
@@ -81,7 +84,7 @@ let render_photo reference =
 
 let render_shortcode shortcode =
   match shortcode with
-  | Shortcode.Video (filename, thumb_opt) -> render_video filename thumb_opt
+  | Shortcode.Video (filename, thumb_opt, looped) -> render_video filename thumb_opt looped
   | Shortcode.Audio (filename) -> render_audio filename
   | Shortcode.Youtube (code) -> render_youtube code
   | Shortcode.Raster (filename, alt, klass, dims) -> render_raster filename alt klass dims
