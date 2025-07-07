@@ -6,7 +6,11 @@ type image = {
   dimensions : (int * int) option;
 }
 
-type t = { titleimage : image option; images : image list ; raw : (string * Yaml.value) list }
+type t = {
+  titleimage : image option;
+  images : image list;
+  raw : (string * Yaml.value) list;
+}
 
 let yaml_dict_to_image a k =
   match List.assoc_opt k a with
@@ -56,17 +60,18 @@ let yaml_dict_to_image_list a k =
 let yaml_to_struct y =
   match y with
   | `O assoc ->
-      { titleimage = yaml_dict_to_image assoc "titleimage"; 
-      images = yaml_dict_to_image_list assoc "images";
-      raw = assoc }
+      {
+        titleimage = yaml_dict_to_image assoc "titleimage";
+        images = yaml_dict_to_image_list assoc "images";
+        raw = assoc;
+      }
   | _ -> failwith "malformed yaml"
 
 let of_string raw_string =
   String.trim raw_string |> Yaml.of_string_exn |> yaml_to_struct
 
 let update_titleimage t titleimage = { t with titleimage }
-let update_images t images = {t with images}
-
+let update_images t images = { t with images }
 let title t = yaml_dict_to_string t.raw "title"
 
 let date t =
@@ -79,14 +84,10 @@ let draft t =
   match yaml_dict_to_bool t.raw "draft" with Some b -> b | None -> false
 
 let content t =
-  match yaml_dict_to_bool t.raw "content" with
-  | Some x -> x
-  | None -> true
+  match yaml_dict_to_bool t.raw "content" with Some x -> x | None -> true
 
 let in_feed t =
-  match yaml_dict_to_bool t.raw "in_feed" with
-  | Some x -> x
-  | None -> true
+  match yaml_dict_to_bool t.raw "in_feed" with Some x -> x | None -> true
 
 let tags t = yaml_dict_to_string_list t.raw "tags"
 let images t = t.images

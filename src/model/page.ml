@@ -54,8 +54,8 @@ let image_shortcode_with_dimensions path filename alt code =
     Shortcode.Raster (filename, alt, code, Some (width, height))
   with
   | Invalid_argument _ ->
-    Dream.log "Failed to process path %s + %s" (Fpath.to_string path) filename;
-    Shortcode.Raster (filename, alt, code, None)
+      Dream.log "Failed to process path %s + %s" (Fpath.to_string path) filename;
+      Shortcode.Raster (filename, alt, code, None)
   | Failure _ ->
       Dream.log "Failed to parse %s"
         (Fpath.to_string (Fpath.add_seg path filename));
@@ -83,9 +83,10 @@ let v ?(base = None) original_section_title original_section_url path
     |> List.map (fun (p, sc) -> (Some p, sc))
     |> update_shortcodes (Fpath.parent path)
   in
-  let markdown_codes = Shortcode.find_labels body
-  |> List.map (fun t -> (None, t))
-  |> update_shortcodes (Fpath.parent path)
+  let markdown_codes =
+    Shortcode.find_labels body
+    |> List.map (fun t -> (None, t))
+    |> update_shortcodes (Fpath.parent path)
   in
   {
     original_section_title;
@@ -94,7 +95,7 @@ let v ?(base = None) original_section_title original_section_url path
     body;
     path;
     base;
-    shortcodes=shortcodes @ markdown_codes;
+    shortcodes = shortcodes @ markdown_codes;
   }
 
 let of_file ?(base = None) original_section_title original_section_url path =
@@ -104,9 +105,11 @@ let of_file ?(base = None) original_section_title original_section_url path =
       failwith
         (Printf.sprintf "Failed to find key in %s" (Fpath.to_string path))
   in
-  let updated_images = List.map ( fun i ->
-    Option.get (image_with_dimensions (Fpath.parent path) (Some  i))
-  ) (Frontmatter.images frontmatter) in
+  let updated_images =
+    List.map
+      (fun i -> Option.get (image_with_dimensions (Fpath.parent path) (Some i)))
+      (Frontmatter.images frontmatter)
+  in
   let frontmatter = Frontmatter.update_images frontmatter updated_images in
   let frontmatter =
     Frontmatter.update_titleimage frontmatter
@@ -153,7 +156,6 @@ let tags t = Frontmatter.tags t.frontmatter
 let resources t = Frontmatter.get_key_as_string_list t.frontmatter "resources"
 let scripts t = Frontmatter.get_key_as_string_list t.frontmatter "scripts"
 let shortcodes t = t.shortcodes
-
 let content t = Frontmatter.content t.frontmatter
 let in_feed t = Frontmatter.in_feed t.frontmatter
 let images t = Frontmatter.images t.frontmatter
@@ -166,5 +168,7 @@ let get_key_as_date t key = Frontmatter.get_key_as_date t.frontmatter key
 let get_key_as_string_list t key =
   Frontmatter.get_key_as_string_list t.frontmatter key
 
-let get_key_as_string_dict t key = Frontmatter.get_key_as_string_dict t.frontmatter key
+let get_key_as_string_dict t key =
+  Frontmatter.get_key_as_string_dict t.frontmatter key
+
 let get_key_as_yaml t key = Frontmatter.get_key_as_yaml t.frontmatter key

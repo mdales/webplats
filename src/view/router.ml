@@ -13,7 +13,9 @@ type page_renderer_t =
 type meta_page_renderer_t = Page.t -> page_renderer_t
 type section_renderer_t = Site.t -> Section.t -> string
 type meta_section_renderer_t = Section.t -> section_renderer_t
-type meta_taxonomy_section_renderer_t = Taxonomy.t -> Section.t -> section_renderer_t
+
+type meta_taxonomy_section_renderer_t =
+  Taxonomy.t -> Section.t -> section_renderer_t
 
 type taxonomy_renderer_t = Site.t -> Taxonomy.t -> string
 type meta_taxonomy_renderer_t = Taxonomy.t -> taxonomy_renderer_t
@@ -21,39 +23,62 @@ type meta_taxonomy_renderer_t = Taxonomy.t -> taxonomy_renderer_t
 module Message = Dream_pure.Message
 module Stream = Dream_pure.Stream
 
-let days = [| "Sun"; "Mon"; "Tue"; "Wed"; "Thu"; "Fri"; "Sat"|]
-let months = [| "Jan" ; "Feb" ; "Mar" ; "Apr" ; "May" ; "Jun" ; "Jul" ; "Aug" ; "Sep" ; "Oct" ; "Nov"; "Dec" |]
+let days = [| "Sun"; "Mon"; "Tue"; "Wed"; "Thu"; "Fri"; "Sat" |]
+
+let months =
+  [|
+    "Jan";
+    "Feb";
+    "Mar";
+    "Apr";
+    "May";
+    "Jun";
+    "Jul";
+    "Aug";
+    "Sep";
+    "Oct";
+    "Nov";
+    "Dec";
+  |]
 
 let ptime_to_last_modiofied (t : Ptime.t) : string =
   (* TODO: convert to GMT *)
   let dow = days.(Ptime.weekday_num t) in
-  let ((year, month, day), ((hours, mins, seconds), _tz)) = Ptime.to_date_time t in
-  Printf.sprintf "%s, %d %s %d %02d:%02d:%02d GMT" dow day months.(month - 1) year hours mins seconds
+  let (year, month, day), ((hours, mins, seconds), _tz) =
+    Ptime.to_date_time t
+  in
+  Printf.sprintf "%s, %d %s %d %02d:%02d:%02d GMT" dow day
+    months.(month - 1)
+    year hours mins seconds
 
 let static_loader root path _request =
   (* In dream the loader is called after the path has been validated,
   which is why there is no path validation here *)
-  let root = match (Fpath.of_string root) with Ok x -> x | _ -> failwith "bad root" in
-  let path = match (Fpath.of_string path) with Ok x -> x | _ -> failwith "bad path" in
+  let root =
+    match Fpath.of_string root with Ok x -> x | _ -> failwith "bad root"
+  in
+  let path =
+    match Fpath.of_string path with Ok x -> x | _ -> failwith "bad path"
+  in
   let full_path = Fpath.normalize (Fpath.append root path) in
   let full_path = Fpath.to_string full_path in
 
   let stats = Unix.stat full_path in
-  let mtime = Option.get (Ptime.of_float_s (stats.st_mtime)) in
+  let mtime = Option.get (Ptime.of_float_s stats.st_mtime) in
   let last_modified = ptime_to_last_modiofied mtime in
 
   let content_type = Magic_mime.lookup full_path in
-  let headers = [("Content-type", content_type); ("Last-modified", last_modified)] in
+  let headers =
+    [ ("Content-type", content_type); ("Last-modified", last_modified) ]
+  in
   Lwt.catch
     (fun () ->
-    Lwt_io.(with_file ~mode:Input full_path) (fun channel ->
-      let%lwt content = Lwt_io.read channel in
-      Message.response
-        ~headers (Stream.string content) Stream.null
-      |> Lwt.return))
-  (fun _exn ->
-    Message.response ~status:`Not_Found Stream.empty Stream.null
-    |> Lwt.return)
+      Lwt_io.(with_file ~mode:Input full_path) (fun channel ->
+          let%lwt content = Lwt_io.read channel in
+          Message.response ~headers (Stream.string content) Stream.null
+          |> Lwt.return))
+    (fun _exn ->
+      Message.response ~status:`Not_Found Stream.empty Stream.null |> Lwt.return)
 
 let direct_loader page filename _root _path request =
   (* This wrapper just avoids the need to do reverse lookups based on how I mangle file names *)
@@ -118,58 +143,60 @@ let routes_for_titleimage sec page thumbnail_loader image_loader =
       (* Basic thumbnails *)
       let _, ext = Fpath.split_ext (Fpath.v img.filename) in
       match ext with
-      | ".svg" -> [
-        Dream.get
-          (page_url ^ "thumbnail.svg")
-          (Dream.static ~loader:(direct_loader page img.filename) "")]
-      | _ ->
-      [
-        Dream.get
-          (page_url ^ "thumbnail.jpg")
-          (Dream.static ~loader:(thumbnail_loader ~retina:false page) "");
-        Dream.get
-          (page_url ^ "thumbnail@2x.jpg")
-          (Dream.static ~loader:(thumbnail_loader ~retina:true page) "");
-        Dream.get (page_url ^ "preview.jpg")
-          (Dream.static
-             ~loader:(image_loader page img.filename (2048, 2048))
-             "");
-      ]
-      @
-      (* The photos images are also in the title image *)
-      match Page.original_section_title page with
-      | "photos" ->
-          let name, ext = Fpath.split_ext (Fpath.v img.filename) in
-          let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
+      | ".svg" ->
           [
             Dream.get
-              (page_url ^ "scrn_" ^ img.filename)
-              (Dream.static
-                 ~loader:(image_loader page img.filename (1008, 800))
-                 "");
-            Dream.get
-              (page_url ^ "scrn_" ^ retina_name)
-              (Dream.static
-                 ~loader:(image_loader page img.filename (2016, 1600))
-                 "");
-            (* This is the direct full resolution download *)
-            Dream.get (page_url ^ img.filename)
+              (page_url ^ "thumbnail.svg")
               (Dream.static ~loader:(direct_loader page img.filename) "");
           ]
-          @ [
-              (* This is the album thumbnails *)
-              Dream.get
-                (page_url ^ "album_" ^ img.filename)
-                (Dream.static
-                   ~loader:(image_loader page img.filename (300, 300))
-                   "");
-              Dream.get
-                (page_url ^ "album_" ^ retina_name)
-                (Dream.static
-                   ~loader:(image_loader page img.filename (600, 600))
-                   "");
-            ]
-      | _ -> [])
+      | _ -> (
+          [
+            Dream.get
+              (page_url ^ "thumbnail.jpg")
+              (Dream.static ~loader:(thumbnail_loader ~retina:false page) "");
+            Dream.get
+              (page_url ^ "thumbnail@2x.jpg")
+              (Dream.static ~loader:(thumbnail_loader ~retina:true page) "");
+            Dream.get (page_url ^ "preview.jpg")
+              (Dream.static
+                 ~loader:(image_loader page img.filename (2048, 2048))
+                 "");
+          ]
+          @
+          (* The photos images are also in the title image *)
+          match Page.original_section_title page with
+          | "photos" ->
+              let name, ext = Fpath.split_ext (Fpath.v img.filename) in
+              let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
+              [
+                Dream.get
+                  (page_url ^ "scrn_" ^ img.filename)
+                  (Dream.static
+                     ~loader:(image_loader page img.filename (1008, 800))
+                     "");
+                Dream.get
+                  (page_url ^ "scrn_" ^ retina_name)
+                  (Dream.static
+                     ~loader:(image_loader page img.filename (2016, 1600))
+                     "");
+                (* This is the direct full resolution download *)
+                Dream.get (page_url ^ img.filename)
+                  (Dream.static ~loader:(direct_loader page img.filename) "");
+              ]
+              @ [
+                  (* This is the album thumbnails *)
+                  Dream.get
+                    (page_url ^ "album_" ^ img.filename)
+                    (Dream.static
+                       ~loader:(image_loader page img.filename (300, 300))
+                       "");
+                  Dream.get
+                    (page_url ^ "album_" ^ retina_name)
+                    (Dream.static
+                       ~loader:(image_loader page img.filename (600, 600))
+                       "");
+                ]
+          | _ -> []))
 
 let routes_for_direct_shortcodes sec page =
   List.concat_map
@@ -187,11 +214,12 @@ let routes_for_direct_shortcodes sec page =
            (Dream.static ~loader:(direct_loader page filename) ""))
 
 let routes_for_scripts_and_resources sec page =
-  (Page.resources page  @ Page.scripts page)|> List.map (fun filename ->
-   Dream.log "adding %s" (Section.url ~page sec ^ filename);
-   Dream.get
-     (Section.url ~page sec ^ filename)
-     (Dream.static ~loader:(direct_loader page filename) ""))
+  Page.resources page @ Page.scripts page
+  |> List.map (fun filename ->
+         Dream.log "adding %s" (Section.url ~page sec ^ filename);
+         Dream.get
+           (Section.url ~page sec ^ filename)
+           (Dream.static ~loader:(direct_loader page filename) ""))
 
 let collect_static_routes site =
   let website_dir = Site.path site in
@@ -218,10 +246,7 @@ let collect_static_routes site =
             (Printf.sprintf "/%s/**" basename)
             (Dream.static ~loader:static_loader (Fpath.to_string (path / ".")))
       | false ->
-          Dream.get ("/" ^ basename)
-            (Dream.static
-               ~loader:static_loader
-               ""))
+          Dream.get ("/" ^ basename) (Dream.static ~loader:static_loader ""))
     things_to_be_published
 
 let routes_for_aliases site =
@@ -253,20 +278,23 @@ let routes_for_redirect_for_sans_slash sec page =
 
 let routes_for_page site sec previous_page page next_page page_renderer
     thumbnail_loader image_loader =
-  match (Page.content page) with false -> [] | true ->
-  Dream.get (Section.url ~page sec) (fun _ ->
-    let stats = Unix.stat (Fpath.to_string (Page.path page)) in
-    let mtime = Option.get (Ptime.of_float_s (stats.st_mtime)) in
-    let last_modified = ptime_to_last_modiofied mtime in
-    let headers = [("Last-modified", last_modified)] in
-      (page_renderer page) site sec previous_page page next_page |> Dream.html ~headers)
-  :: (routes_for_redirect_for_sans_slash sec page
-     @ routes_for_titleimage sec page thumbnail_loader image_loader
-     @ routes_for_frontmatter_image_list sec page image_loader
-     @ routes_for_frontmatter_video_list sec page
-     @ routes_for_image_shortcodes sec page image_loader
-     @ routes_for_direct_shortcodes sec page
-     @ routes_for_scripts_and_resources sec page )
+  match Page.content page with
+  | false -> []
+  | true ->
+      Dream.get (Section.url ~page sec) (fun _ ->
+          let stats = Unix.stat (Fpath.to_string (Page.path page)) in
+          let mtime = Option.get (Ptime.of_float_s stats.st_mtime) in
+          let last_modified = ptime_to_last_modiofied mtime in
+          let headers = [ ("Last-modified", last_modified) ] in
+          (page_renderer page) site sec previous_page page next_page
+          |> Dream.html ~headers)
+      :: (routes_for_redirect_for_sans_slash sec page
+         @ routes_for_titleimage sec page thumbnail_loader image_loader
+         @ routes_for_frontmatter_image_list sec page image_loader
+         @ routes_for_frontmatter_video_list sec page
+         @ routes_for_image_shortcodes sec page image_loader
+         @ routes_for_direct_shortcodes sec page
+         @ routes_for_scripts_and_resources sec page)
 
 let routes_for_pages_in_section site sec page_renderer thumbnail_loader
     image_loader =
@@ -293,12 +321,12 @@ let routes_for_section ~section_renderer ~page_renderer ~thumbnail_loader
        (Section.url sec ^ "index.xml")
        (fun _ ->
          Rss.render_rss site (Section.pages sec |> List.map (fun p -> (sec, p)))
-         |> Dream.respond ~headers:[("Content-Type", "application/rss+xml")])
+         |> Dream.respond ~headers:[ ("Content-Type", "application/rss+xml") ])
   :: routes_for_pages_in_section site sec page_renderer thumbnail_loader
        image_loader
 
-let routes_for_taxonomies ~taxonomy_renderer ~taxonomy_section_renderer ~page_renderer
-    ~thumbnail_loader ~image_loader site =
+let routes_for_taxonomies ~taxonomy_renderer ~taxonomy_section_renderer
+    ~page_renderer ~thumbnail_loader ~image_loader site =
   let taxonomies = Site.taxonomies site in
   List.concat_map
     (fun (name, taxonomy) ->
@@ -306,8 +334,7 @@ let routes_for_taxonomies ~taxonomy_renderer ~taxonomy_section_renderer ~page_re
         (List.length (Taxonomy.sections taxonomy));
 
       Dream.get (Taxonomy.url taxonomy) (fun _ ->
-          let render_taxonomy = taxonomy_renderer taxonomy
-          in
+          let render_taxonomy = taxonomy_renderer taxonomy in
           render_taxonomy site taxonomy |> Dream.html)
       :: List.concat_map
            (fun sec ->

@@ -25,51 +25,45 @@ let img_expansion args =
   let filename = Fpath.v (List.hd args) in
   let _, ext = Fpath.split_ext filename in
   match ext with
-    | ".svg" -> (
+  | ".svg" -> (
       match args with
       | [ arg1 ] -> Vector (arg1, None, None)
       | [ arg1; arg2 ] -> Vector (arg1, Some arg2, None)
       | [ arg1; arg2; arg3 ] -> Vector (arg1, Some arg2, Some arg3)
-      | _ -> Unknown args
-    )
-    | ".mov" | ".mp4" -> (
+      | _ -> Unknown args)
+  | ".mov" | ".mp4" -> (
       match args with
       | [ arg1 ] -> Video (arg1, None)
       | [ arg1; arg2 ] -> Video (arg1, Some arg2)
-      | _ -> Unknown args
-    )
-    | _ -> (
-    match args with
-     | [ arg1 ] -> Raster (arg1, None, None, None)
-     | [ arg1; arg2 ] -> Raster (arg1, Some arg2, None, None)
-     | [ arg1; arg2; arg3 ] ->
-         Raster (arg1, Some arg2, Some arg3, None)
-     | _ -> Unknown args
-    )
+      | _ -> Unknown args)
+  | _ -> (
+      match args with
+      | [ arg1 ] -> Raster (arg1, None, None, None)
+      | [ arg1; arg2 ] -> Raster (arg1, Some arg2, None, None)
+      | [ arg1; arg2; arg3 ] -> Raster (arg1, Some arg2, Some arg3, None)
+      | _ -> Unknown args)
 
 let find_labels body =
   let open Cmarkit in
   let body = Cmarkit.Doc.of_string body in
   let module String_set = Set.Make (String) in
   let inline m acc = function
-  | Inline.Image (l, _) ->
-    let t = match (Inline.Link.text l) with
-    | Inline.Text (s, _) -> Some s
-    | _ -> None
-    in
-    let r = match (Inline.Link.reference l) with
-    | `Inline (link, _) -> (
-      let s, _ = Option.get (Link_definition.dest link) in s
-    )
-    | `Ref (_, _, _) -> "ref"
-    in
-    let args = match t with
-    | None -> [r]
-    | Some x -> [r ; x]
-    in
-    Folder.ret ((img_expansion args) :: acc)
-  | _ ->
-      Folder.default (* let the folder thread the fold *)
+    | Inline.Image (l, _) ->
+        let t =
+          match Inline.Link.text l with
+          | Inline.Text (s, _) -> Some s
+          | _ -> None
+        in
+        let r =
+          match Inline.Link.reference l with
+          | `Inline (link, _) ->
+              let s, _ = Option.get (Link_definition.dest link) in
+              s
+          | `Ref (_, _, _) -> "ref"
+        in
+        let args = match t with None -> [ r ] | Some x -> [ r; x ] in
+        Folder.ret (img_expansion args :: acc)
+    | _ -> Folder.default (* let the folder thread the fold *)
   in
   let folder = Folder.make ~inline () in
   Folder.fold_doc folder [] body

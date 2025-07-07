@@ -142,7 +142,18 @@ let render_image_fill_lwt page filename (max_width, max_height) =
       let ratio = max wratio hratio in
       let newwidth = int_of_float (ratio *. fwidth)
       and newheight = int_of_float (ratio *. fheight) in
-      let rp = Lwt_process.exec ("gm", [| "gm" ; "convert" ; (Fpath.to_string imgpath) ; "-resize" ; (Printf.sprintf "%dx%d" newwidth newheight) ; target_path |]) in
+      let rp =
+        Lwt_process.exec
+          ( "gm",
+            [|
+              "gm";
+              "convert";
+              Fpath.to_string imgpath;
+              "-resize";
+              Printf.sprintf "%dx%d" newwidth newheight;
+              target_path;
+            |] )
+      in
       Lwt.bind rp (fun _res -> Lwt.return (Fpath.v target_path))
 
 let render_image_fit_lwt page filename (max_width, max_height) =
@@ -157,22 +168,31 @@ let render_image_fit_lwt page filename (max_width, max_height) =
   match Sys.file_exists target_path with
   | true -> Lwt.return (Fpath.v target_path)
   | false -> (
-    makedirs target_folder;
-    let img = Images.load (Fpath.to_string imgpath) [] in
-    let width, height = Images.size img in
-    let fwidth = float_of_int width and fheight = float_of_int height in
-    let wratio = float_of_int max_width /. fwidth
-    and hratio = float_of_int max_height /. fheight in
-    match wratio >= 1.0 && hratio >= 1.0 with
-    | true -> Lwt.return imgpath
-    | false -> (
-      let ratio = min wratio hratio in
-      let newwidth = int_of_float (ratio *. fwidth)
-      and newheight = int_of_float (ratio *. fheight) in
-      let rp = Lwt_process.exec ("gm", [| "gm" ; "convert" ; (Fpath.to_string imgpath) ; "-resize" ; (Printf.sprintf "%dx%d" newwidth newheight) ; target_path |]) in
-      Lwt.bind rp (fun _res -> Lwt.return (Fpath.v target_path))
-    )
-  )
+      makedirs target_folder;
+      let img = Images.load (Fpath.to_string imgpath) [] in
+      let width, height = Images.size img in
+      let fwidth = float_of_int width and fheight = float_of_int height in
+      let wratio = float_of_int max_width /. fwidth
+      and hratio = float_of_int max_height /. fheight in
+      match wratio >= 1.0 && hratio >= 1.0 with
+      | true -> Lwt.return imgpath
+      | false ->
+          let ratio = min wratio hratio in
+          let newwidth = int_of_float (ratio *. fwidth)
+          and newheight = int_of_float (ratio *. fheight) in
+          let rp =
+            Lwt_process.exec
+              ( "gm",
+                [|
+                  "gm";
+                  "convert";
+                  Fpath.to_string imgpath;
+                  "-resize";
+                  Printf.sprintf "%dx%d" newwidth newheight;
+                  target_path;
+                |] )
+          in
+          Lwt.bind rp (fun _res -> Lwt.return (Fpath.v target_path)))
 
 let render_image_lwt page filename scale (max_width, max_height) =
   match scale with
@@ -183,4 +203,5 @@ let render_thumbnail_lwt page thumbnail_size =
   match Page.titleimage page with
   | None -> failwith "blah"
   | Some titleimg ->
-      render_image_fill_lwt page titleimg.filename (thumbnail_size, thumbnail_size)
+      render_image_fill_lwt page titleimg.filename
+        (thumbnail_size, thumbnail_size)

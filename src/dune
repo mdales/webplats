@@ -16,4 +16,5 @@
   camlimages.jpeg
   camlimages.png
   pcre2)
-  (preprocess (pps lwt_ppx)))
+ (preprocess
+  (pps lwt_ppx)))
