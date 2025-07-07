@@ -203,8 +203,8 @@ let routes_for_direct_shortcodes sec page =
     (fun (_, sc) ->
       match sc with
       | Shortcode.Vector (r, _, _) -> [ r ]
-      | Shortcode.Video (r, None) -> [ r ]
-      | Shortcode.Video (r, Some t) -> [ r; t ]
+      | Shortcode.Video (r, None, _) -> [ r ]
+      | Shortcode.Video (r, Some t, _) -> [ r; t ]
       | Shortcode.Audio r -> [ r ]
       | _ -> [])
     (Page.shortcodes page)
