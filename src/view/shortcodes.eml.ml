@@ -82,6 +82,26 @@ let render_vector filename alt klass =
 let render_photo reference =
     <p>TODO: photo link to <a href="/photos/<%s reference %>/"><%s reference %></a></p>
 
+let render_chart _style filename xaxis yaxis =
+  <div
+% let identifier = Printf.sprintf "chart%d" (Random.int 1024) in
+    id="<%s identifier %>">
+  </div>
+  <script>
+    var vlSpec = {
+      $schema: 'https://vega.github.io/schema/vega-lite/v6.json',
+      mark: 'line',
+      data: {"url": "<%s filename %>"},
+      width: 1000,
+      "encoding": {
+        "x": {"field": "<%s xaxis %>", "type": "nominal",  "axis": {"labels": false}},
+        "y": {"field": "<%s yaxis %>", "type": "quantitative"}
+      }
+    };
+    vegaEmbed('#<%s identifier %>', vlSpec);
+  </script>
+
+
 let render_shortcode shortcode =
   match shortcode with
   | Shortcode.Video (filename, thumb_opt, looped) -> render_video filename thumb_opt looped
@@ -90,4 +110,5 @@ let render_shortcode shortcode =
   | Shortcode.Raster (filename, alt, klass, dims) -> render_raster filename alt klass dims
   | Shortcode.Vector (filename, alt, klass) -> render_vector filename alt klass
   | Shortcode.Photo (reference) -> render_photo reference
+  | Shortcode.Chart (style, filename, xaxis, yaxis) -> render_chart style filename xaxis yaxis
   | _ -> ""

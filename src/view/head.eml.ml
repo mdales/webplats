@@ -14,6 +14,10 @@ let render_head_generic site =
   <link href="<%s Section.url sec %>index.xml" rel="feed" type="application/rss+xml" title="<%s Site.title site %>: <%s Section.title sec %>" />
 % ) (Site.sections site));
   <meta property="og:site_name" content="<%s Site.title site %>"/>
+  <script src="https://cdn.jsdelivr.net/npm/vega@6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@7"></script>
+
 
 let render_head_section sec =
   <meta property="og:type" content="website"/>

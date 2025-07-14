@@ -4,6 +4,7 @@ type t =
   | Vector of string * string option * string option
   | Audio of string
   | Photo of string
+  | Chart of string * string * string * string
   | Youtube of string
   | Unknown of string list
 
@@ -91,4 +92,5 @@ let find_shortcodes body =
            | [ "audio"; arg1 ] -> Audio arg1
            | [ "photo"; arg1 ] -> Photo arg1
            | [ "youtube"; arg1 ] -> Youtube arg1
+           | [ "chart"; arg1 ; arg2 ; arg3 ; arg4] -> Chart (arg1, arg2, arg3, arg4)
            | _ -> Unknown sl ))
