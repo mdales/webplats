@@ -1,9 +1,11 @@
+
 type t =
   | Video of string * string option * bool
   | Raster of string * string option * string option * (int * int) option
   | Vector of string * string option * string option
   | Audio of string
   | Photo of string
+  | Chart of string * string * string * string
   | Youtube of string
   | Unknown of string list
 
