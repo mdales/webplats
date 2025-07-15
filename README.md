@@ -17,3 +17,16 @@ Frontmatter gives you a place to store extra information in the page, which you 
 | *tags* | list of strings | Tags associated with the page. |
 | *aliases* | list of strings | Alternative site relative URLs this page can be accessed via. These will generate 302 responses to the canonical version of the page. |
 | *in_feed* | boolean | If this key exists and is marked false, the page will not appear in the RSS feed. |
+
+## Shortcodes
+
+Whilst markdown is preferred, there are some [Jekyll](https://jekyllrb.com)/[Hugo](https://gohugo.io) style short codes supported:
+
+| Shortcode | Args | Usage |
+| --- | --- | --- |
+| audio | filename | Inserts an audio player into the page |
+| chart | sytle, CSV filename, x-axis column, y-axis column | Insert a chart using vega-lite into page |
+| img | filename, alt text | Inserts a raster image or SVG into the page |
+| video | filename, thumbnail image filename | Inserts an HTML5 video player into the page |
+| videoloop | filename, thumbnail image filename | Inserts an HTML5 video player into the page configured to loop |
+| youtube | video code | Inserts a non-cookie based youtube embed |
