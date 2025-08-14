@@ -14,6 +14,25 @@ let recent_pages pages =
 	in
 	loop 10 pages
 
+let render_page_images sec page =
+  <div>
+% (List.iter (fun (i : Frontmatter.image) ->
+%   let name, ext = Fpath.split_ext (Fpath.v i.filename) in
+%   let retina_filename = Printf.sprintf "%s@2x%s" (Fpath.to_string name) ext in
+     <div class="snapshotitem single">
+       <figure class="single">
+         <img
+            src="<%s Section.url ~page sec %><%s i.filename %>"
+            srcset="<%s Section.url ~page sec %><%s retina_filename %> 2x, <%s Section.url ~page sec %><%s i.filename %> 1x"
+% (match (i.description) with Some desc ->
+            alt="<%s desc %>"
+% | None -> ());
+         />
+       </figure>
+      </div>
+% ) (Page.images page));
+  </div>
+
 let render_rss site pages =
   <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
@@ -43,21 +62,7 @@ let render_rss site pages =
              <%s Shortcodes.render_raster ((Section.url ~page sec) ^ img.filename) img.description None None %>
 % | _ -> ());
              <%s Render.render_body page %>
-% (List.iter (fun (i : Frontmatter.image) ->
-%   let name, ext = Fpath.split_ext (Fpath.v i.filename) in
-%   let retina_filename = Printf.sprintf "%s@2x%s" (Fpath.to_string name) ext in
-           <div class="snapshotitem single">
-             <figure class="single">
-               <img
-                  src="<%s Section.url ~page sec %><%s i.filename %>"
-                  srcset="<%s Section.url ~page sec %><%s retina_filename %> 2x, <%s Section.url ~page sec %><%s i.filename %> 1x"
-% (match (i.description) with Some desc ->
-                  alt="<%s desc %>"
-% | None -> ());
-               />
-             </figure>
-            </div>
-% ) (Page.images page));
+             <%s render_page_images sec page %>
           </description>
         </item>
 % ) (recent_pages pages));
