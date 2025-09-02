@@ -83,14 +83,15 @@ let find_shortcodes body =
   |> List.map (fun (loc, sl) ->
          ( loc,
            match sl with
-              | [ "video"; arg1 ] -> Video (arg1, None, false)
-              | [ "video"; arg1; arg2 ] -> Video (arg1, Some arg2, false)
-               | [ "videoloop"; arg1 ] -> Video (arg1, None, true)
-               | [ "videoloop"; arg1; arg2 ] -> Video (arg1, Some arg2, true)
-            | ["img"] -> Unknown sl
+           | [ "video"; arg1 ] -> Video (arg1, None, false)
+           | [ "video"; arg1; arg2 ] -> Video (arg1, Some arg2, false)
+           | [ "videoloop"; arg1 ] -> Video (arg1, None, true)
+           | [ "videoloop"; arg1; arg2 ] -> Video (arg1, Some arg2, true)
+           | [ "img" ] -> Unknown sl
            | "img" :: args -> img_expansion args
            | [ "audio"; arg1 ] -> Audio arg1
            | [ "photo"; arg1 ] -> Photo arg1
            | [ "youtube"; arg1 ] -> Youtube arg1
-           | [ "chart"; arg1 ; arg2 ; arg3 ; arg4] -> Chart (arg1, arg2, arg3, arg4)
+           | [ "chart"; arg1; arg2; arg3; arg4 ] ->
+               Chart (arg1, arg2, arg3, arg4)
            | _ -> Unknown sl ))

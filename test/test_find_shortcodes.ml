@@ -9,6 +9,7 @@ let shortcode_printer (sc : Shortcode.t) =
   | Photo a -> Printf.sprintf "Photo(%s)" a
   | Youtube a -> Printf.sprintf "Youtube(%s)" a
   | Video (a, _b, c) -> Printf.sprintf "Video(%s, _, %b)" a c
+  | Chart (a, _b, _c, _d) -> Printf.sprintf "Chart(%s, _, _, _)" a
   | Unknown a -> Printf.sprintf "Unknown(%d)" (List.length a)
 
 let assert_equal_sc = assert_equal ~printer:shortcode_printer
@@ -52,9 +53,7 @@ let test_simple_vector_shortcode _ =
   let (loc, len), code = List.hd codes in
   assert_equal_int ~msg:"Code offset" 1 loc;
   assert_equal_int ~msg:"Code length" 20 len;
-  assert_equal_sc ~msg:"Code"
-    (Shortcode.Vector ("test.svg", None, None))
-    code
+  assert_equal_sc ~msg:"Code" (Shortcode.Vector ("test.svg", None, None)) code
 
 let test_multi_ext_image_shortcode _ =
   let body = {| {{< img GetPhoto-2.ashx.jpeg >}} |} in
@@ -108,8 +107,7 @@ let test_invalid_image_shortcode_with_extra_param _ =
   assert_equal_int ~msg:"Code offset" 1 loc;
   assert_equal_int ~msg:"Code length" 56 len;
   assert_equal_sc ~msg:"Code"
-    (Shortcode.Unknown
-       [ "test.jpg"; "Something else"; "unrounded"; "surprise" ])
+    (Shortcode.Unknown [ "test.jpg"; "Something else"; "unrounded"; "surprise" ])
     code
 
 let test_invalid_empty_image_shortcode _ =
@@ -208,12 +206,13 @@ let suite =
          "Test simple audio shortcode" >:: test_simple_audio_shortcode;
          "Test simple youtube shortcode" >:: test_simple_youtube_shortcode;
          "Test simple photo shortcode" >:: test_simple_photo_shortcode;
-          "Test simple video shortcode" >:: test_simple_video_shortcode;
-          "Test simple video shortcode with thumbnail"
-          >:: test_simple_video_shortcode_with_thumbnail;
-           "Test simple video shortcode looped" >:: test_simple_video_shortcode_looped;
-           "Test simple video shortcode with thumbnail looped"
-           >:: test_simple_video_shortcode_with_thumbnail_looped;
+         "Test simple video shortcode" >:: test_simple_video_shortcode;
+         "Test simple video shortcode with thumbnail"
+         >:: test_simple_video_shortcode_with_thumbnail;
+         "Test simple video shortcode looped"
+         >:: test_simple_video_shortcode_looped;
+         "Test simple video shortcode with thumbnail looped"
+         >:: test_simple_video_shortcode_with_thumbnail_looped;
        ]
 
 let () = run_test_tt_main suite

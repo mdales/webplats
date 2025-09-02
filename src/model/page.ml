@@ -174,6 +174,7 @@ let get_key_as_string_dict t key =
 let get_key_as_yaml t key = Frontmatter.get_key_as_yaml t.frontmatter key
 
 let has_chart t =
-  List.fold_left (fun acc (_, sc) ->
-    acc || (match sc with Shortcode.Chart _ -> true | _ -> false)
-  ) false (shortcodes t)
+  List.fold_left
+    (fun acc (_, sc) ->
+      acc || match sc with Shortcode.Chart _ -> true | _ -> false)
+    false (shortcodes t)

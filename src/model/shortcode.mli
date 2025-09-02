@@ -1,4 +1,3 @@
-
 type t =
   | Video of string * string option * bool
   | Raster of string * string option * string option * (int * int) option
