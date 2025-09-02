@@ -1,3 +1,4 @@
+module Stdlib_string = String
 open Astring
 open Fpath
 
@@ -41,7 +42,7 @@ let months =
     "Dec";
   |]
 
-let ptime_to_last_modiofied (t : Ptime.t) : string =
+let ptime_to_last_modified (t : Ptime.t) : string =
   (* TODO: convert to GMT *)
   let dow = days.(Ptime.weekday_num t) in
   let (year, month, day), ((hours, mins, seconds), _tz) =
@@ -51,7 +52,71 @@ let ptime_to_last_modiofied (t : Ptime.t) : string =
     months.(month - 1)
     year hours mins seconds
 
-let static_loader root path _request =
+let static_return_entire_file full_path =
+  let stats = Unix.stat full_path in
+  let mtime = Option.get (Ptime.of_float_s stats.st_mtime) in
+  let last_modified = ptime_to_last_modified mtime in
+  let file_size = Int64.of_int stats.st_size in
+  let content_type = Magic_mime.lookup full_path in
+
+  let headers =
+    [
+      ("Content-Type", content_type);
+      ("Last-Modified", last_modified);
+      ("Accept-Ranges", "bytes");
+      ("Content-Length", Int64.to_string file_size);
+    ]
+  in
+  Lwt_io.(with_file ~mode:Input full_path) (fun channel ->
+      let%lwt content = Lwt_io.read channel in
+      Message.response ~headers (Stream.string content) Stream.null
+      |> Lwt.return)
+
+let static_return_partial_file start_pos end_pos full_path =
+  let stats = Unix.stat full_path in
+  let mtime = Option.get (Ptime.of_float_s stats.st_mtime) in
+  let last_modified = ptime_to_last_modified mtime in
+  let file_size = Int64.of_int stats.st_size in
+  let content_type = Magic_mime.lookup full_path in
+
+  let content_length = Int64.add (Int64.sub end_pos start_pos) 1L in
+  let headers =
+    [
+      ("Content-Type", content_type);
+      ("Last-Modified", last_modified);
+      ("Accept-Ranges", "bytes");
+      ( "Content-Range",
+        Printf.sprintf "bytes %Ld-%Ld/%Ld" start_pos end_pos file_size );
+      ("Content-Length", Int64.to_string content_length);
+    ]
+  in
+
+  Lwt_io.(with_file ~mode:Input full_path) (fun channel ->
+      let%lwt () = Lwt_io.set_position channel start_pos in
+      let buffer_size = min 8192L content_length |> Int64.to_int in
+      let buffer = Bytes.create buffer_size in
+      let rec read_chunk remaining acc =
+        if Int64.equal remaining 0L then
+          Lwt.return (Stdlib_string.concat "" (List.rev acc))
+        else
+          let to_read =
+            min (Int64.of_int buffer_size) remaining |> Int64.to_int
+          in
+          let%lwt bytes_read = Lwt_io.read_into channel buffer 0 to_read in
+          if bytes_read = 0 then
+            Lwt.return (Stdlib_string.concat "" (List.rev acc))
+          else
+            let chunk = Bytes.sub_string buffer 0 bytes_read in
+            read_chunk
+              (Int64.sub remaining (Int64.of_int bytes_read))
+              (chunk :: acc)
+      in
+      let%lwt content = read_chunk content_length [] in
+      Message.response ~status:`Partial_Content ~headers (Stream.string content)
+        Stream.null
+      |> Lwt.return)
+
+let static_loader root path request =
   (* In dream the loader is called after the path has been validated,
   which is why there is no path validation here *)
   let root =
@@ -64,19 +129,20 @@ let static_loader root path _request =
   let full_path = Fpath.to_string full_path in
 
   let stats = Unix.stat full_path in
-  let mtime = Option.get (Ptime.of_float_s stats.st_mtime) in
-  let last_modified = ptime_to_last_modiofied mtime in
+  let file_size = Int64.of_int stats.st_size in
 
-  let content_type = Magic_mime.lookup full_path in
-  let headers =
-    [ ("Content-type", content_type); ("Last-modified", last_modified) ]
-  in
+  let range_header = Dream.header request "Range" in
+
   Lwt.catch
     (fun () ->
-      Lwt_io.(with_file ~mode:Input full_path) (fun channel ->
-          let%lwt content = Lwt_io.read channel in
-          Message.response ~headers (Stream.string content) Stream.null
-          |> Lwt.return))
+      match range_header with
+      | Some range_str when Stdlib_string.starts_with ~prefix:"bytes=" range_str
+        -> (
+          match Http.parse_range range_str file_size with
+          | Some (start_pos, end_pos) ->
+              static_return_partial_file start_pos end_pos full_path
+          | None -> static_return_entire_file full_path)
+      | _ -> static_return_entire_file full_path)
     (fun _exn ->
       Message.response ~status:`Not_Found Stream.empty Stream.null |> Lwt.return)
 
@@ -285,7 +351,7 @@ let routes_for_page site sec previous_page page next_page page_renderer
       Dream.get (Section.url ~page sec) (fun _ ->
           let stats = Unix.stat (Fpath.to_string (Page.path page)) in
           let mtime = Option.get (Ptime.of_float_s stats.st_mtime) in
-          let last_modified = ptime_to_last_modiofied mtime in
+          let last_modified = ptime_to_last_modified mtime in
           let headers = [ ("Last-modified", last_modified) ] in
           (page_renderer page) site sec previous_page page next_page
           |> Dream.html ~headers)
