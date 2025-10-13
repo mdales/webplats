@@ -61,8 +61,14 @@ let render_rss site pages =
 % let img = Option.get (Page.titleimage page) in
              <%s Shortcodes.render_raster ((Section.url ~page sec) ^ img.filename) img.description None None %>
 % | _ -> ());
-             <%s Render.render_body page %>
-             <%s render_page_images sec page %>
+% (match (Page.get_key_as_bool page "rss-inline") with Some false ->
+    <p><a href="<%s Section.url ~page sec %>">Please visit page for details.</a></p>
+% | _ -> (
+      <%s Render.render_body page %>
+      <%s render_page_images sec page %>
+% ));
+
+
           </description>
         </item>
 % ) (recent_pages pages));
