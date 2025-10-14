@@ -5,9 +5,9 @@ let recent_pages pages =
 		| _ -> (
 			match pages with
 			| [] -> []
-			| (sec, page) :: tl -> (
+			| (sec, page, renderer) :: tl -> (
         match Page.in_feed page with
-        | true -> (sec, page) :: (loop (count - 1) tl)
+        | true -> (sec, page, renderer) :: (loop (count - 1) tl)
         | false -> loop count tl
       )
 		)
@@ -41,11 +41,11 @@ let render_rss site pages =
     <description>Recent content on my <%s Site.title site %></description>
     <generator>https://github.com/mdales/webplats/</generator>
     <language>en-us</language>
-% (match pages with (_, hd) :: _ ->
+% (match pages with (_, hd, _) :: _ ->
     <lastBuildDate><%s Ptime.to_rfc3339 (Page.date hd) %></lastBuildDate>
 % | [] -> ());
     <atom:link href="<%s Uri.to_string (Uri.with_uri ~path:(Some {|index.xml|}) (Site.url site)) %>" rel="self" type="application/rss+xml" />
-% (List.iter (fun (sec, page) ->
+% (List.iter (fun (sec, page, renderer) ->
         <item>
           <title><%s Page.title page %></title>
 % (match (Page.get_key_as_string page "source") with Some url ->
@@ -64,7 +64,7 @@ let render_rss site pages =
 % (match (Page.get_key_as_bool page "rss-inline") with Some false ->
     <p><a href="<%s Section.url ~page sec %>">Please visit page for details.</a></p>
 % | _ -> (
-      <%s Render.render_body page %>
+      <%s renderer page %>
       <%s render_page_images sec page %>
 % ));
 
