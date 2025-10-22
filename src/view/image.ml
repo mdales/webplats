@@ -22,7 +22,7 @@ let makedirs path =
              let p = Fpath.add_seg acc seg in
              (match Sys.file_exists (Fpath.to_string p) with
              | true -> ()
-             | false -> Sys.mkdir (Fpath.to_string p) 0755);
+             | false -> Sys.mkdir (Fpath.to_string p) 0o755);
              p)
            (Fpath.v hd) tl)
 
