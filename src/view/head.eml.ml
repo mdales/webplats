@@ -13,6 +13,7 @@ let render_head_generic site =
   <link href="<%s Section.url sec %>index.xml" rel="alternate" type="application/rss+xml" title="<%s Site.title site %>: <%s Section.title sec %>" />
   <link href="<%s Section.url sec %>index.xml" rel="feed" type="application/rss+xml" title="<%s Site.title site %>: <%s Section.title sec %>" />
 % ) (Site.sections site));
+  <link rel="alternate" type="application/feed+json" title="JSON Feed" href="/feed.json">
   <meta property="og:site_name" content="<%s Site.title site %>"/>
 
 let render_head_section sec =
