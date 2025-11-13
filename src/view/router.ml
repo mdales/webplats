@@ -14,6 +14,8 @@ type page_renderer_t =
 type meta_page_renderer_t = Page.t -> page_renderer_t
 type section_renderer_t = Site.t -> Section.t -> string
 type meta_section_renderer_t = Section.t -> section_renderer_t
+type body_renderer_t = Page.t -> string
+type meta_body_renderer_t = Page.t ->  body_renderer_t
 
 type meta_taxonomy_section_renderer_t =
   Taxonomy.t -> Section.t -> section_renderer_t
@@ -380,26 +382,37 @@ let routes_for_pages_in_section site sec page_renderer thumbnail_loader
       in
       loop None hd tl
 
+let routes_for_feed base_url site page_list =
+ [
+  Dream.get (base_url ^ "index.xml") (fun _ ->
+      Rss.render_rss site page_list
+      |> Dream.respond ~headers:[ ("Content-Type", "application/rss+xml") ]);
+  Dream.get (base_url ^ "feed.json") (fun _ ->
+    let feed = Rss.render_jsonfeed site page_list in
+    match feed with
+    | Result.Ok body ->  Dream.respond ~headers:[ ("Content-Type", "application/feed+json") ] body
+    | _ -> Dream.html ~status:`Internal_Server_Error "<h1>Something went wrong</h1>"
+  );
+]
+
 let routes_for_section ~section_renderer ~page_renderer ~thumbnail_loader
     ~image_loader site sec =
+  let pages_in_feed = (Section.pages sec |> List.map (fun p -> (sec, p, Render.render_body))) in
+
   Dream.get (Section.url sec) (fun _ ->
       (section_renderer sec) site sec |> Dream.html)
-  :: Dream.get
-       (Section.url sec ^ "index.xml")
-       (fun _ ->
-         Rss.render_rss site (Section.pages sec |> List.map (fun p -> (sec, p, Render.render_body)))
-         |> Dream.respond ~headers:[ ("Content-Type", "application/rss+xml") ])
-  :: Dream.get
-        (Section.url sec ^ "feed.json")
-        (fun _ ->
-          let feed = Rss.render_jsonfeed site (Section.pages sec |> List.map (fun p -> (sec, p, Render.render_body)))
-          in
-          match feed with
-          | Result.Ok body -> Dream.respond ~headers:[ ("Content-Type", "application/feed+json") ] body
-          | _ -> Dream.html ~status:`Internal_Server_Error "<h1>Something went wrong</h1>"
-          )
-  :: routes_for_pages_in_section site sec page_renderer thumbnail_loader
-       image_loader
+  :: (routes_for_feed (Section.url sec) site pages_in_feed
+  @ routes_for_pages_in_section site sec page_renderer thumbnail_loader
+       image_loader)
+
+let routes_for_toplevel ~page_body_renderer site =
+  let pages_in_feed = (Site.sections site
+    |> List.concat_map (fun sec ->
+           Section.pages sec |> List.map (fun p -> (sec, p, page_body_renderer p)))
+    |> List.sort (fun (_, a, _) (_, b, _) ->
+           Ptime.compare (Page.date b) (Page.date a))) in
+  routes_for_feed "/" site pages_in_feed
+
 
 let routes_for_taxonomies ~taxonomy_renderer ~taxonomy_section_renderer
     ~page_renderer ~thumbnail_loader ~image_loader site =

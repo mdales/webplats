@@ -10,6 +10,8 @@ type page_renderer_t =
 type meta_page_renderer_t = Page.t -> page_renderer_t
 type section_renderer_t = Site.t -> Section.t -> string
 type meta_section_renderer_t = Section.t -> section_renderer_t
+type body_renderer_t = Page.t -> string
+type meta_body_renderer_t = Page.t ->  body_renderer_t
 
 type meta_taxonomy_section_renderer_t =
   Taxonomy.t -> Section.t -> section_renderer_t
@@ -65,6 +67,11 @@ val routes_for_section :
   image_loader:image_loader_t ->
   Site.t ->
   Section.t ->
+  Dream.route list
+
+val routes_for_toplevel :
+  page_body_renderer:meta_body_renderer_t ->
+  Site.t ->
   Dream.route list
 
 val routes_for_taxonomies :
