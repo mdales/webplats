@@ -53,3 +53,28 @@ let render_rss site pages =
 
     </channel>
   </rss>
+
+let render_jsonfeed site pages =
+  let pages = recent_pages pages in
+  let items = List.map (fun (sec, page, renderer) ->
+    let canonical_url = Uri.to_string (Uri.with_uri ~path:(Some (Section.url ~page sec)) (Site.url site)) in
+    let page_url = match (Page.get_key_as_string page "source") with
+    | Some url -> url
+    | None -> canonical_url
+    in
+    let tags = Page.tags page in
+    Jsonfeed.Item.create
+    ~id:canonical_url
+    ~url:page_url
+    ~title:(Page.title page)
+    ~content:(`Html (renderer page))
+    ~tags:tags
+    ()
+  ) pages in
+  let feed = Jsonfeed.create
+    ~title:(Site.title site)
+    ~home_page_url:(Uri.to_string (Site.url site))
+    ~feed_url:(Printf.sprintf "%s/feed.json" (Uri.to_string (Site.url site)))
+    ~items:items
+    () in
+  Jsonfeed.to_string feed
