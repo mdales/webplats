@@ -389,6 +389,15 @@ let routes_for_section ~section_renderer ~page_renderer ~thumbnail_loader
        (fun _ ->
          Rss.render_rss site (Section.pages sec |> List.map (fun p -> (sec, p, Render.render_body)))
          |> Dream.respond ~headers:[ ("Content-Type", "application/rss+xml") ])
+  :: Dream.get
+        (Section.url sec ^ "feed.json")
+        (fun _ ->
+          let feed = Rss.render_jsonfeed site (Section.pages sec |> List.map (fun p -> (sec, p, Render.render_body)))
+          in
+          match feed with
+          | Result.Ok body -> Dream.respond ~headers:[ ("Content-Type", "application/feed+json") ] body
+          | _ -> Dream.html ~status:`Internal_Server_Error "<h1>Something went wrong</h1>"
+          )
   :: routes_for_pages_in_section site sec page_renderer thumbnail_loader
        image_loader
 
