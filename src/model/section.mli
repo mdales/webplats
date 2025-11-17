@@ -1,6 +1,6 @@
 type t
 
-val v : ?synthetic:bool -> string -> string -> Page.t list -> t
+val v : ?synthetic:bool -> string -> Uri.t -> Page.t list -> t
 (* [v ?synthetic title url pages] *)
 
 val of_directory : base:Fpath.t -> Fpath.t -> t
@@ -9,5 +9,5 @@ val of_directory : base:Fpath.t -> Fpath.t -> t
 val updated_with_page : t -> Page.t -> t
 val pages : t -> Page.t list
 val title : t -> string
-val url : ?page:Page.t -> t -> string
+val uri : ?page:Page.t -> ?resource:string -> t -> Uri.t
 val synthetic : t -> bool

@@ -158,13 +158,13 @@ let routes_for_frontmatter_image_list sec page (image_loader : image_loader_t) =
       [
         (* non retina *)
         Dream.get
-          (Section.url ~page sec ^ i.filename)
+          (Uri.to_string (Section.uri ~page ~resource:i.filename sec))
           (Dream.static ~loader:(image_loader page i.filename (720, 1200)) "");
         (* retina *)
         (let name, ext = Fpath.split_ext (Fpath.v i.filename) in
          let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
          Dream.get
-           (Section.url ~page sec ^ retina_name)
+           (Uri.to_string (Section.uri ~page ~resource:retina_name sec))
            (Dream.static
               ~loader:(image_loader page i.filename (720 * 2, 1200 * 2))
               ""));
@@ -175,7 +175,7 @@ let routes_for_frontmatter_video_list sec page =
   List.map
     (fun filename ->
       Dream.get
-        (Section.url ~page sec ^ filename)
+        (Uri.to_string (Section.uri ~page ~resource:filename sec))
         (fun _ ->
           Dream.respond
             (In_channel.with_open_bin
@@ -190,12 +190,12 @@ let routes_for_image_shortcodes sec page (image_loader : image_loader_t) =
       | Shortcode.Raster (filename, _, _, _) ->
           [
             Dream.get
-              (Section.url ~page sec ^ filename)
+              (Uri.to_string (Section.uri ~page ~resource:filename sec))
               (Dream.static ~loader:(image_loader page filename (800, 600)) "");
             (let name, ext = Fpath.split_ext (Fpath.v filename) in
              let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
              Dream.get
-               (Section.url ~page sec ^ retina_name)
+               (Uri.to_string (Section.uri ~page ~resource:retina_name sec))
                (Dream.static
                   ~loader:(image_loader page filename (800 * 2, 600 * 2))
                   ""));
@@ -204,7 +204,7 @@ let routes_for_image_shortcodes sec page (image_loader : image_loader_t) =
     (Page.shortcodes page)
 
 let routes_for_titleimage sec page thumbnail_loader image_loader =
-  let page_url = Section.url ~page sec in
+  let page_url = Section.uri ~page sec in
   match Page.titleimage page with
   | None -> []
   | Some img -> (
@@ -214,18 +214,19 @@ let routes_for_titleimage sec page thumbnail_loader image_loader =
       | ".svg" ->
           [
             Dream.get
-              (page_url ^ "thumbnail.svg")
+              (Uri.to_string (Section.uri ~page ~resource:"thumbnail.svg" sec))
               (Dream.static ~loader:(direct_loader page img.filename) "");
           ]
       | _ -> (
           [
             Dream.get
-              (page_url ^ "thumbnail.jpg")
+              (Uri.to_string (Section.uri ~page ~resource:"thumbnail.jpg" sec))
               (Dream.static ~loader:(thumbnail_loader ~retina:false page) "");
             Dream.get
-              (page_url ^ "thumbnail@2x.jpg")
+              (Uri.to_string (Section.uri ~page ~resource:"thumbnail@2x.jpg" sec))
               (Dream.static ~loader:(thumbnail_loader ~retina:true page) "");
-            Dream.get (page_url ^ "preview.jpg")
+            Dream.get
+              (Uri.to_string (Section.uri ~page ~resource:"preview.jpg" sec))
               (Dream.static
                  ~loader:(image_loader page img.filename (2048, 2048))
                  "");
@@ -238,28 +239,29 @@ let routes_for_titleimage sec page thumbnail_loader image_loader =
               let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
               [
                 Dream.get
-                  (page_url ^ "scrn_" ^ img.filename)
+                  (Uri.to_string (Section.uri ~page ~resource:("scrn_" ^ img.filename) sec))
                   (Dream.static
                      ~loader:(image_loader page img.filename (1008, 800))
                      "");
                 Dream.get
-                  (page_url ^ "scrn_" ^ retina_name)
+                  (Uri.to_string (Section.uri ~page ~resource:("scrn_" ^ retina_name) sec))
                   (Dream.static
                      ~loader:(image_loader page img.filename (2016, 1600))
                      "");
                 (* This is the direct full resolution download *)
-                Dream.get (page_url ^ img.filename)
+                Dream.get
+                  (Uri.to_string (Section.uri ~page ~resource:img.filename sec))
                   (Dream.static ~loader:(direct_loader page img.filename) "");
               ]
               @ [
                   (* This is the album thumbnails *)
                   Dream.get
-                    (page_url ^ "album_" ^ img.filename)
+                    (Uri.to_string (Section.uri ~page ~resource:("album_" ^ img.filename) sec))
                     (Dream.static
                        ~loader:(image_loader page img.filename (300, 300))
                        "");
                   Dream.get
-                    (page_url ^ "album_" ^ retina_name)
+                    (Uri.to_string (Section.uri ~page ~resource:("album_" ^ retina_name) sec))
                     (Dream.static
                        ~loader:(image_loader page img.filename (600, 600))
                        "");
@@ -279,15 +281,14 @@ let routes_for_direct_shortcodes sec page =
     (Page.shortcodes page)
   |> List.map (fun filename ->
          Dream.get
-           (Section.url ~page sec ^ filename)
+           (Uri.to_string (Section.uri ~page ~resource:filename sec))
            (Dream.static ~loader:(direct_loader page filename) ""))
 
 let routes_for_scripts_and_resources sec page =
   Page.resources page @ Page.scripts page
   |> List.map (fun filename ->
-         Dream.log "adding %s" (Section.url ~page sec ^ filename);
          Dream.get
-           (Section.url ~page sec ^ filename)
+           (Uri.to_string (Section.uri ~page ~resource:filename sec))
            (Dream.static ~loader:(direct_loader page filename) ""))
 
 let collect_static_routes site =
@@ -327,13 +328,13 @@ let routes_for_aliases site =
             (fun alias ->
               Dream.get alias (fun r ->
                   Dream.redirect ~status:`Moved_Permanently r
-                    (Section.url ~page sec)))
+                    (Uri.to_string (Section.uri ~page sec))))
             (Page.aliases page))
         (Section.pages sec))
     (Site.sections site)
 
 let routes_for_redirect_for_sans_slash sec page =
-  let page_url = Section.url ~page sec in
+  let page_url = Uri.to_string (Section.uri ~page sec) in
   match String.is_suffix ~affix:"/" page_url with
   | false -> []
   | true ->
@@ -350,7 +351,7 @@ let routes_for_page site sec previous_page page next_page page_renderer
   match Page.content page with
   | false -> []
   | true ->
-      Dream.get (Section.url ~page sec) (fun _ ->
+      Dream.get (Uri.to_string (Section.uri ~page sec)) (fun _ ->
           let stats = Unix.stat (Fpath.to_string (Page.path page)) in
           let mtime = Option.get (Ptime.of_float_s stats.st_mtime) in
           let last_modified = ptime_to_last_modified mtime in
@@ -382,40 +383,40 @@ let routes_for_pages_in_section site sec page_renderer thumbnail_loader
       in
       loop None hd tl
 
-let routes_for_feed base_url site page_list =
+let routes_for_feed base_section site page_list =
  [
-  Dream.get (base_url ^ "index.xml") (fun _ ->
-      Rss.render_rss site page_list
+  Dream.get
+      (Uri.to_string (Section.uri ~resource:"index.xml" base_section))
+      (fun _ ->
+      Rss.render_rss base_section site page_list
       |> Dream.respond ~headers:[ ("Content-Type", "application/rss+xml") ]);
-  Dream.get (base_url ^ "feed.json") (fun _ ->
-    let feed = Rss.render_jsonfeed site page_list in
+  Dream.get
+  (Uri.to_string (Section.uri ~resource:"feed.json" base_section))
+   (fun _ ->
+    let feed = Rss.render_jsonfeed base_section site page_list in
     match feed with
     | Result.Ok body ->  Dream.respond ~headers:[ ("Content-Type", "application/feed+json") ] body
     | _ -> Dream.html ~status:`Internal_Server_Error "<h1>Something went wrong</h1>"
   );
 ]
 
-let routes_for_section ~section_renderer ~page_renderer ~thumbnail_loader
+let routes_for_section ~section_renderer ~page_renderer ~page_body_renderer ~thumbnail_loader
     ~image_loader site sec =
-  let pages_in_feed = (Section.pages sec |> List.map (fun p -> (sec, p, Render.render_body))) in
-
-  Dream.get (Section.url sec) (fun _ ->
+  let raw_pages_in_feed = match (Section.title sec) with
+  | "website" -> List.concat_map (fun sec -> Section.pages sec |> List.map (fun p -> (sec, p, page_body_renderer p))) (Site.sections site)
+  | _ -> Section.pages sec |> List.map (fun p -> (sec, p, page_body_renderer p))
+  in
+  let pages_in_feed = raw_pages_in_feed |> List.sort (fun (_, a, _) (_, b, _) ->
+     Ptime.compare (Page.date b) (Page.date a))
+     in
+  Dream.get (Uri.to_string (Section.uri sec)) (fun _ ->
       (section_renderer sec) site sec |> Dream.html)
-  :: (routes_for_feed (Section.url sec) site pages_in_feed
+  :: (routes_for_feed sec site pages_in_feed
   @ routes_for_pages_in_section site sec page_renderer thumbnail_loader
        image_loader)
 
-let routes_for_toplevel ~page_body_renderer site =
-  let pages_in_feed = (Site.sections site
-    |> List.concat_map (fun sec ->
-           Section.pages sec |> List.map (fun p -> (sec, p, page_body_renderer p)))
-    |> List.sort (fun (_, a, _) (_, b, _) ->
-           Ptime.compare (Page.date b) (Page.date a))) in
-  routes_for_feed "/" site pages_in_feed
-
-
 let routes_for_taxonomies ~taxonomy_renderer ~taxonomy_section_renderer
-    ~page_renderer ~thumbnail_loader ~image_loader site =
+    ~page_renderer ~page_body_renderer ~thumbnail_loader ~image_loader site =
   let taxonomies = Site.taxonomies site in
   List.concat_map
     (fun (name, taxonomy) ->
@@ -429,6 +430,6 @@ let routes_for_taxonomies ~taxonomy_renderer ~taxonomy_section_renderer
            (fun sec ->
              routes_for_section
                ~section_renderer:(taxonomy_section_renderer taxonomy)
-               ~page_renderer ~thumbnail_loader ~image_loader site sec)
+               ~page_renderer ~page_body_renderer ~thumbnail_loader ~image_loader site sec)
            (Taxonomy.sections taxonomy))
     taxonomies

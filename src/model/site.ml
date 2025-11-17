@@ -23,7 +23,7 @@ let build_taxonomy taxonomy_name (pages : Page.t list) =
               in
               ( term,
                 Section.v ~synthetic:true term
-                  (Printf.sprintf "/%s/%s/" taxonomy_name term_for_url)
+                  (Uri.of_string (Printf.sprintf "/%s/%s/" taxonomy_name term_for_url))
                   [ page ] )
               :: acc
           | Some section ->
@@ -96,7 +96,7 @@ let of_directory path =
       root_listing
   in
 
-  let toplevel = Section.v "website" "/" root_pages in
+  let toplevel = Section.v "website" (Uri.of_string "/") root_pages in
 
   let taxonomies =
     List.map
@@ -116,5 +116,5 @@ let toplevel t = t.toplevel
 let path t = t.path
 let hugo_theme t = Config.hugo_theme t.config
 let taxonomies t = t.taxonomies
-let url t = Config.base_url t.config
+let uri t = Config.base_url t.config
 let port t = Config.port t.config

@@ -10,10 +10,10 @@ let render_head_generic site =
   <link rel="me" href="https://mastodon.me.uk/@mdales">
   <link rel="me" href="https://toot.mynameismwd.org/@michael">
 % (List.iter (fun sec ->
-  <link href="<%s Section.url sec %>index.xml" rel="alternate" type="application/rss+xml" title="<%s Site.title site %>: <%s Section.title sec %>" />
-  <link href="<%s Section.url sec %>index.xml" rel="feed" type="application/rss+xml" title="<%s Site.title site %>: <%s Section.title sec %>" />
+  <link href="<%s Uri.to_string (Section.uri ~resource:{|index.xml|} sec) %>" rel="alternate" type="application/rss+xml" title="<%s Site.title site %>: <%s Section.title sec %>" />
+  <link href="<%s Uri.to_string (Section.uri ~resource:{|index.xml|} sec) %>" rel="feed" type="application/rss+xml" title="<%s Site.title site %>: <%s Section.title sec %>" />
+  <link rel="alternate" type="application/feed+json" title="JSON Feed" href="<%s Uri.to_string (Section.uri ~resource:{|feed.json|} sec) %>">
 % ) (Site.sections site));
-  <link rel="alternate" type="application/feed+json" title="JSON Feed" href="/feed.json">
   <meta property="og:site_name" content="<%s Site.title site %>"/>
 
 let render_head_section sec =
@@ -22,9 +22,9 @@ let render_head_section sec =
   <meta property="og:title" content="<%s Section.title sec %>"/>
   <meta itemprop="name" content="<%s Section.title sec %>"/>
   <meta property="twitter:title" content="<%s Section.title sec %>"/>
-  <meta property="og:url" content="<%s Section.url sec %>"/>
-  <meta itemprop="url" content="<%s Section.url sec %>"/>
-  <meta property="twitter:url" content="<%s Section.url sec %>"/>
+  <meta property="og:url" content="<%s Uri.to_string (Section.uri sec) %>"/>
+  <meta itemprop="url" content="<%s Uri.to_string (Section.uri sec) %>"/>
+  <meta property="twitter:url" content="<%s Uri.to_string (Section.uri sec) %>"/>
 
 let render_head_page sec page =
   <meta property="og:type" content="article"/>
@@ -32,9 +32,9 @@ let render_head_page sec page =
   <meta property="og:title" content="<%s Page.title page %>"/>
   <meta itemprop="name" content="<%s Page.title page %>"/>
   <meta property="twitter:title" content="<%s Page.title page %>"/>
-  <meta property="og:url" content="<%s Section.url ~page sec %>"/>
-  <meta itemprop="url" content="<%s Section.url ~page sec %>"/>
-  <meta property="twitter:url" content="<%s Section.url ~page sec %>"/>
+  <meta property="og:url" content="<%s Uri.to_string (Section.uri ~page sec) %>"/>
+  <meta itemprop="url" content="<%s Uri.to_string (Section.uri ~page sec) %>"/>
+  <meta property="twitter:url" content="<%s Uri.to_string (Section.uri ~page sec) %>"/>
 % (match (Page.synopsis page) with Some syn ->
   <meta property="og:description" content="<%s syn %>"/>
   <meta itemprop="description" content="<%s syn %>"/>

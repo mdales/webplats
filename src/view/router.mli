@@ -63,21 +63,18 @@ val routes_for_pages_in_section :
 val routes_for_section :
   section_renderer:meta_section_renderer_t ->
   page_renderer:meta_page_renderer_t ->
+  page_body_renderer:meta_body_renderer_t ->
   thumbnail_loader:thumbnail_loader_t ->
   image_loader:image_loader_t ->
   Site.t ->
   Section.t ->
   Dream.route list
 
-val routes_for_toplevel :
-  page_body_renderer:meta_body_renderer_t ->
-  Site.t ->
-  Dream.route list
-
 val routes_for_taxonomies :
   taxonomy_renderer:meta_taxonomy_renderer_t ->
   taxonomy_section_renderer:meta_taxonomy_section_renderer_t ->
   page_renderer:meta_page_renderer_t ->
+  page_body_renderer:meta_body_renderer_t ->
   thumbnail_loader:thumbnail_loader_t ->
   image_loader:image_loader_t ->
   Site.t ->
