@@ -23,7 +23,8 @@ let build_taxonomy taxonomy_name (pages : Page.t list) =
               in
               ( term,
                 Section.v ~synthetic:true term
-                  (Uri.of_string (Printf.sprintf "/%s/%s/" taxonomy_name term_for_url))
+                  (Uri.of_string
+                     (Printf.sprintf "/%s/%s/" taxonomy_name term_for_url))
                   [ page ] )
               :: acc
           | Some section ->

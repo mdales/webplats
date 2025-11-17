@@ -9,13 +9,13 @@ let rec find_markdown_files path =
          | true -> find_markdown_files p
          | false -> ( match Fpath.get_ext p with ".md" -> [ p ] | _ -> []))
 
-let v ?(synthetic = true) title uri pages =
-  { title; pages; uri; synthetic }
+let v ?(synthetic = true) title uri pages = { title; pages; uri; synthetic }
 let updated_with_page t p = { t with pages = p :: t.pages }
 
 let of_directory ~base path =
-  let url_path = match Fpath.rem_prefix base path with
-    | Some path -> "/" ^ (Fpath.to_string path)
+  let url_path =
+    match Fpath.rem_prefix base path with
+    | Some path -> "/" ^ Fpath.to_string path
     | None -> failwith "base is not parent directory"
   in
 
@@ -39,22 +39,20 @@ let synthetic t = t.synthetic
 let uri ?page ?resource t =
   match page with
   | None -> (
-    match resource with
-    | None -> t.uri
-    | Some filename -> (
+      match resource with
+      | None -> t.uri
+      | Some filename ->
+          let current_path = Fpath.v (Uri.path t.uri) in
+          let extended_path = Fpath.add_seg current_path filename in
+          Uri.with_uri ~path:(Some (Fpath.to_string extended_path)) t.uri)
+  | Some p ->
+      let page_name = Page.url_name p in
+      (* This should be built into Uri IMNSHO, but there is no append path function :/ *)
+      let page_path =
+        match resource with
+        | None -> Fpath.v (page_name ^ "/")
+        | Some filename -> Fpath.add_seg (Fpath.v page_name) filename
+      in
       let current_path = Fpath.v (Uri.path t.uri) in
-      let extended_path = Fpath.add_seg current_path filename in
-        Uri.with_uri ~path:(Some (Fpath.to_string extended_path)) t.uri
-    )
-  )
-  | Some p -> (
-    let page_name = Page.url_name p in
-    (* This should be built into Uri IMNSHO, but there is no append path function :/ *)
-    let page_path = match resource with
-    | None -> Fpath.v (page_name ^ "/")
-    | Some filename -> Fpath.add_seg (Fpath.v page_name) filename
-    in
-    let current_path = Fpath.v (Uri.path t.uri) in
-    let extended_path = Fpath.append current_path page_path in
-    Uri.with_uri ~path:(Some (Fpath.to_string extended_path)) t.uri
-  )
+      let extended_path = Fpath.append current_path page_path in
+      Uri.with_uri ~path:(Some (Fpath.to_string extended_path)) t.uri

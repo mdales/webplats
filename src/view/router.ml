@@ -15,7 +15,7 @@ type meta_page_renderer_t = Page.t -> page_renderer_t
 type section_renderer_t = Site.t -> Section.t -> string
 type meta_section_renderer_t = Section.t -> section_renderer_t
 type body_renderer_t = Page.t -> string
-type meta_body_renderer_t = Page.t ->  body_renderer_t
+type meta_body_renderer_t = Page.t -> body_renderer_t
 
 type meta_taxonomy_section_renderer_t =
   Taxonomy.t -> Section.t -> section_renderer_t
@@ -204,7 +204,6 @@ let routes_for_image_shortcodes sec page (image_loader : image_loader_t) =
     (Page.shortcodes page)
 
 let routes_for_titleimage sec page thumbnail_loader image_loader =
-  let page_url = Section.uri ~page sec in
   match Page.titleimage page with
   | None -> []
   | Some img -> (
@@ -223,7 +222,8 @@ let routes_for_titleimage sec page thumbnail_loader image_loader =
               (Uri.to_string (Section.uri ~page ~resource:"thumbnail.jpg" sec))
               (Dream.static ~loader:(thumbnail_loader ~retina:false page) "");
             Dream.get
-              (Uri.to_string (Section.uri ~page ~resource:"thumbnail@2x.jpg" sec))
+              (Uri.to_string
+                 (Section.uri ~page ~resource:"thumbnail@2x.jpg" sec))
               (Dream.static ~loader:(thumbnail_loader ~retina:true page) "");
             Dream.get
               (Uri.to_string (Section.uri ~page ~resource:"preview.jpg" sec))
@@ -239,12 +239,14 @@ let routes_for_titleimage sec page thumbnail_loader image_loader =
               let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
               [
                 Dream.get
-                  (Uri.to_string (Section.uri ~page ~resource:("scrn_" ^ img.filename) sec))
+                  (Uri.to_string
+                     (Section.uri ~page ~resource:("scrn_" ^ img.filename) sec))
                   (Dream.static
                      ~loader:(image_loader page img.filename (1008, 800))
                      "");
                 Dream.get
-                  (Uri.to_string (Section.uri ~page ~resource:("scrn_" ^ retina_name) sec))
+                  (Uri.to_string
+                     (Section.uri ~page ~resource:("scrn_" ^ retina_name) sec))
                   (Dream.static
                      ~loader:(image_loader page img.filename (2016, 1600))
                      "");
@@ -256,12 +258,15 @@ let routes_for_titleimage sec page thumbnail_loader image_loader =
               @ [
                   (* This is the album thumbnails *)
                   Dream.get
-                    (Uri.to_string (Section.uri ~page ~resource:("album_" ^ img.filename) sec))
+                    (Uri.to_string
+                       (Section.uri ~page ~resource:("album_" ^ img.filename)
+                          sec))
                     (Dream.static
                        ~loader:(image_loader page img.filename (300, 300))
                        "");
                   Dream.get
-                    (Uri.to_string (Section.uri ~page ~resource:("album_" ^ retina_name) sec))
+                    (Uri.to_string
+                       (Section.uri ~page ~resource:("album_" ^ retina_name) sec))
                     (Dream.static
                        ~loader:(image_loader page img.filename (600, 600))
                        "");
@@ -351,7 +356,9 @@ let routes_for_page site sec previous_page page next_page page_renderer
   match Page.content page with
   | false -> []
   | true ->
-      Dream.get (Uri.to_string (Section.uri ~page sec)) (fun _ ->
+      Dream.get
+        (Uri.to_string (Section.uri ~page sec))
+        (fun _ ->
           let stats = Unix.stat (Fpath.to_string (Page.path page)) in
           let mtime = Option.get (Ptime.of_float_s stats.st_mtime) in
           let last_modified = ptime_to_last_modified mtime in
@@ -384,36 +391,50 @@ let routes_for_pages_in_section site sec page_renderer thumbnail_loader
       loop None hd tl
 
 let routes_for_feed base_section site page_list =
- [
-  Dream.get
+  [
+    Dream.get
       (Uri.to_string (Section.uri ~resource:"index.xml" base_section))
       (fun _ ->
-      Rss.render_rss base_section site page_list
-      |> Dream.respond ~headers:[ ("Content-Type", "application/rss+xml") ]);
-  Dream.get
-  (Uri.to_string (Section.uri ~resource:"feed.json" base_section))
-   (fun _ ->
-    let feed = Rss.render_jsonfeed base_section site page_list in
-    match feed with
-    | Result.Ok body ->  Dream.respond ~headers:[ ("Content-Type", "application/feed+json") ] body
-    | _ -> Dream.html ~status:`Internal_Server_Error "<h1>Something went wrong</h1>"
-  );
-]
+        Rss.render_rss base_section site page_list
+        |> Dream.respond ~headers:[ ("Content-Type", "application/rss+xml") ]);
+    Dream.get
+      (Uri.to_string (Section.uri ~resource:"feed.json" base_section))
+      (fun _ ->
+        let feed = Rss.render_jsonfeed base_section site page_list in
+        match feed with
+        | Result.Ok body ->
+            Dream.respond
+              ~headers:[ ("Content-Type", "application/feed+json") ]
+              body
+        | _ ->
+            Dream.html ~status:`Internal_Server_Error
+              "<h1>Something went wrong</h1>");
+  ]
 
-let routes_for_section ~section_renderer ~page_renderer ~page_body_renderer ~thumbnail_loader
-    ~image_loader site sec =
-  let raw_pages_in_feed = match (Section.title sec) with
-  | "website" -> List.concat_map (fun sec -> Section.pages sec |> List.map (fun p -> (sec, p, page_body_renderer p))) (Site.sections site)
-  | _ -> Section.pages sec |> List.map (fun p -> (sec, p, page_body_renderer p))
+let routes_for_section ~section_renderer ~page_renderer ~page_body_renderer
+    ~thumbnail_loader ~image_loader site sec =
+  let raw_pages_in_feed =
+    match Section.title sec with
+    | "website" ->
+        List.concat_map
+          (fun sec ->
+            Section.pages sec
+            |> List.map (fun p -> (sec, p, page_body_renderer p)))
+          (Site.sections site)
+    | _ ->
+        Section.pages sec |> List.map (fun p -> (sec, p, page_body_renderer p))
   in
-  let pages_in_feed = raw_pages_in_feed |> List.sort (fun (_, a, _) (_, b, _) ->
-     Ptime.compare (Page.date b) (Page.date a))
-     in
-  Dream.get (Uri.to_string (Section.uri sec)) (fun _ ->
-      (section_renderer sec) site sec |> Dream.html)
+  let pages_in_feed =
+    raw_pages_in_feed
+    |> List.sort (fun (_, a, _) (_, b, _) ->
+           Ptime.compare (Page.date b) (Page.date a))
+  in
+  Dream.get
+    (Uri.to_string (Section.uri sec))
+    (fun _ -> (section_renderer sec) site sec |> Dream.html)
   :: (routes_for_feed sec site pages_in_feed
-  @ routes_for_pages_in_section site sec page_renderer thumbnail_loader
-       image_loader)
+     @ routes_for_pages_in_section site sec page_renderer thumbnail_loader
+         image_loader)
 
 let routes_for_taxonomies ~taxonomy_renderer ~taxonomy_section_renderer
     ~page_renderer ~page_body_renderer ~thumbnail_loader ~image_loader site =
@@ -430,6 +451,7 @@ let routes_for_taxonomies ~taxonomy_renderer ~taxonomy_section_renderer
            (fun sec ->
              routes_for_section
                ~section_renderer:(taxonomy_section_renderer taxonomy)
-               ~page_renderer ~page_body_renderer ~thumbnail_loader ~image_loader site sec)
+               ~page_renderer ~page_body_renderer ~thumbnail_loader
+               ~image_loader site sec)
            (Taxonomy.sections taxonomy))
     taxonomies
