@@ -455,3 +455,27 @@ let routes_for_taxonomies ~taxonomy_renderer ~taxonomy_section_renderer
                ~image_loader site sec)
            (Taxonomy.sections taxonomy))
     taxonomies
+
+let of_site ~section_renderer ~taxonomy_renderer ~taxonomy_section_renderer
+~page_renderer ~page_body_renderer ~thumbnail_loader ~image_loader site =
+
+  let static = collect_static_routes site in
+
+  let sections =
+    List.concat_map
+      (routes_for_section ~thumbnail_loader
+        ~image_loader ~section_renderer
+        ~page_renderer ~page_body_renderer site)
+      (Site.sections site)
+  in
+
+  let taxonomies =
+    routes_for_taxonomies ~thumbnail_loader
+      ~image_loader ~taxonomy_renderer
+      ~taxonomy_section_renderer ~page_renderer ~page_body_renderer
+      site
+  in
+
+  let aliases = routes_for_aliases site in
+
+  sections @ taxonomies @ aliases @ static
