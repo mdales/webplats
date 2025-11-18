@@ -2,11 +2,9 @@ module Stdlib_string = String
 open Astring
 open Fpath
 
-type thumbnail_loader_t =
-  retina:bool -> Page.t -> string -> string -> Dream.handler
+type thumbnail_loader_t = retina:bool -> Page.t -> Dream.request -> Dream.response Lwt.t
 
-type image_loader_t =
-  Page.t -> string -> int * int -> string -> string -> Dream.handler
+type image_loader_t = Page.t -> string -> int * int -> Dream.handler
 
 type page_renderer_t =
   Site.t -> Section.t -> Page.t option -> Page.t -> Page.t option -> string
@@ -159,14 +157,14 @@ let routes_for_frontmatter_image_list sec page (image_loader : image_loader_t) =
         (* non retina *)
         Dream.get
           (Uri.to_string (Section.uri ~page ~resource:i.filename sec))
-          (Dream.static ~loader:(image_loader page i.filename (720, 1200)) "");
+          (Dream.static ~loader:(fun _root _path -> image_loader page i.filename (720, 1200)) "");
         (* retina *)
         (let name, ext = Fpath.split_ext (Fpath.v i.filename) in
          let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
          Dream.get
            (Uri.to_string (Section.uri ~page ~resource:retina_name sec))
            (Dream.static
-              ~loader:(image_loader page i.filename (720 * 2, 1200 * 2))
+              ~loader:(fun _root _path -> image_loader page i.filename (720 * 2, 1200 * 2))
               ""));
       ])
     (Page.images page)
@@ -191,13 +189,13 @@ let routes_for_image_shortcodes sec page (image_loader : image_loader_t) =
           [
             Dream.get
               (Uri.to_string (Section.uri ~page ~resource:filename sec))
-              (Dream.static ~loader:(image_loader page filename (800, 600)) "");
+              (Dream.static ~loader:(fun _root _path -> image_loader page filename (800, 600)) "");
             (let name, ext = Fpath.split_ext (Fpath.v filename) in
              let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
              Dream.get
                (Uri.to_string (Section.uri ~page ~resource:retina_name sec))
                (Dream.static
-                  ~loader:(image_loader page filename (800 * 2, 600 * 2))
+                  ~loader:(fun _root _path -> image_loader page filename (800 * 2, 600 * 2))
                   ""));
           ]
       | _ -> [])
@@ -220,15 +218,15 @@ let routes_for_titleimage sec page thumbnail_loader image_loader =
           [
             Dream.get
               (Uri.to_string (Section.uri ~page ~resource:"thumbnail.jpg" sec))
-              (Dream.static ~loader:(thumbnail_loader ~retina:false page) "");
+              (Dream.static ~loader:(fun _root _path -> thumbnail_loader ~retina:false page) "");
             Dream.get
               (Uri.to_string
                  (Section.uri ~page ~resource:"thumbnail@2x.jpg" sec))
-              (Dream.static ~loader:(thumbnail_loader ~retina:true page) "");
+              (Dream.static ~loader:(fun _root _path -> thumbnail_loader ~retina:true page) "");
             Dream.get
               (Uri.to_string (Section.uri ~page ~resource:"preview.jpg" sec))
               (Dream.static
-                 ~loader:(image_loader page img.filename (2048, 2048))
+                 ~loader:(fun _root _path -> image_loader page img.filename (2048, 2048))
                  "");
           ]
           @
@@ -242,13 +240,13 @@ let routes_for_titleimage sec page thumbnail_loader image_loader =
                   (Uri.to_string
                      (Section.uri ~page ~resource:("scrn_" ^ img.filename) sec))
                   (Dream.static
-                     ~loader:(image_loader page img.filename (1008, 800))
+                     ~loader:(fun _root _path -> image_loader page img.filename (1008, 800))
                      "");
                 Dream.get
                   (Uri.to_string
                      (Section.uri ~page ~resource:("scrn_" ^ retina_name) sec))
                   (Dream.static
-                     ~loader:(image_loader page img.filename (2016, 1600))
+                     ~loader:(fun _root _path -> image_loader page img.filename (2016, 1600))
                      "");
                 (* This is the direct full resolution download *)
                 Dream.get
@@ -262,13 +260,13 @@ let routes_for_titleimage sec page thumbnail_loader image_loader =
                        (Section.uri ~page ~resource:("album_" ^ img.filename)
                           sec))
                     (Dream.static
-                       ~loader:(image_loader page img.filename (300, 300))
+                       ~loader:(fun _root _path -> image_loader page img.filename (300, 300))
                        "");
                   Dream.get
                     (Uri.to_string
                        (Section.uri ~page ~resource:("album_" ^ retina_name) sec))
                     (Dream.static
-                       ~loader:(image_loader page img.filename (600, 600))
+                       ~loader:(fun _root _path -> image_loader page img.filename (600, 600))
                        "");
                 ]
           | _ -> []))
