@@ -442,7 +442,7 @@ let routes_for_taxonomies ~taxonomy_renderer ~taxonomy_section_renderer
       Dream.log "Taxonomy %s: %d terms" name
         (List.length (Taxonomy.sections taxonomy));
 
-      Dream.get (Taxonomy.url taxonomy) (fun _ ->
+      Dream.get (Uri.to_string (Taxonomy.uri taxonomy)) (fun _ ->
           let render_taxonomy = taxonomy_renderer taxonomy in
           render_taxonomy site taxonomy |> Dream.html)
       :: List.concat_map
