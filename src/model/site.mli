@@ -9,3 +9,4 @@ val hugo_theme : t -> string
 val taxonomies : t -> (string * Taxonomy.t) list
 val uri : t -> Uri.t
 val port : t -> int
+val author : t -> string option

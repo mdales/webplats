@@ -14,6 +14,9 @@ let render_head_generic site =
   <link href="<%s Uri.to_string (Section.uri ~resource:{|index.xml|} sec) %>" rel="feed" type="application/rss+xml" title="<%s Site.title site %>: <%s Section.title sec %>" />
   <link rel="alternate" type="application/feed+json" title="JSON Feed" href="<%s Uri.to_string (Section.uri ~resource:{|feed.json|} sec) %>">
 % ) (Site.sections site));
+% (match (Site.author site) with Some name ->
+  <meta name="author" content="<%s name %>">
+% | None -> ());
   <meta property="og:site_name" content="<%s Site.title site %>"/>
 
 let render_head_section sec =

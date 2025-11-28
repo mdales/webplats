@@ -6,6 +6,7 @@ type t = {
   base_url : Uri.t;
   hugo_theme : string;
   port : int;
+  author : string option;
 }
 
 let of_file path =
@@ -20,11 +21,12 @@ let of_file path =
             | Some p -> p
             | None -> 8080
           and hugo_theme = Option.get (yaml_dict_to_string assoc "theme")
+          and author = List.assoc_opt "name" (yaml_dict_to_string_dict assoc "author")
           and taxonomies =
             yaml_dict_to_string_dict assoc "taxonomies"
             |> List.map (fun (k, v) -> (k ^ "s", v))
           in
-          { title; base_url; taxonomies; hugo_theme; port }
+          { title; base_url; taxonomies; hugo_theme; port; author }
       | _ -> failwith "Failed to load config")
 
 let base_url t = t.base_url
@@ -32,3 +34,4 @@ let title t = t.title
 let taxonomies t = t.taxonomies
 let hugo_theme t = t.hugo_theme
 let port t = t.port
+let author t = t.author
