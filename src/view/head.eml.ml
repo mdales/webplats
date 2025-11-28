@@ -24,33 +24,26 @@ let render_head_section sec =
   <title><%s Section.title sec %></title>
   <meta property="og:title" content="<%s Section.title sec %>"/>
   <meta itemprop="name" content="<%s Section.title sec %>"/>
-  <meta property="twitter:title" content="<%s Section.title sec %>"/>
   <meta property="og:url" content="<%s Uri.to_string (Section.uri sec) %>"/>
   <meta itemprop="url" content="<%s Uri.to_string (Section.uri sec) %>"/>
-  <meta property="twitter:url" content="<%s Uri.to_string (Section.uri sec) %>"/>
 
 let render_head_page sec page =
   <meta property="og:type" content="article"/>
   <title><%s Page.title page %></title>
   <meta property="og:title" content="<%s Page.title page %>"/>
   <meta itemprop="name" content="<%s Page.title page %>"/>
-  <meta property="twitter:title" content="<%s Page.title page %>"/>
   <meta property="og:url" content="<%s Uri.to_string (Section.uri ~page sec) %>"/>
   <meta itemprop="url" content="<%s Uri.to_string (Section.uri ~page sec) %>"/>
-  <meta property="twitter:url" content="<%s Uri.to_string (Section.uri ~page sec) %>"/>
 % (match (Page.synopsis page) with Some syn ->
   <meta property="og:description" content="<%s syn %>"/>
   <meta itemprop="description" content="<%s syn %>"/>
-  <meta property="twitter:description" content="<%s syn %>"/>
 % | None -> ());
 % (match (Page.titleimage page) with Some i ->
   <meta property="og:image" content="preview.jpg"/>
   <meta itemprop="image" content="preview.jpg"/>
-  <meta property="twitter:image" content="preview.jpg"/>
 % (match i.description with Some desc ->
   <meta property="og:image:alt" content="<%s desc %>"/>
   <meta property="image:alt" content="<%s desc %>"/>
-  <meta property="twitter:image:alt" content="<%s desc %>"/>
 % | None -> ());
 % | None -> ());
 % List.iter (fun filename ->
