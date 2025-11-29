@@ -26,6 +26,9 @@ module Stream = Dream_pure.Stream
 
 let days = [| "Sun"; "Mon"; "Tue"; "Wed"; "Thu"; "Fri"; "Sat" |]
 
+let esc_dream_get a b =
+  Dream.get (Uri.pct_decode a) b
+
 let months =
   [|
     "Jan";
@@ -155,13 +158,13 @@ let routes_for_frontmatter_image_list sec page (image_loader : image_loader_t) =
     (fun (i : Frontmatter.image) ->
       [
         (* non retina *)
-        Dream.get
+        esc_dream_get
           (Uri.to_string (Section.uri ~page ~resource:i.filename sec))
           (Dream.static ~loader:(fun _root _path -> image_loader page i.filename (720, 1200)) "");
         (* retina *)
         (let name, ext = Fpath.split_ext (Fpath.v i.filename) in
          let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
-         Dream.get
+         esc_dream_get
            (Uri.to_string (Section.uri ~page ~resource:retina_name sec))
            (Dream.static
               ~loader:(fun _root _path -> image_loader page i.filename (720 * 2, 1200 * 2))
@@ -172,7 +175,7 @@ let routes_for_frontmatter_image_list sec page (image_loader : image_loader_t) =
 let routes_for_frontmatter_video_list sec page =
   List.map
     (fun filename ->
-      Dream.get
+      esc_dream_get
         (Uri.to_string (Section.uri ~page ~resource:filename sec))
         (fun _ ->
           Dream.respond
@@ -187,12 +190,12 @@ let routes_for_image_shortcodes sec page (image_loader : image_loader_t) =
       match sc with
       | Shortcode.Raster (filename, _, _, _) ->
           [
-            Dream.get
+            esc_dream_get
               (Uri.to_string (Section.uri ~page ~resource:filename sec))
               (Dream.static ~loader:(fun _root _path -> image_loader page filename (800, 600)) "");
             (let name, ext = Fpath.split_ext (Fpath.v filename) in
              let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
-             Dream.get
+             esc_dream_get
                (Uri.to_string (Section.uri ~page ~resource:retina_name sec))
                (Dream.static
                   ~loader:(fun _root _path -> image_loader page filename (800 * 2, 600 * 2))
@@ -210,20 +213,20 @@ let routes_for_titleimage sec page thumbnail_loader image_loader =
       match ext with
       | ".svg" ->
           [
-            Dream.get
+            esc_dream_get
               (Uri.to_string (Section.uri ~page ~resource:"thumbnail.svg" sec))
               (Dream.static ~loader:(direct_loader page img.filename) "");
           ]
       | _ -> (
           [
-            Dream.get
+            esc_dream_get
               (Uri.to_string (Section.uri ~page ~resource:"thumbnail.jpg" sec))
               (Dream.static ~loader:(fun _root _path -> thumbnail_loader ~retina:false page) "");
-            Dream.get
+            esc_dream_get
               (Uri.to_string
                  (Section.uri ~page ~resource:"thumbnail@2x.jpg" sec))
               (Dream.static ~loader:(fun _root _path -> thumbnail_loader ~retina:true page) "");
-            Dream.get
+            esc_dream_get
               (Uri.to_string (Section.uri ~page ~resource:"preview.jpg" sec))
               (Dream.static
                  ~loader:(fun _root _path -> image_loader page img.filename (2048, 2048))
@@ -236,33 +239,33 @@ let routes_for_titleimage sec page thumbnail_loader image_loader =
               let name, ext = Fpath.split_ext (Fpath.v img.filename) in
               let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
               [
-                Dream.get
+                esc_dream_get
                   (Uri.to_string
                      (Section.uri ~page ~resource:("scrn_" ^ img.filename) sec))
                   (Dream.static
                      ~loader:(fun _root _path -> image_loader page img.filename (1008, 800))
                      "");
-                Dream.get
+                esc_dream_get
                   (Uri.to_string
                      (Section.uri ~page ~resource:("scrn_" ^ retina_name) sec))
                   (Dream.static
                      ~loader:(fun _root _path -> image_loader page img.filename (2016, 1600))
                      "");
                 (* This is the direct full resolution download *)
-                Dream.get
+                esc_dream_get
                   (Uri.to_string (Section.uri ~page ~resource:img.filename sec))
                   (Dream.static ~loader:(direct_loader page img.filename) "");
               ]
               @ [
                   (* This is the album thumbnails *)
-                  Dream.get
+                  esc_dream_get
                     (Uri.to_string
                        (Section.uri ~page ~resource:("album_" ^ img.filename)
                           sec))
                     (Dream.static
                        ~loader:(fun _root _path -> image_loader page img.filename (300, 300))
                        "");
-                  Dream.get
+                  esc_dream_get
                     (Uri.to_string
                        (Section.uri ~page ~resource:("album_" ^ retina_name) sec))
                     (Dream.static
@@ -283,14 +286,14 @@ let routes_for_direct_shortcodes sec page =
       | _ -> [])
     (Page.shortcodes page)
   |> List.map (fun filename ->
-         Dream.get
+         esc_dream_get
            (Uri.to_string (Section.uri ~page ~resource:filename sec))
            (Dream.static ~loader:(direct_loader page filename) ""))
 
 let routes_for_scripts_and_resources sec page =
   Page.resources page @ Page.scripts page
   |> List.map (fun filename ->
-         Dream.get
+         esc_dream_get
            (Uri.to_string (Section.uri ~page ~resource:filename sec))
            (Dream.static ~loader:(direct_loader page filename) ""))
 
@@ -315,11 +318,11 @@ let collect_static_routes site =
       let basename = Fpath.basename path in
       match Sys.is_directory (Fpath.to_string path) with
       | true ->
-          Dream.get
+          esc_dream_get
             (Printf.sprintf "/%s/**" basename)
             (Dream.static ~loader:static_loader (Fpath.to_string (path / ".")))
       | false ->
-          Dream.get ("/" ^ basename) (Dream.static ~loader:static_loader ""))
+          esc_dream_get ("/" ^ basename) (Dream.static ~loader:static_loader ""))
     things_to_be_published
 
 let routes_for_aliases site =
@@ -329,7 +332,7 @@ let routes_for_aliases site =
         (fun page ->
           List.map
             (fun alias ->
-              Dream.get alias (fun r ->
+              esc_dream_get alias (fun r ->
                   Dream.redirect ~status:`Moved_Permanently r
                     (Uri.to_string (Section.uri ~page sec))))
             (Page.aliases page))
@@ -345,7 +348,7 @@ let routes_for_redirect_for_sans_slash sec page =
         String.with_range ~len:(String.length page_url - 1) page_url
       in
       [
-        Dream.get sans_slash (fun r ->
+        esc_dream_get sans_slash (fun r ->
             Dream.redirect ~status:`Moved_Permanently r page_url);
       ]
 
@@ -354,7 +357,8 @@ let routes_for_page site sec previous_page page next_page page_renderer
   match Page.content page with
   | false -> []
   | true ->
-      Dream.get
+      (* Dream.log "Adding %s" (Uri.to_string (Section.uri ~page sec)); *)
+      esc_dream_get
         (Uri.to_string (Section.uri ~page sec))
         (fun _ ->
           let stats = Unix.stat (Fpath.to_string (Page.path page)) in
@@ -390,12 +394,12 @@ let routes_for_pages_in_section site sec page_renderer thumbnail_loader
 
 let routes_for_feed base_section site page_list =
   [
-    Dream.get
+    esc_dream_get
       (Uri.to_string (Section.uri ~resource:"index.xml" base_section))
       (fun _ ->
         Rss.render_rss base_section site page_list
         |> Dream.respond ~headers:[ ("Content-Type", "application/rss+xml") ]);
-    Dream.get
+    esc_dream_get
       (Uri.to_string (Section.uri ~resource:"feed.json" base_section))
       (fun _ ->
         let feed = Rss.render_jsonfeed base_section site page_list in
@@ -427,7 +431,7 @@ let routes_for_section ~section_renderer ~page_renderer ~page_body_renderer
     |> List.sort (fun (_, a, _) (_, b, _) ->
            Ptime.compare (Page.date b) (Page.date a))
   in
-  Dream.get
+  esc_dream_get
     (Uri.to_string (Section.uri sec))
     (fun _ -> (section_renderer sec) site sec |> Dream.html)
   :: (routes_for_feed sec site pages_in_feed
@@ -442,7 +446,7 @@ let routes_for_taxonomies ~taxonomy_renderer ~taxonomy_section_renderer
       Dream.log "Taxonomy %s: %d terms" name
         (List.length (Taxonomy.sections taxonomy));
 
-      Dream.get (Uri.to_string (Taxonomy.uri taxonomy)) (fun _ ->
+      esc_dream_get (Uri.to_string (Taxonomy.uri taxonomy)) (fun _ ->
           let render_taxonomy = taxonomy_renderer taxonomy in
           render_taxonomy site taxonomy |> Dream.html)
       :: List.concat_map
