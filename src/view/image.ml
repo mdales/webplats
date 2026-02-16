@@ -126,13 +126,33 @@ let render_diagram page code =
   | true -> Lwt.return (Fpath.v target_path)
   | false ->
     makedirs target_folder;
-    let proc = Lwt_process.open_process_full ("d2", [|"d2"; "-"; target_path|]) in
+    let proc = Lwt_process.open_process_full ("d2", [|"d2"; "--sketch"; "-"; target_path|]) in
     Lwt.bind (Lwt_io.write proc#stdin code) (fun () ->
       Lwt.bind (Lwt_io.close proc#stdin) (fun () ->
+      Lwt.bind (Lwt_io.read proc#stderr) (fun stderr_output ->
+      Lwt.bind (Lwt_io.read proc#stdout) (fun stdout_output ->
         Lwt.bind proc#close (fun status ->
           match status with
           | Unix.WEXITED 0 -> Lwt.return (Fpath.v target_path)
-          | _ -> Lwt.fail_with "D2 rendering failed")))
+          | Unix.WEXITED code ->
+              let msg = Printf.sprintf
+                "D2 rendering failed with exit code %d\nStdout: %s\nStderr: %s"
+                code stdout_output stderr_output
+              in
+              Lwt.fail_with msg
+          | Unix.WSIGNALED signal ->
+              let msg = Printf.sprintf
+                "D2 process killed by signal %d\nStderr: %s"
+                signal stderr_output
+              in
+              Lwt.fail_with msg
+          | Unix.WSTOPPED signal ->
+              let msg = Printf.sprintf
+                "D2 process stopped by signal %d\nStderr: %s"
+                signal stderr_output
+              in
+              Lwt.fail_with msg
+          )))))
 
 let render_image_fill_lwt page filename (max_width, max_height) =
   let imgpath = Fpath.add_seg (Page.path page) filename in
