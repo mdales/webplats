@@ -88,6 +88,10 @@ let v ?(base = None) original_section_title original_section_url path
     |> List.map (fun t -> (None, t))
     |> update_shortcodes (Fpath.parent path)
   in
+  let code_blocks =
+    Shortcode.find_codes body
+    |> List.map (fun t -> (None, t))
+  in
   {
     original_section_title;
     original_section_url;
@@ -95,7 +99,7 @@ let v ?(base = None) original_section_title original_section_url path
     body;
     path;
     base;
-    shortcodes = shortcodes @ markdown_codes;
+    shortcodes = shortcodes @ markdown_codes @ code_blocks;
   }
 
 let of_file ?(base = None) original_section_title original_section_url path =

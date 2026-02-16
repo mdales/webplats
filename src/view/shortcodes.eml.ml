@@ -101,13 +101,10 @@ let render_chart _style filename xaxis yaxis =
     vegaEmbed('#<%s identifier %>', vlSpec);
   </script>
 
-let render_mermaid body =
-  <h1>mermaid</h1>
-  <div>
-% (List.iter (fun s ->
-      <p><%s s %></p>
-% ) body);
-  </div>
+let render_diagram code =
+  let hash = Digest.string code |> Digest.to_hex in
+  let filename = Printf.sprintf "%s.svg" hash in
+  render_vector filename None None
 
 let render_shortcode shortcode =
   match shortcode with
@@ -118,5 +115,5 @@ let render_shortcode shortcode =
   | Shortcode.Vector (filename, alt, klass) -> render_vector filename alt klass
   | Shortcode.Photo (reference) -> render_photo reference
   | Shortcode.Chart (style, filename, xaxis, yaxis) -> render_chart style filename xaxis yaxis
-  | Shortcode.Mermaid body -> render_mermaid body
+  | Shortcode.Diagram (code) -> render_diagram code
   | _ -> ""

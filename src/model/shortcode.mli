@@ -6,8 +6,10 @@ type t =
   | Photo of string
   | Chart of string * string * string * string
   | Youtube of string
+  | Diagram of string
   | Unknown of string list
 
 val find_shortcodes : string -> ((int * int) * t) list
 val find_labels : string -> t list
+val find_codes : string -> t list
 val img_expansion : string list -> t
