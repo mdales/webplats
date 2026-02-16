@@ -104,7 +104,7 @@ let render_chart _style filename xaxis yaxis =
 let render_diagram code =
   let hash = Digest.string code |> Digest.to_hex in
   let filename = Printf.sprintf "%s.svg" hash in
-  render_vector filename None None
+  render_vector filename None (Some "d2")
 
 let render_shortcode shortcode =
   match shortcode with
