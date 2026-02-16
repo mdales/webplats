@@ -10,6 +10,7 @@ let shortcode_printer (sc : Shortcode.t) =
   | Youtube a -> Printf.sprintf "Youtube(%s)" a
   | Video (a, _b, c) -> Printf.sprintf "Video(%s, _, %b)" a c
   | Chart (a, _b, _c, _d) -> Printf.sprintf "Chart(%s, _, _, _)" a
+  | Diagram a -> Printf.sprintf "Diagram(%s)" a
   | Unknown a -> Printf.sprintf "Unknown(%d)" (List.length a)
 
 let assert_equal_sc = assert_equal ~printer:shortcode_printer

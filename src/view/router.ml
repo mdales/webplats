@@ -204,6 +204,27 @@ let routes_for_image_shortcodes sec page (image_loader : image_loader_t) =
       | _ -> [])
     (Page.shortcodes page)
 
+let diagram_wrapper page code request =
+  let pathp = Image.render_diagram page code in
+  Lwt.bind pathp (fun path ->
+      static_loader "/" (Fpath.to_string path) request)
+
+let routes_for_diagram_shortcodes sec page =
+  List.concat_map
+    (fun (_, sc) ->
+      match sc with
+      | Shortcode.Diagram code -> (
+        let hash = Digest.string code |> Digest.to_hex in
+        let filename = Printf.sprintf "%s.svg" hash in
+        [
+          Dream.get
+          (Uri.to_string (Section.uri ~page ~resource:filename sec))
+          (Dream.static ~loader:(fun _root _path -> diagram_wrapper page code) "")
+        ]
+      )
+      | _ -> []
+    ) (Page.shortcodes page)
+
 let routes_for_titleimage sec page thumbnail_loader image_loader =
   match Page.titleimage page with
   | None -> []
@@ -372,6 +393,7 @@ let routes_for_page site sec previous_page page next_page page_renderer
          @ routes_for_frontmatter_image_list sec page image_loader
          @ routes_for_frontmatter_video_list sec page
          @ routes_for_image_shortcodes sec page image_loader
+         @ routes_for_diagram_shortcodes sec page
          @ routes_for_direct_shortcodes sec page
          @ routes_for_scripts_and_resources sec page)
 

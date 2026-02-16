@@ -6,6 +6,7 @@ type t =
   | Photo of string
   | Chart of string * string * string * string
   | Youtube of string
+  | Diagram of string
   | Unknown of string list
 
 let find_raw_shortcodes body =
@@ -46,8 +47,7 @@ let img_expansion args =
 
 let find_labels body =
   let open Cmarkit in
-  let body = Cmarkit.Doc.of_string body in
-  let module String_set = Set.Make (String) in
+  let body = Doc.of_string body in
   let inline _m acc = function
     | Inline.Image (l, _) ->
         let t =
@@ -67,6 +67,25 @@ let find_labels body =
     | _ -> Folder.default (* let the folder thread the fold *)
   in
   let folder = Folder.make ~inline () in
+  Folder.fold_doc folder [] body
+
+let find_codes body =
+  let open Cmarkit in
+  let body = Doc.of_string body in
+  let block _m acc = function
+  | Block.Code_block (node, _) -> (
+    match Block.Code_block.info_string node with
+    | Some ("d2", _) -> (
+      let code_nodes = Block.Code_block.code node in
+      let code_lines = List.map (fun (s, _) -> s) code_nodes in
+      let code = List.fold_left (fun acc l -> Printf.sprintf "%s\n%s" acc l) "" code_lines in
+      Folder.ret ((Diagram code) :: acc)
+    )
+    | _ -> Folder.default
+  )
+  | _ -> Folder.default
+  in
+  let folder = Folder.make ~block () in
   Folder.fold_doc folder [] body
 
 let find_shortcodes body =

@@ -35,21 +35,17 @@ let render_diagram_blocks doc =
     match n with
     | Block.Code_block (node, meta) ->
       (
-      Dream.log "found block";
       match Block.Code_block.info_string node with
       | Some ("d2", _) -> (
-        Dream.log "info name d2";
-
-        let code = Block.Code_block.code node in
-        List.iter (fun (s, _) ->
-          Dream.log "line: %s" s
-        ) code;
-
-        let html = "Some HTML here" in
+        let code_nodes = Block.Code_block.code node in
+        let code_lines = List.map (fun (s, _) -> s) code_nodes in
+        let code = List.fold_left (fun acc l -> Printf.sprintf "%s\n%s" acc l) "" code_lines in
+        let sc = Shortcode.Diagram code in
+        let html = Shortcodes.render_shortcode sc in
         let html_blocks = Block_line.list_of_string html in
         let new_block = Block.Html_block (html_blocks, meta) in
         `Map (Some new_block))
-        | _ -> (Dream.log "no info"); `Default
+        | _ -> `Default
       )
     | _ -> `Default
   in

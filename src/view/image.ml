@@ -115,6 +115,25 @@ let _render_image_fit page filename (max_width, max_height) =
           Images.save target_path None [] resultimg;
           Fpath.v target_path)
 
+let render_diagram page code =
+  let hash = Digest.string code |> Digest.to_hex in
+  let filename = Printf.sprintf "%s.svg" hash in
+  let target_folder =
+    Fpath.append (cache_dir ()) (Fpath.v (Page.url_name page))
+  in
+  let target_path = Fpath.to_string (Fpath.add_seg target_folder filename) in
+  match Sys.file_exists target_path with
+  | true -> Lwt.return (Fpath.v target_path)
+  | false ->
+    makedirs target_folder;
+    let proc = Lwt_process.open_process_full ("d2", [|"d2"; "-"; target_path|]) in
+    Lwt.bind (Lwt_io.write proc#stdin code) (fun () ->
+      Lwt.bind (Lwt_io.close proc#stdin) (fun () ->
+        Lwt.bind proc#close (fun status ->
+          match status with
+          | Unix.WEXITED 0 -> Lwt.return (Fpath.v target_path)
+          | _ -> Lwt.fail_with "D2 rendering failed")))
+
 let render_image_fill_lwt page filename (max_width, max_height) =
   let imgpath = Fpath.add_seg (Page.path page) filename in
   let targetname =
