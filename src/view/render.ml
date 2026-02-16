@@ -1,7 +1,7 @@
 open Astring
+open Cmarkit
 
 let render_markdown_images doc =
-  let open Cmarkit in
   let inline _ n =
     match n with
     | Inline.Image (node, meta) ->
@@ -29,6 +29,34 @@ let render_markdown_images doc =
   let mapper = Mapper.make ~inline () in
   Mapper.map_doc mapper doc
 
+let render_diagram_blocks doc =
+  Dream.log "hello";
+  let block _ n =
+    match n with
+    | Block.Code_block (node, meta) ->
+      (
+      Dream.log "found block";
+      match Block.Code_block.info_string node with
+      | Some ("d2", _) -> (
+        Dream.log "info name d2";
+
+        let code = Block.Code_block.code node in
+        List.iter (fun (s, _) ->
+          Dream.log "line: %s" s
+        ) code;
+
+        let html = "Some HTML here" in
+        let html_blocks = Block_line.list_of_string html in
+        let new_block = Block.Html_block (html_blocks, meta) in
+        `Map (Some new_block))
+        | _ -> (Dream.log "no info"); `Default
+      )
+    | _ -> `Default
+  in
+  let mapper = Mapper.make ~block () in
+  Mapper.map_doc mapper doc
+
+
 let render_body page =
   let unrendered_markdown = Page.body page in
   let ordered_shortcodes =
@@ -46,8 +74,9 @@ let render_body page =
         before ^ rendered_shortcode ^ after)
       unrendered_markdown ordered_shortcodes
   in
-  Cmarkit.Doc.of_string ~strict:false body
+  Doc.of_string ~strict:false body
   |> render_markdown_images
+  |> render_diagram_blocks
   (* |> Hilite_markdown.transform *)
   |> Cmarkit_html.of_doc ~safe:false
 
