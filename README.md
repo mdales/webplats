@@ -26,7 +26,22 @@ Whilst markdown is preferred, there are some [Jekyll](https://jekyllrb.com)/[Hug
 | --- | --- | --- |
 | audio | filename | Inserts an audio player into the page |
 | chart | sytle, CSV filename, x-axis column, y-axis column | Insert a chart using vega-lite into page |
+| geojson | filename | Inserts a map with the data from the geojson displayed |
 | img | filename, alt text | Inserts a raster image or SVG into the page |
 | video | filename, thumbnail image filename | Inserts an HTML5 video player into the page |
 | videoloop | filename, thumbnail image filename | Inserts an HTML5 video player into the page configured to loop |
 | youtube | video code | Inserts a non-cookie based youtube embed |
+
+## Other extensions
+
+If you have [D2 installed](https://d2lang.com) then you can use code blocks to include flow chart diagrams, like so:
+
+````markdown
+```d2
+direction: right
+A -> B
+A -> C
+B -> D
+C -> D
+```
+````

@@ -101,6 +101,25 @@ let render_chart _style filename xaxis yaxis =
     vegaEmbed('#<%s identifier %>', vlSpec);
   </script>
 
+let render_geojson filename =
+  <div
+% let identifier = Printf.sprintf "geojson%d" (Random.int 1024) in
+  id="<%s identifier %>" class="map">
+  </div>
+  <script>
+    const map_<%s identifier %> = L.map('<%s identifier %>').setView([20.0, 0.0], 2);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map_<%s identifier %>);
+    fetch('<%s filename %>')
+      .then(r => r.json())
+      .then(data => {
+        const layer = L.geoJSON(data, { style: { color: '#e63946', fillOpacity: 0.2 } })
+          .addTo(map_<%s identifier %>);
+        map_<%s identifier %>.fitBounds(layer.getBounds(), { padding: [20, 20], maxZoom: 14 });
+      });
+  </script>
+
 let render_diagram code =
   let hash = Digest.string code |> Digest.to_hex in
   let filename = Printf.sprintf "%s.svg" hash in
@@ -115,5 +134,6 @@ let render_shortcode shortcode =
   | Shortcode.Vector (filename, alt, klass) -> render_vector filename alt klass
   | Shortcode.Photo (reference) -> render_photo reference
   | Shortcode.Chart (style, filename, xaxis, yaxis) -> render_chart style filename xaxis yaxis
+  | Shortcode.GeoJSON (filename) -> render_geojson filename
   | Shortcode.Diagram (code) -> render_diagram code
   | _ -> ""

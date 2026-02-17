@@ -182,3 +182,10 @@ let has_chart t =
     (fun acc (_, sc) ->
       acc || match sc with Shortcode.Chart _ -> true | _ -> false)
     false (shortcodes t)
+
+let has_map t =
+  (* In future we may have rasters etc., hence the name not matching the single shortcode *)
+  List.fold_left
+    (fun acc (_, sc) ->
+      acc || match sc with Shortcode.GeoJSON _ -> true | _ -> false)
+    false (shortcodes t)

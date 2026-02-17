@@ -304,6 +304,7 @@ let routes_for_direct_shortcodes sec page =
       | Shortcode.Video (r, Some t, _) -> [ r; t ]
       | Shortcode.Audio r -> [ r ]
       | Shortcode.Chart (_, r, _, _) -> [ r ]
+      | Shortcode.GeoJSON r -> [ r ]
       | _ -> [])
     (Page.shortcodes page)
   |> List.map (fun filename ->

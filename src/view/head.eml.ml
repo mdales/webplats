@@ -64,6 +64,10 @@ let render_head ~site ~sec ~page () =
     <script src="https://cdn.jsdelivr.net/npm/vega-lite@6"></script>
     <script src ="https://cdn.jsdelivr.net/npm/vega-embed@7"></script>
 % | false -> ());
+% (match (Page.has_map p) with true ->
+  <link rel="stylesheet" href="/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="/leaflet@1.9.4/dist/leaflet.js"></script>
+% | false -> ());
 % | None -> (
 % match sec with Some s ->
     <%s! render_head_section s %>

@@ -10,6 +10,7 @@ let shortcode_printer (sc : Shortcode.t) =
   | Youtube a -> Printf.sprintf "Youtube(%s)" a
   | Video (a, _b, c) -> Printf.sprintf "Video(%s, _, %b)" a c
   | Chart (a, _b, _c, _d) -> Printf.sprintf "Chart(%s, _, _, _)" a
+  | GeoJSON a -> Printf.sprintf "GeoJSON(%s)" a
   | Diagram a -> Printf.sprintf "Diagram(%s)" a
   | Unknown a -> Printf.sprintf "Unknown(%d)" (List.length a)
 

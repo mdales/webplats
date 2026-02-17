@@ -5,6 +5,7 @@ type t =
   | Audio of string
   | Photo of string
   | Chart of string * string * string * string
+  | GeoJSON of string
   | Youtube of string
   | Diagram of string
   | Unknown of string list
@@ -113,4 +114,5 @@ let find_shortcodes body =
            | [ "youtube"; arg1 ] -> Youtube arg1
            | [ "chart"; arg1; arg2; arg3; arg4 ] ->
                Chart (arg1, arg2, arg3, arg4)
+           | [ "geojson"; arg1 ] -> GeoJSON arg1
            | _ -> Unknown sl ))

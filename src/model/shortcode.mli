@@ -5,6 +5,7 @@ type t =
   | Audio of string
   | Photo of string
   | Chart of string * string * string * string
+  | GeoJSON of string
   | Youtube of string
   | Diagram of string
   | Unknown of string list
