@@ -35,7 +35,7 @@ let is_image_retina dims =
   match dims with
   | None -> true
   | Some (width, height) -> (
-    (width > (800 * 2)) && (height > (600 * 2))
+    (width > (900 * 2)) && (height > (700 * 2))
   )
 
 let render_raster filename alt klass dims =
@@ -60,6 +60,42 @@ let render_raster filename alt klass dims =
       </figure>
     </div>
   </div>
+
+let render_compare_rasters filename1 filename2 dims =
+  <div class="compare"
+% let identifier = Printf.sprintf "compare%d" (Random.int 1024) in
+    id="<%s identifier %>"
+  >
+    <img class="before"
+      src="<%s filename1 %>"
+% let name, ext = Fpath.split_ext (Fpath.v filename1) in
+% (match (is_image_retina dims) with true ->
+% let retina_filename = Printf.sprintf "%s@2x%s" (Fpath.to_string name) ext in
+          srcset="<%s retina_filename %> 2x, <%s filename1 %> 1x"
+% | false -> ());
+    alt="Before">
+    <img class="after"
+      src="<%s filename2 %>"
+% let name, ext = Fpath.split_ext (Fpath.v filename2) in
+% (match (is_image_retina dims) with true ->
+% let retina_filename = Printf.sprintf "%s@2x%s" (Fpath.to_string name) ext in
+          srcset="<%s retina_filename %> 2x, <%s filename2 %> 1x"
+% | false -> ());
+      alt="After">
+    <div class="handle"></div>
+    <span class="label label-before">Before</span>
+    <span class="label label-after">After</span>
+    <input type="range" min="0" max="100" value="50"
+           oninput="updateCompare(this)">
+  </div>
+  <script>
+  function updateCompare(slider) {
+    const pct = slider.value;
+    const wrap = slider.closest('.compare');
+    wrap.querySelector('.after').style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+    wrap.querySelector('.handle').style.left = `${pct}%`;
+  }
+  </script>
 
 let render_vector filename alt klass =
     <div class="listimage">
@@ -136,4 +172,5 @@ let render_shortcode shortcode =
   | Shortcode.Chart (style, filename, xaxis, yaxis) -> render_chart style filename xaxis yaxis
   | Shortcode.GeoJSON (filename) -> render_geojson filename
   | Shortcode.Diagram (code) -> render_diagram code
+  | Shortcode.CompareRaster (filename1, filename2, dims) -> render_compare_rasters filename1 filename2 dims
   | _ -> ""

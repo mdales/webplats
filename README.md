@@ -26,6 +26,7 @@ Whilst markdown is preferred, there are some [Jekyll](https://jekyllrb.com)/[Hug
 | --- | --- | --- |
 | audio | filename | Inserts an audio player into the page |
 | chart | sytle, CSV filename, x-axis column, y-axis column | Insert a chart using vega-lite into page |
+| compare | filename1, filename2 | Adds an image comparison slide |
 | geojson | filename | Inserts a map with the data from the geojson displayed |
 | img | filename, alt text | Inserts a raster image or SVG into the page |
 | video | filename, thumbnail image filename | Inserts an HTML5 video player into the page |

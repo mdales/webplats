@@ -12,6 +12,7 @@ let shortcode_printer (sc : Shortcode.t) =
   | Chart (a, _b, _c, _d) -> Printf.sprintf "Chart(%s, _, _, _)" a
   | GeoJSON a -> Printf.sprintf "GeoJSON(%s)" a
   | Diagram a -> Printf.sprintf "Diagram(%s)" a
+  | CompareRasters (a, b, _) -> Printf.sprintf "CompareRasters(%s, %s, _)" a b
   | Unknown a -> Printf.sprintf "Unknown(%d)" (List.length a)
 
 let assert_equal_sc = assert_equal ~printer:shortcode_printer

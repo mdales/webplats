@@ -184,23 +184,28 @@ let routes_for_frontmatter_video_list sec page =
                (fun ic -> In_channel.input_all ic))))
     (Page.videos page)
 
+let inner_image_for_shortcodes sec page image_loader filename =
+  [
+    esc_dream_get
+      (Uri.to_string (Section.uri ~page ~resource:filename sec))
+      (Dream.static ~loader:(fun _root _path -> image_loader page filename (900, 700)) "");
+    (let name, ext = Fpath.split_ext (Fpath.v filename) in
+     let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
+     esc_dream_get
+       (Uri.to_string (Section.uri ~page ~resource:retina_name sec))
+       (Dream.static
+          ~loader:(fun _root _path -> image_loader page filename (900 * 2, 700 * 2))
+          ""));
+  ]
+
 let routes_for_image_shortcodes sec page (image_loader : image_loader_t) =
+  let curried_f = inner_image_for_shortcodes sec page image_loader in
   List.concat_map
     (fun (_, sc) ->
       match sc with
-      | Shortcode.Raster (filename, _, _, _) ->
-          [
-            esc_dream_get
-              (Uri.to_string (Section.uri ~page ~resource:filename sec))
-              (Dream.static ~loader:(fun _root _path -> image_loader page filename (800, 600)) "");
-            (let name, ext = Fpath.split_ext (Fpath.v filename) in
-             let retina_name = Fpath.to_string name ^ "@2x" ^ ext in
-             esc_dream_get
-               (Uri.to_string (Section.uri ~page ~resource:retina_name sec))
-               (Dream.static
-                  ~loader:(fun _root _path -> image_loader page filename (800 * 2, 600 * 2))
-                  ""));
-          ]
+      | Shortcode.Raster (filename, _, _, _) -> curried_f filename
+      | Shortcode.CompareRaster (filename1, filename2, _) ->
+        [filename1; filename2] |> List.concat_map curried_f
       | _ -> [])
     (Page.shortcodes page)
 

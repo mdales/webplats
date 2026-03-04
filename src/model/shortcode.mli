@@ -8,6 +8,7 @@ type t =
   | GeoJSON of string
   | Youtube of string
   | Diagram of string
+  | CompareRaster of string * string * (int * int) option
   | Unknown of string list
 
 val find_shortcodes : string -> ((int * int) * t) list

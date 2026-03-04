@@ -8,6 +8,7 @@ type t =
   | GeoJSON of string
   | Youtube of string
   | Diagram of string
+  | CompareRaster of string * string * (int * int) option
   | Unknown of string list
 
 let find_raw_shortcodes body =
@@ -115,4 +116,5 @@ let find_shortcodes body =
            | [ "chart"; arg1; arg2; arg3; arg4 ] ->
                Chart (arg1, arg2, arg3, arg4)
            | [ "geojson"; arg1 ] -> GeoJSON arg1
+           | [ "compare"; arg1; arg2 ] -> CompareRaster (arg1, arg2, None)
            | _ -> Unknown sl ))
