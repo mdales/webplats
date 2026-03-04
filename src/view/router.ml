@@ -207,7 +207,7 @@ let routes_for_image_shortcodes sec page (image_loader : image_loader_t) =
     (fun (_, sc) ->
       match sc with
       | Shortcode.Raster (filename, _, _, _) -> curried_f filename
-      | Shortcode.CompareRaster (filename1, filename2, _) ->
+      | Shortcode.CompareRaster (filename1, filename2, _, _, _) ->
         [filename1; filename2] |> List.concat_map curried_f
       | _ -> [])
     (Page.shortcodes page)

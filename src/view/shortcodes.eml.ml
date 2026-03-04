@@ -61,7 +61,7 @@ let render_raster filename alt klass dims =
     </div>
   </div>
 
-let render_compare_rasters filename1 filename2 dims =
+let render_compare_rasters filename1 filename2 label1 label2 dims =
   <div class="compare"
 % let identifier = Printf.sprintf "compare%d" (Random.int 1024) in
     id="<%s identifier %>"
@@ -73,7 +73,7 @@ let render_compare_rasters filename1 filename2 dims =
 % let retina_filename = Printf.sprintf "%s@2x%s" (Fpath.to_string name) ext in
           srcset="<%s retina_filename %> 2x, <%s filename1 %> 1x"
 % | false -> ());
-    alt="Before">
+    alt="<%s label1 %>">
     <img class="after"
       src="<%s filename2 %>"
 % let name, ext = Fpath.split_ext (Fpath.v filename2) in
@@ -81,10 +81,10 @@ let render_compare_rasters filename1 filename2 dims =
 % let retina_filename = Printf.sprintf "%s@2x%s" (Fpath.to_string name) ext in
           srcset="<%s retina_filename %> 2x, <%s filename2 %> 1x"
 % | false -> ());
-      alt="After">
+      alt="<%s label2 %>">
     <div class="handle"></div>
-    <span class="label label-before">Before</span>
-    <span class="label label-after">After</span>
+    <span class="label label-before"><%s label1 %></span>
+    <span class="label label-after"><%s label2 %></span>
     <input type="range" min="0" max="100" value="50"
            oninput="updateCompare(this)">
   </div>
@@ -94,7 +94,11 @@ let render_compare_rasters filename1 filename2 dims =
     const wrap = slider.closest('.compare');
     wrap.querySelector('.after').style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
     wrap.querySelector('.handle').style.left = `${pct}%`;
+    wrap.querySelector('.label-before').style.opacity = (100 - pct) / 100;
+    wrap.querySelector('.label-after').style.opacity = pct / 100;
   }
+  document.querySelectorAll('.compare input[type=range]')
+  .forEach(s => updateCompare(s));
   </script>
 
 let render_vector filename alt klass =
@@ -172,5 +176,5 @@ let render_shortcode shortcode =
   | Shortcode.Chart (style, filename, xaxis, yaxis) -> render_chart style filename xaxis yaxis
   | Shortcode.GeoJSON (filename) -> render_geojson filename
   | Shortcode.Diagram (code) -> render_diagram code
-  | Shortcode.CompareRaster (filename1, filename2, dims) -> render_compare_rasters filename1 filename2 dims
+  | Shortcode.CompareRaster (filename1, filename2, label1, label2, dims) -> render_compare_rasters filename1 filename2 label1 label2 dims
   | _ -> ""

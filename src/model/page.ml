@@ -65,7 +65,7 @@ let image_shortcode_with_dimensions path filename alt code =
         (Fpath.to_string (Fpath.add_seg path filename));
       Shortcode.Raster (filename, alt, code, None)
 
-let compare_shortcode_with_dimensions path fn1 fn2 =
+let compare_shortcode_with_dimensions path fn1 fn2 l1 l2  =
   (* Lazy: just take dims off first image for now *)
   try
     let metadata =
@@ -73,19 +73,19 @@ let compare_shortcode_with_dimensions path fn1 fn2 =
     in
     let width = int_of_string (List.assoc "width" metadata)
     and height = int_of_string (List.assoc "height" metadata) in
-    Shortcode.CompareRaster (fn1, fn2, Some (width, height))
+    Shortcode.CompareRaster (fn1, fn2, l1, l2, Some (width, height))
   with
   | Invalid_argument _ ->
       Dream.log "Failed to process path %s + %s" (Fpath.to_string path) fn1;
-      Shortcode.CompareRaster (fn1, fn2, None)
+      Shortcode.CompareRaster (fn1, fn2, l1, l2, None)
   | Failure _ ->
       Dream.log "Failed to parse %s"
         (Fpath.to_string (Fpath.add_seg path fn1));
-        Shortcode.CompareRaster (fn1, fn2, None)
+        Shortcode.CompareRaster (fn1, fn2, l1, l2, None)
   | Metadata.Invalid ->
       Dream.log "Error reading metadata %s"
         (Fpath.to_string (Fpath.add_seg path fn1));
-        Shortcode.CompareRaster (fn1, fn2, None)
+        Shortcode.CompareRaster (fn1, fn2, l1, l2, None)
 
 let update_shortcodes dir sl =
   List.map
@@ -93,8 +93,8 @@ let update_shortcodes dir sl =
       match sc with
       | Shortcode.Raster (fn, alt, code, _) ->
           (pos, image_shortcode_with_dimensions dir fn alt code)
-      | Shortcode.CompareRaster (fn1, fn2, _) ->
-        (pos, compare_shortcode_with_dimensions dir fn1 fn2)
+      | Shortcode.CompareRaster (fn1, fn2, l1, l2, _) ->
+        (pos, compare_shortcode_with_dimensions dir fn1 fn2 l1 l2)
       | x -> (pos, x))
     sl
 
