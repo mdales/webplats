@@ -153,6 +153,9 @@ let direct_loader page filename _root _path request =
   (* This wrapper just avoids the need to do reverse lookups based on how I mangle file names *)
   static_loader (Fpath.to_string (Page.path page)) filename request
 
+let replacement_loader actual_filename _root _path request =
+  static_loader (Fpath.to_string (Fpath.parent actual_filename)) (Fpath.basename actual_filename) request
+
 let routes_for_frontmatter_image_list sec page (image_loader : image_loader_t) =
   List.concat_map
     (fun (i : Frontmatter.image) ->
@@ -508,4 +511,16 @@ let of_site ~section_renderer ~taxonomy_renderer ~taxonomy_section_renderer
 
   let aliases = routes_for_aliases site in
 
-  sections @ taxonomies @ aliases @ static
+  let css_routes = match Site.css_digest_path site with
+  | None -> []
+  | Some digest_path -> [
+    (
+      let te = Option.get (Site.css_path site) in
+      esc_dream_get digest_path (
+        Dream.static ~loader:(replacement_loader te) ""
+      )
+    )
+  ]
+  in
+
+  sections @ taxonomies @ aliases @ static @ css_routes

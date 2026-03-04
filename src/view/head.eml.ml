@@ -1,10 +1,12 @@
 
 let render_head_generic site =
-  <link rel="stylesheet" href="/css/base.css" type="text/css" media="screen">
   <link rel="icon" href="/img/favicon-32.png" sizes="32x32">
   <link rel="icon" href="/img/favicon-57.png" sizes="57x57">
   <link rel="icon" href="/img/favicon-180.png" sizes="180x180">
   <link rel="icon" href="/img/favicon-192.png" sizes="192x192">
+% (match (Site.css_digest_path site) with Some p ->
+  <link rel="stylesheet" href="/<%s p %>" type="text/css" media="screen">
+% | None -> ());
   <link rel="apple-touch-icon" href="/img/favicon-57.png" sizes="57x57">
   <link rel="apple-touch-icon" href="/img/favicon-180.png" sizes="180x180">
   <link rel="me" href="https://mastodon.me.uk/@mdales">

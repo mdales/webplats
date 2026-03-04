@@ -4,6 +4,7 @@ type t = {
   config : Config.t;
   path : Fpath.t;
   taxonomies : (string * Taxonomy.t) list;
+  css_digest_path : string option;
 }
 
 let build_taxonomy taxonomy_name (pages : Page.t list) =
@@ -99,6 +100,19 @@ let of_directory path =
 
   let toplevel = Section.v "website" (Uri.of_string "/") root_pages in
 
+  let css_digest_path = match Config.css_path config with
+    | None -> None
+    | Some s -> (
+      let relative_path = Fpath.v s in
+      let p = Fpath.append path relative_path in
+      let digest = Digest.to_hex (Digest.file (Fpath.to_string p)) in
+      let basename = Fpath.basename relative_path in
+      let parent = Fpath.parent relative_path in
+      let digest_path = Fpath.add_seg parent (Printf.sprintf "%s_%s" digest basename) in
+      Some (Fpath.to_string digest_path)
+    )
+  in
+
   let taxonomies =
     List.map
       (fun (tag, name) ->
@@ -109,7 +123,7 @@ let of_directory path =
       (Config.taxonomies config)
   in
 
-  { sections; toplevel; config; path; taxonomies }
+  { sections; toplevel; config; path; taxonomies; css_digest_path}
 
 let sections t = t.toplevel :: t.sections
 let title t = Config.title t.config
@@ -120,3 +134,9 @@ let taxonomies t = t.taxonomies
 let uri t = Config.base_url t.config
 let port t = Config.port t.config
 let author t = Config.author t.config
+let css_digest_path t = t.css_digest_path
+
+let css_path t =
+  match Config.css_path t.config with
+  | None -> None
+  | Some s -> Some (Fpath.append t.path (Fpath.v s))

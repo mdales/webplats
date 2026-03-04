@@ -9,5 +9,6 @@ val port : t -> int
 val taxonomies : t -> (string * string) list
 (* Taxonomies in Hugo are a tuple of frontmatter key and human readable key *)
 val author : t -> string option
+val css_path : t -> string option
 
 val hugo_theme : t -> string

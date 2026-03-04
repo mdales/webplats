@@ -7,6 +7,7 @@ type t = {
   hugo_theme : string;
   port : int;
   author : string option;
+  css : string option;
 }
 
 let of_file path =
@@ -25,8 +26,9 @@ let of_file path =
           and taxonomies =
             yaml_dict_to_string_dict assoc "taxonomies"
             |> List.map (fun (k, v) -> (k ^ "s", v))
+          and css = yaml_dict_to_string assoc "css"
           in
-          { title; base_url; taxonomies; hugo_theme; port; author }
+          { title; base_url; taxonomies; hugo_theme; port; author; css }
       | _ -> failwith "Failed to load config")
 
 let base_url t = t.base_url
@@ -35,3 +37,4 @@ let taxonomies t = t.taxonomies
 let hugo_theme t = t.hugo_theme
 let port t = t.port
 let author t = t.author
+let css_path t = t.css
