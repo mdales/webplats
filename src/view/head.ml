@@ -195,7 +195,14 @@ let render_head ~site ~sec ~page () =
         ]
         | false -> []
         in
-        chart_headers @ (render_head_page (Option.get sec) p)
+        let map_headers = match Page.has_map p with
+        | true -> [
+            El.link ~at:[At.rel "stylesheet"; At.href "/leaflet@1.9.4/dist/leaflet.css"] ();
+            El.script ~at:[At.src "/leaflet@1.9.4/dist/leaflet.js"] [];
+        ]
+        | false -> []
+        in
+        (render_head_page (Option.get sec) p) @ map_headers @ chart_headers
     )
     | None -> (
         match sec with
