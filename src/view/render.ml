@@ -21,7 +21,8 @@ let render_markdown_images doc =
         let args = match t with None -> [ r ] | Some x -> [ r; x ] in
 
         let shortcode = Shortcode.img_expansion args in
-        let html = Shortcodes.render_shortcode shortcode in
+        let html = Shortcodes.render_shortcode shortcode |> Htmlit.El.div |> Htmlit.El.to_string ~doctype:false in
+
         Mapper.ret
           (Inline.Raw_html (Block_line.tight_list_of_string html, meta))
     | _ -> Mapper.default
@@ -41,7 +42,7 @@ let render_diagram_blocks doc =
         let code_lines = List.map (fun (s, _) -> s) code_nodes in
         let code = List.fold_left (fun acc l -> Printf.sprintf "%s\n%s" acc l) "" code_lines in
         let sc = Shortcode.Diagram code in
-        let html = Shortcodes.render_shortcode sc in
+        let html = Shortcodes.render_shortcode sc |> Htmlit.El.div |> Htmlit.El.to_string ~doctype:false in
         let html_blocks = Block_line.list_of_string html in
         let new_block = Block.Html_block (html_blocks, meta) in
         `Map (Some new_block))
@@ -64,7 +65,7 @@ let render_body page =
   let body =
     List.fold_left
       (fun body ((loc, len), shortcode) ->
-        let rendered_shortcode = Shortcodes.render_shortcode shortcode in
+        let rendered_shortcode = Shortcodes.render_shortcode shortcode |> Htmlit.El.div |> Htmlit.El.to_string ~doctype:false in
         let before = String.with_index_range ~last:(loc - 1) body
         and after = String.with_index_range ~first:(loc + len) body in
         before ^ rendered_shortcode ^ after)

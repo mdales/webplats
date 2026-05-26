@@ -1,14 +1,3 @@
-(rule
- (targets shortcodes.ml)
- (deps shortcodes.eml.ml)
- (action
-  (run dream_eml %{deps} --workspace %{workspace_root})))
-
-(rule
- (targets head.ml)
- (deps head.eml.ml)
- (action
-  (run dream_eml %{deps} --workspace %{workspace_root})))
 
 (rule
  (targets rss.ml)

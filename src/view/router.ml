@@ -1,16 +1,17 @@
 module Stdlib_string = String
 open Astring
 open Fpath
+open Htmlit
 
 type thumbnail_loader_t = retina:bool -> Page.t -> Dream.request -> Dream.response Lwt.t
 
 type image_loader_t = Page.t -> string -> int * int -> Dream.handler
 
 type page_renderer_t =
-  Site.t -> Section.t -> Page.t option -> Page.t -> Page.t option -> string
+  Site.t -> Section.t -> Page.t option -> Page.t -> Page.t option -> El.html
 
 type meta_page_renderer_t = Page.t -> page_renderer_t
-type section_renderer_t = Site.t -> Section.t -> string
+type section_renderer_t = Site.t -> Section.t -> El.html
 type meta_section_renderer_t = Section.t -> section_renderer_t
 type body_renderer_t = Page.t -> string
 type meta_body_renderer_t = Page.t -> body_renderer_t
@@ -18,7 +19,7 @@ type meta_body_renderer_t = Page.t -> body_renderer_t
 type meta_taxonomy_section_renderer_t =
   Taxonomy.t -> Section.t -> section_renderer_t
 
-type taxonomy_renderer_t = Site.t -> Taxonomy.t -> string
+type taxonomy_renderer_t = Site.t -> Taxonomy.t -> El.html
 type meta_taxonomy_renderer_t = Taxonomy.t -> taxonomy_renderer_t
 
 module Message = Dream_pure.Message
@@ -396,6 +397,7 @@ let routes_for_page site sec previous_page page next_page page_renderer
           let last_modified = ptime_to_last_modified mtime in
           let headers = [ ("Last-modified", last_modified) ] in
           (page_renderer page) site sec previous_page page next_page
+          |> El.to_string ~doctype:true
           |> Dream.html ~headers)
       :: (routes_for_redirect_for_sans_slash sec page
          @ routes_for_titleimage sec page thumbnail_loader image_loader
@@ -464,7 +466,7 @@ let routes_for_section ~section_renderer ~page_renderer ~page_body_renderer
   in
   esc_dream_get
     (Uri.to_string (Section.uri sec))
-    (fun _ -> (section_renderer sec) site sec |> Dream.html)
+    (fun _ -> (section_renderer sec) site sec |> El.to_string ~doctype:true |>Dream.html)
   :: (routes_for_feed sec site pages_in_feed
      @ routes_for_pages_in_section site sec page_renderer thumbnail_loader
          image_loader)
@@ -479,7 +481,7 @@ let routes_for_taxonomies ~taxonomy_renderer ~taxonomy_section_renderer
 
       esc_dream_get (Uri.to_string (Taxonomy.uri taxonomy)) (fun _ ->
           let render_taxonomy = taxonomy_renderer taxonomy in
-          render_taxonomy site taxonomy |> Dream.html)
+          render_taxonomy site taxonomy |> El.to_string ~doctype:true |> Dream.html)
       :: List.concat_map
            (fun sec ->
              routes_for_section
