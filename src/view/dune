@@ -1,6 +1,0 @@
-
-(rule
- (targets rss.ml)
- (deps rss.eml.ml)
- (action
-  (run dream_eml %{deps} --workspace %{workspace_root})))

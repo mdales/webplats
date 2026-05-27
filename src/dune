@@ -16,6 +16,7 @@
   camlimages.jpeg
   camlimages.png
   pcre2
-  htmlit)
+  htmlit
+  syndic)
  (preprocess
   (pps lwt_ppx)))

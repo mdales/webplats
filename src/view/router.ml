@@ -430,12 +430,12 @@ let routes_for_feed base_section site page_list =
     esc_dream_get
       (Uri.to_string (Section.uri ~resource:"index.xml" base_section))
       (fun _ ->
-        Rss.render_rss base_section site page_list
+        Feed.render_atom base_section site page_list
         |> Dream.respond ~headers:[ ("Content-Type", "application/rss+xml") ]);
     esc_dream_get
       (Uri.to_string (Section.uri ~resource:"feed.json" base_section))
       (fun _ ->
-        let feed = Rss.render_jsonfeed base_section site page_list in
+        let feed = Feed.render_jsonfeed base_section site page_list in
         match feed with
         | Result.Ok body ->
             Dream.respond
