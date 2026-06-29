@@ -1,4 +1,4 @@
-type t = { tag : string; title : string; sections : Section.t list }
+type 'a t = { tag : string; title : string; sections : 'a Section.t list }
 
 let v tag title sections = { tag; title; sections }
 let title t = t.title

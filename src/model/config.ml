@@ -1,19 +1,19 @@
 open Yamlutil
 
-type t = {
+type 'a t = {
   title : string;
   taxonomies : (string * string) list;
   base_url : Uri.t;
   hugo_theme : string;
   port : int;
   author : string option;
-  css : string option;
-}
+  css : ('a Eio.Path.t) option;
+} constraint 'a = [> Eio.Fs.dir_ty ]
 
 let of_file path =
   Eio.Path.with_open_in path (fun file ->
     let content = Eio.Flow.read_all file in
-    match Yaml.of_string_exn content with    
+    match Yaml.of_string_exn content with
     | `O assoc ->
         let title = Option.get (yaml_dict_to_string assoc "title")
         and base_url =
@@ -27,7 +27,14 @@ let of_file path =
         and taxonomies =
           yaml_dict_to_string_dict assoc "taxonomies"
           |> List.map (fun (k, v) -> (k ^ "s", v))
-        and css = yaml_dict_to_string assoc "css"
+        and relative_css = yaml_dict_to_string assoc "css"
+        in
+        let css = match relative_css with
+        | None -> None
+        | Some p -> (
+          let parent, _ = Option.get (Eio.Path.split path) in
+          Some (Eio.Path.(parent / p))
+        )
         in
         { title; base_url; taxonomies; hugo_theme; port; author; css }
     | _ -> failwith "Failed to load config")

@@ -1,14 +1,5 @@
 type scale = Fit | Fill
 
-let cache_dir () =
-  let p =
-    match Sys.getenv_opt "WEBPLATS_CACHE_DIR" with
-    | Some x -> x
-    | None -> (
-        match Sys.getenv_opt "TMPDIR" with Some x -> x | None -> "/tmp")
-  in
-  Fpath.v p
-
 let makedirs path =
   let segs =
     Fpath.segs path |> List.map (fun p -> match p with "" -> "/" | _ -> p)
@@ -26,21 +17,60 @@ let makedirs path =
              p)
            (Fpath.v hd) tl)
 
-let _render_image_fill page filename (max_width, max_height) =
-  let imgpath = Fpath.add_seg (Page.path page) filename in
+let render_diagram process_mgr cache_dir page code =
+  let hash = Digest.string code |> Digest.to_hex in
+  let filename = Printf.sprintf "%s.svg" hash in
+  let target_folder =
+    Eio.Path.(cache_dir / (Page.url_name page))
+  in
+  let target_path = Eio.Path.(target_folder / filename) in
+  match Eio.Path.is_file target_path with
+  | true -> target_path
+  | false ->
+    (try
+      Eio.Path.mkdir ~perm:0o755 target_folder
+    with
+    | Eio.Io (Eio.Fs.E (Eio.Fs.Already_exists _), _) -> ()
+    );
+    Eio.Switch.run @@ fun sw ->
+      let stdin_r, stdin_w = Eio.Process.pipe ~sw process_mgr in
+      Eio.Fiber.both
+        (fun () ->
+          Eio.Flow.copy_string code stdin_w;
+          Eio.Flow.close stdin_w)
+        (fun () ->
+          Eio.Process.run process_mgr ~stdin:stdin_r [
+            "d2";
+            "--sketch";
+            "-";
+            Option.get (Eio.Path.native target_path)
+          ]);
+    target_path
+
+let render_image_fill process_mgr cache_dir page filename (max_width, max_height) =
+  let imgpath = Eio.Path.((Page.path page) / filename) in
   let targetname =
     Printf.sprintf "image_fill_%dx%d_%s" max_width max_height filename
   in
   let target_folder =
-    Fpath.append (cache_dir ()) (Fpath.v (Page.url_name page))
+    Eio.Path.(cache_dir / (Page.url_name page))
   in
-  let target_path = Fpath.to_string (Fpath.add_seg target_folder targetname) in
-  match Sys.file_exists target_path with
-  | true -> Fpath.v target_path
+  let target_path = Eio.Path.(target_folder / targetname) in
+  match Eio.Path.is_file target_path with
+  | true -> target_path
   | false ->
-      makedirs target_folder;
-      let img = Images.load (Fpath.to_string imgpath) [] in
-      let width, height = Images.size img in
+      (try
+        Eio.Path.mkdir ~perm:0o755 target_folder
+      with
+      | Eio.Io (Eio.Fs.E (Eio.Fs.Already_exists _), _) -> ()
+      );
+      let metadata =
+        Metadata.Image.parse_file
+          (Option.get (Eio.Path.native imgpath))
+      in
+      let width = int_of_string (List.assoc "width" metadata)
+      and height = int_of_string (List.assoc "height" metadata) in
+
       let fwidth = float_of_int width and fheight = float_of_int height in
       let f_max_width = float_of_int max_width
       and f_max_height = float_of_int max_height in
@@ -53,46 +83,40 @@ let _render_image_fill page filename (max_width, max_height) =
       let ratio = max wratio hratio in
       let newwidth = int_of_float (ratio *. fwidth)
       and newheight = int_of_float (ratio *. fheight) in
-      let resultimg =
-        match img with
-        | Rgb24 rgb ->
-            let resized = Rgb24.resize None rgb newwidth newheight in
-            let cropped =
-              Rgb24.sub resized
-                ((newwidth - max_width) / 2)
-                ((newheight - max_height) / 2)
-                max_width max_height
-            in
-            Images.Rgb24 cropped
-        | Rgba32 rgba ->
-            let resized = Rgba32.resize None rgba newwidth newheight in
-            let cropped =
-              Rgba32.sub resized
-                ((newwidth - max_width) / 2)
-                ((newheight - max_height) / 2)
-                max_width max_height
-            in
-            Images.Rgba32 cropped
-        | _ -> failwith "unexpcted image format"
-      in
-      Images.save target_path None [] resultimg;
-      Fpath.v target_path
 
-let _render_image_fit page filename (max_width, max_height) =
-  let imgpath = Fpath.add_seg (Page.path page) filename in
+      Eio.Process.run process_mgr [
+        "gm";
+        "convert";
+        (Option.get (Eio.Path.native imgpath));
+        "-resize";
+        Printf.sprintf "%dx%d" newwidth newheight;
+        Option.get (Eio.Path.native target_path);
+      ];
+      target_path
+
+let render_image_fit process_mgr cache_dir page filename (max_width, max_height) =
+  let imgpath = Eio.Path.((Page.path page) / filename) in
   let targetname =
     Printf.sprintf "image_fit_%dx%d_%s" max_width max_height filename
   in
   let target_folder =
-    Fpath.append (cache_dir ()) (Fpath.v (Page.url_name page))
+    Eio.Path.(cache_dir / (Page.url_name page))
   in
-  let target_path = Fpath.to_string (Fpath.add_seg target_folder targetname) in
-  match Sys.file_exists target_path with
-  | true -> Fpath.v target_path
+  let target_path = Eio.Path.(target_folder / targetname) in
+  match Eio.Path.is_file target_path with
+  | true -> target_path
   | false -> (
-      makedirs target_folder;
-      let img = Images.load (Fpath.to_string imgpath) [] in
-      let width, height = Images.size img in
+      (try
+        Eio.Path.mkdir ~perm:0o755 target_folder
+      with
+      | Eio.Io (Eio.Fs.E (Eio.Fs.Already_exists _), _) -> ()
+      );
+      let metadata =
+        Metadata.Image.parse_file
+          (Option.get (Eio.Path.native imgpath))
+      in
+      let width = int_of_string (List.assoc "width" metadata)
+      and height = int_of_string (List.assoc "height" metadata) in
       let fwidth = float_of_int width and fheight = float_of_int height in
       let wratio = float_of_int max_width /. fwidth
       and hratio = float_of_int max_height /. fheight in
@@ -102,145 +126,25 @@ let _render_image_fit page filename (max_width, max_height) =
           let ratio = min wratio hratio in
           let newwidth = int_of_float (ratio *. fwidth)
           and newheight = int_of_float (ratio *. fheight) in
-          let resultimg =
-            match img with
-            | Rgb24 rgb ->
-                let resized = Rgb24.resize None rgb newwidth newheight in
-                Images.Rgb24 resized
-            | Rgba32 rgba ->
-                let resized = Rgba32.resize None rgba newwidth newheight in
-                Images.Rgba32 resized
-            | _ -> failwith "unexpcted image format"
-          in
-          Images.save target_path None [] resultimg;
-          Fpath.v target_path)
+          Eio.Process.run process_mgr    [
+            "gm";
+            "convert";
+            (Option.get (Eio.Path.native imgpath));
+            "-resize";
+            Printf.sprintf "%dx%d" newwidth newheight;
+            Option.get (Eio.Path.native target_path);
+          ];
+          target_path
+          )
 
-let render_diagram page code =
-  let hash = Digest.string code |> Digest.to_hex in
-  let filename = Printf.sprintf "%s.svg" hash in
-  let target_folder =
-    Fpath.append (cache_dir ()) (Fpath.v (Page.url_name page))
-  in
-  let target_path = Fpath.to_string (Fpath.add_seg target_folder filename) in
-  match Sys.file_exists target_path with
-  | true -> Lwt.return (Fpath.v target_path)
-  | false ->
-    makedirs target_folder;
-    let proc = Lwt_process.open_process_full ("d2", [|"d2"; "--sketch"; "-"; target_path|]) in
-    Lwt.bind (Lwt_io.write proc#stdin code) (fun () ->
-      Lwt.bind (Lwt_io.close proc#stdin) (fun () ->
-      Lwt.bind (Lwt_io.read proc#stderr) (fun stderr_output ->
-      Lwt.bind (Lwt_io.read proc#stdout) (fun stdout_output ->
-        Lwt.bind proc#close (fun status ->
-          match status with
-          | Unix.WEXITED 0 -> Lwt.return (Fpath.v target_path)
-          | Unix.WEXITED code ->
-              let msg = Printf.sprintf
-                "D2 rendering failed with exit code %d\nStdout: %s\nStderr: %s"
-                code stdout_output stderr_output
-              in
-              Lwt.fail_with msg
-          | Unix.WSIGNALED signal ->
-              let msg = Printf.sprintf
-                "D2 process killed by signal %d\nStderr: %s"
-                signal stderr_output
-              in
-              Lwt.fail_with msg
-          | Unix.WSTOPPED signal ->
-              let msg = Printf.sprintf
-                "D2 process stopped by signal %d\nStderr: %s"
-                signal stderr_output
-              in
-              Lwt.fail_with msg
-          )))))
-
-let render_image_fill_lwt page filename (max_width, max_height) =
-  let imgpath = Fpath.add_seg (Page.path page) filename in
-  let targetname =
-    Printf.sprintf "image_fill_%dx%d_%s" max_width max_height filename
-  in
-  let target_folder =
-    Fpath.append (cache_dir ()) (Fpath.v (Page.url_name page))
-  in
-  let target_path = Fpath.to_string (Fpath.add_seg target_folder targetname) in
-  match Sys.file_exists target_path with
-  | true -> Lwt.return (Fpath.v target_path)
-  | false ->
-      makedirs target_folder;
-      let img = Images.load (Fpath.to_string imgpath) [] in
-      let width, height = Images.size img in
-      let fwidth = float_of_int width and fheight = float_of_int height in
-      let f_max_width = float_of_int max_width
-      and f_max_height = float_of_int max_height in
-      let ftarget =
-        match fwidth /. fheight > f_max_width /. f_max_height with
-        | true -> f_max_width
-        | false -> f_max_height
-      in
-      let wratio = ftarget /. fwidth and hratio = ftarget /. fheight in
-      let ratio = max wratio hratio in
-      let newwidth = int_of_float (ratio *. fwidth)
-      and newheight = int_of_float (ratio *. fheight) in
-      let rp =
-        Lwt_process.exec
-          ( "gm",
-            [|
-              "gm";
-              "convert";
-              Fpath.to_string imgpath;
-              "-resize";
-              Printf.sprintf "%dx%d" newwidth newheight;
-              target_path;
-            |] )
-      in
-      Lwt.bind rp (fun _res -> Lwt.return (Fpath.v target_path))
-
-let render_image_fit_lwt page filename (max_width, max_height) =
-  let imgpath = Fpath.add_seg (Page.path page) filename in
-  let targetname =
-    Printf.sprintf "image_fit_%dx%d_%s" max_width max_height filename
-  in
-  let target_folder =
-    Fpath.append (cache_dir ()) (Fpath.v (Page.url_name page))
-  in
-  let target_path = Fpath.to_string (Fpath.add_seg target_folder targetname) in
-  match Sys.file_exists target_path with
-  | true -> Lwt.return (Fpath.v target_path)
-  | false -> (
-      makedirs target_folder;
-      let img = Images.load (Fpath.to_string imgpath) [] in
-      let width, height = Images.size img in
-      let fwidth = float_of_int width and fheight = float_of_int height in
-      let wratio = float_of_int max_width /. fwidth
-      and hratio = float_of_int max_height /. fheight in
-      match wratio >= 1.0 && hratio >= 1.0 with
-      | true -> Lwt.return imgpath
-      | false ->
-          let ratio = min wratio hratio in
-          let newwidth = int_of_float (ratio *. fwidth)
-          and newheight = int_of_float (ratio *. fheight) in
-          let rp =
-            Lwt_process.exec
-              ( "gm",
-                [|
-                  "gm";
-                  "convert";
-                  Fpath.to_string imgpath;
-                  "-resize";
-                  Printf.sprintf "%dx%d" newwidth newheight;
-                  target_path;
-                |] )
-          in
-          Lwt.bind rp (fun _res -> Lwt.return (Fpath.v target_path)))
-
-let render_image_lwt page filename scale (max_width, max_height) =
+let render_image process_mgr cache_dir page filename scale (max_width, max_height) =
   match scale with
-  | Fit -> render_image_fit_lwt page filename (max_width, max_height)
-  | Fill -> render_image_fill_lwt page filename (max_width, max_height)
+  | Fit -> render_image_fit process_mgr cache_dir page filename (max_width, max_height)
+  | Fill -> render_image_fill process_mgr cache_dir page filename (max_width, max_height)
 
-let render_thumbnail_lwt page thumbnail_size =
+let render_thumbnail process_mgr cache_dir page thumbnail_size =
   match Page.titleimage page with
   | None -> failwith "blah"
   | Some titleimg ->
-      render_image_fill_lwt page titleimg.filename
+      render_image_fill process_mgr cache_dir page titleimg.filename
         (thumbnail_size, thumbnail_size)

@@ -4,7 +4,7 @@ let rem_prefix base path =
     | None -> None
     | Some (path, basename) -> (
       let updated_acc = basename :: acc in
-      if path = base then
+      if Eio.Path.native path = Eio.Path.native base then
         Some updated_acc
       else
         loop path updated_acc
@@ -14,8 +14,9 @@ let rem_prefix base path =
   match rest with
   | None -> None
   | Some rest -> (
-    let newpath = List.fold_left (fun acc p ->
-      "/" ^ p ^ acc
-    ) "" rest
-    in Some newpath
+    Some (String.concat "/" (List.rev rest))
+    (* let newpath = List.fold_left (fun acc p ->
+      acc ^ "/" ^ p
+    ) "" rest *)
+    (* in Some newpath *)
   )

@@ -1,16 +1,16 @@
-type t = {
+type 'a t = {
   original_section_title : string;
   original_section_url : string;
   frontmatter : Frontmatter.t;
   body : string;
-  path : Eio.Fs.dir_ty Eio.Path.t;
-  base : (Eio.Fs.dir_ty Eio.Path.t) option;
+  path : 'a Eio.Path.t;
+  base : ('a Eio.Path.t) option;
   shortcodes : ((int * int) option * Shortcode.t) list;
-}
+} constraint 'a = [> Eio.Fs.dir_ty ]
 
 let read_frontmatter path =
   let raw_frontmatter, body_markdown =
-    Eio.Path.with_open_in path (fun file -> 
+    Eio.Path.with_open_in path (fun file ->
       let content = Eio.Flow.read_all file in
       let parts = Astring.String.cuts ~sep:"---" content in
       match parts with
@@ -27,7 +27,6 @@ let image_with_dimensions path (img : Frontmatter.image option) =
   | None -> img
   | Some img -> (
       try
-        (* We use metadata rather than camlimage here as it's way faster *)
         let metadata =
           Metadata.Image.parse_file
             (Option.get (Eio.Path.native (Eio.Path.(path / img.filename))))
@@ -37,11 +36,11 @@ let image_with_dimensions path (img : Frontmatter.image option) =
         Some { img with dimensions = Some (width, height) }
       with
       | Failure _ ->
-          Fmt.pr "Failed to parse %a@"
+          Fmt.pr "Failed to parse %a@\n"
             Eio.Path.pp Eio.Path.(path / img.filename);
           Some img
       | Metadata.Invalid ->
-          Fmt.pr "Error reading metadata %a@"
+          Fmt.pr "Error reading metadata %a@\n"
             Eio.Path.pp Eio.Path.(path / img.filename);
           Some img)
 
@@ -55,14 +54,14 @@ let image_shortcode_with_dimensions path filename alt code =
     Shortcode.Raster (filename, alt, code, Some (width, height))
   with
   | Invalid_argument _ ->
-      Fmt.pr "Failed to process path %a + %s@" Eio.Path.pp path filename;
+      Fmt.pr "Failed to process path %a + %s@\n" Eio.Path.pp path filename;
       Shortcode.Raster (filename, alt, code, None)
   | Failure _ ->
-      Fmt.pr "Failed to parse %a@"
+      Fmt.pr "Failed to parse %a@\n"
         Eio.Path.pp Eio.Path.(path / filename);
       Shortcode.Raster (filename, alt, code, None)
   | Metadata.Invalid ->
-      Fmt.pr "Error reading metadata %a@"
+      Fmt.pr "Error reading metadata %a@\n"
         Eio.Path.pp Eio.Path.(path / filename);
       Shortcode.Raster (filename, alt, code, None)
 
@@ -161,7 +160,7 @@ let url_name t =
         )
         | x -> (
           let idx = String.rindex basename '.' in
-          String.sub basename 0 ((String.length basename) - idx) 
+          String.sub basename 0 ((String.length basename) - idx)
         ))
     | Some base ->
         let p = Option.get (Path.rem_prefix base t.path) in
@@ -171,8 +170,8 @@ let url_name t =
           | "index.md" -> (
              Option.get (Path.rem_prefix base parent)
           )
-          | _ -> ( 
-            let pstr = Option.get (Eio.Path.native parent) in           
+          | _ -> (
+            let pstr = Option.get (Eio.Path.native parent) in
             let idx = String.rindex pstr '.' in
             String.sub pstr 0 ((String.length basename) - idx)
           )
@@ -191,7 +190,7 @@ let date t = Frontmatter.date t.frontmatter
 let synopsis t = Frontmatter.synopsis t.frontmatter
 let titleimage t = Frontmatter.titleimage t.frontmatter
 let draft t = Frontmatter.draft t.frontmatter
-let path t = 
+let path t =
   let parent, _ = Option.get (Eio.Path.split t.path) in parent
 let body t = t.body
 let tags t = Frontmatter.tags t.frontmatter

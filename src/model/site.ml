@@ -1,13 +1,13 @@
-type t = {
-  sections : Section.t list;
-  toplevel : Section.t;
-  config : Config.t;
-  path : Fpath.t;
-  taxonomies : (string * Taxonomy.t) list;
-  css_digest_path : string option;
-}
+type 'a t = {
+  sections : 'a Section.t list;
+  toplevel : 'a Section.t;
+  config : 'a Config.t;
+  path :  'a Eio.Path.t;
+  taxonomies : (string * ('a Taxonomy.t)) list;
+  css_digest_path : ( 'a Eio.Path.t) option;
+} constraint 'a = [> Eio.Fs.dir_ty ]
 
-let build_taxonomy taxonomy_name (pages : Page.t list) =
+let build_taxonomy taxonomy_name pages =
   Printf.printf "Building taxonomy %s" taxonomy_name;
   List.fold_left
     (fun acc page ->
@@ -86,13 +86,18 @@ let of_directory path =
   let root_pages =
     List.filter_map
       (fun p ->
-        match Fpath.get_ext p with
+        let _, basename = Option.get (Eio.Path.split p) in
+        let fbasename = Fpath.v basename in
+        match Fpath.get_ext fbasename with
         | ".md" -> Some (Page.of_file "root" "/" p)
         | _ -> (
-            let root_dir_path = Fpath.add_seg p "index.md" in
-            match Sys.file_exists (Fpath.to_string root_dir_path) with
-            | true -> Some (Page.of_file "root" "/" root_dir_path)
-            | false -> None))
+            match Eio.Path.is_directory p with
+            | false -> None
+            | true -> (
+              let root_dir_path = Eio.Path.(p / "index.md") in
+              match Eio.Path.is_file root_dir_path with
+              | true -> Some (Page.of_file "root" "/" root_dir_path)
+              | false -> None)))
       root_listing
   in
 
@@ -100,14 +105,13 @@ let of_directory path =
 
   let css_digest_path = match Config.css_path config with
     | None -> None
-    | Some s -> (
-      let relative_path = Fpath.v s in
-      let p = Fpath.append path relative_path in
-      let digest = Digest.to_hex (Digest.file (Fpath.to_string p)) in
-      let basename = Fpath.basename relative_path in
-      let parent = Fpath.parent relative_path in
-      let digest_path = Fpath.add_seg parent (Printf.sprintf "%s_%s" digest basename) in
-      Some (Fpath.to_string digest_path)
+    | Some p -> (
+      let digest = Eio.Path.with_open_in p (fun f ->
+        Digest.to_hex (Digest.string (Eio.Flow.read_all f))
+      ) in
+      let parent, basename = Option.get (Eio.Path.split p) in
+      let digest_path = Eio.Path.(parent / (Printf.sprintf "%s_%s" digest basename)) in
+      Some digest_path
     )
   in
 
@@ -134,7 +138,4 @@ let port t = Config.port t.config
 let author t = Config.author t.config
 let css_digest_path t = t.css_digest_path
 
-let css_path t =
-  match Config.css_path t.config with
-  | None -> None
-  | Some s -> Some (Fpath.append t.path (Fpath.v s))
+let css_path t = Config.css_path t.config

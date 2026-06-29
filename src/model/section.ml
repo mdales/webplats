@@ -1,6 +1,6 @@
 open Astring
 
-type t = { title : string; pages : Page.t list; uri : Uri.t; synthetic : bool }
+type 'a t = { title : string; pages : ('a Page.t) list; uri : Uri.t; synthetic : bool } constraint 'a = [> Eio.Fs.dir_ty ]
 
 let rec find_markdown_files path =
   Eio.Path.read_dir path
@@ -43,7 +43,7 @@ let of_directory ~base path =
     |> List.filter (fun p -> not (Page.draft p))
     |> List.sort (fun a b -> Ptime.compare (Page.date b) (Page.date a))
   in
-  v ~synthetic:false title (Uri.of_string url_path) pages
+  v ~synthetic:false title (Uri.of_string ("/" ^ url_path ^ "/")) pages
 
 let title t = t.title
 let pages t = t.pages

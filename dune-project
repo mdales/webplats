@@ -30,7 +30,6 @@
   magic-mime
   yaml
   uri
-  camlimages
   pcre2)
  (tags
   (topics "to describe" your project)))

@@ -5,6 +5,7 @@
  (public_name webplats)
  (libraries
   fpath
+  eio
   eio_main
   cohttp-eio
   magic-mime
@@ -15,9 +16,6 @@
   yaml
   uri
   jsonfeed
-  camlimages.core
-  camlimages.jpeg
-  camlimages.png
   pcre2
   htmlit
   syndic))

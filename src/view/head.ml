@@ -1,9 +1,16 @@
 open Htmlit
 
 let render_head_generic site =
-    [
-        El.link ~at:[At.rel "stylesheet"; At.href "/css/base.css"; At.media "screen"] ();
-    ]
+    (match Site.css_digest_path site with
+        | None -> []
+        | Some p -> (
+            let sp = Site.path site in
+            let css_path = Option.get (Path.rem_prefix sp p) in
+            [
+                El.link ~at:[At.rel "stylesheet"; At.href ("/" ^ css_path); At.media "screen"] ();
+            ]
+        )
+    )
     @
     List.map (fun dim ->
         El.link ~at:[
