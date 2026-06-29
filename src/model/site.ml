@@ -8,7 +8,7 @@ type t = {
 }
 
 let build_taxonomy taxonomy_name (pages : Page.t list) =
-  Dream.log "Building taxonomy %s" taxonomy_name;
+  Printf.printf "Building taxonomy %s" taxonomy_name;
   List.fold_left
     (fun acc page ->
       let sl =
@@ -44,9 +44,9 @@ let of_directory path =
         match acc with
         | Some _ -> acc
         | None -> (
-            let config_path = Fpath.add_seg path fname in
+            let config_path = Eio.Path.(path / fname) in
             try
-              Printf.printf "%s\n" (Fpath.to_string config_path);
+              Fmt.pr "%a@\n" Eio.Path.pp config_path;
               Some (Config.of_file config_path)
             with Sys_error _ -> None))
       None
@@ -56,24 +56,22 @@ let of_directory path =
     match config with None -> failwith "Failed to find config" | Some c -> c
   in
 
-  let content_path = Fpath.add_seg path "content" in
+  let content_path = Eio.Path.(path / "content") in
 
-  let root_listing =
-    Sys.readdir (Fpath.to_string content_path)
-    |> Array.to_list
-    |> List.map (fun p -> Fpath.append content_path (Fpath.v p))
+  let root_listing = Eio.Path.read_dir content_path
+    |> List.map (fun item -> Eio.Path.(content_path / item))
   in
 
   let sections =
     List.filter_map
       (fun p ->
-        match Sys.is_directory (Fpath.to_string p) with
+        match Eio.Path.is_directory p with
         | false -> None
         | true -> (
             match
-              Sys.file_exists (Fpath.to_string (Fpath.add_seg p "index.md"))
+              Eio.Path.is_file (Eio.Path.(p / "index.md"))
             with
-            | false -> Some (Fpath.to_dir_path p)
+            | false -> Some p
             | true -> None))
       root_listing
     |> List.map (fun p -> Section.of_directory ~base:content_path p)

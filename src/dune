@@ -5,7 +5,10 @@
  (public_name webplats)
  (libraries
   fpath
-  dream
+  eio_main
+  cohttp-eio
+  magic-mime
+  http
   cmarkit
   astring
   metadata
@@ -17,6 +20,4 @@
   camlimages.png
   pcre2
   htmlit
-  syndic)
- (preprocess
-  (pps lwt_ppx)))
+  syndic))

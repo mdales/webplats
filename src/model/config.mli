@@ -1,6 +1,6 @@
 type t
 
-val of_file : Fpath.t -> t
+val of_file : Eio.Fs.dir_ty Eio.Path.t -> t
 (** Loads the website config from a YAML file *)
 
 val title : t -> string

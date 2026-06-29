@@ -31,7 +31,6 @@ let render_markdown_images doc =
   Mapper.map_doc mapper doc
 
 let render_diagram_blocks doc =
-  Dream.log "hello";
   let block _ n =
     match n with
     | Block.Code_block (node, meta) ->

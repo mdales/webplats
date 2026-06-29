@@ -1,3 +1,10 @@
+type route_handler = Http.Request.t -> Cohttp_eio.Server.response
+
+type route = {
+  uri: string;
+  handler: route_handler;
+}
+
 type thumbnail_loader_t = retina:bool -> Page.t -> Dream.handler
 (** This function will be called when Webplats requires a thumbnail image for the page. The standard is to
     load the image specified in the frontmatter "titleimage" entry, but the renderer can decide to select
@@ -36,4 +43,4 @@ val of_site :
   thumbnail_loader:thumbnail_loader_t ->
   image_loader:image_loader_t ->
   Site.t ->
-  Dream.route list
+  route list

@@ -3,7 +3,7 @@ type t
 val v : ?synthetic:bool -> string -> Uri.t -> Page.t list -> t
 (* [v ?synthetic title url pages] *)
 
-val of_directory : base:Fpath.t -> Fpath.t -> t
+val of_directory : base:Eio.Fs.dir_ty Eio.Path.t -> Eio.Fs.dir_ty Eio.Path.t -> t
 (* Create a section based on a directory of files, recursively collecting index.md files within *)
 
 val updated_with_page : t -> Page.t -> t

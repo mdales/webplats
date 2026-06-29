@@ -1,15 +1,15 @@
 type t
 
 val v :
-  ?base:Fpath.t option ->
+  ?base:(Eio.Fs.dir_ty Eio.Path.t) option ->
   string ->
   string ->
-  Fpath.t ->
+  Eio.Fs.dir_ty Eio.Path.t ->
   Frontmatter.t ->
   string ->
   t
 
-val of_file : ?base:Fpath.t option -> string -> string -> Fpath.t -> t
+val of_file : ?base:Eio.Fs.dir_ty Eio.Path.t option -> string -> string -> Eio.Fs.dir_ty Eio.Path.t -> t
 (** of_file base_path original_section_title original_section_url path *)
 
 val url_name : t -> string
@@ -29,7 +29,7 @@ val date : t -> Ptime.t
 val synopsis : t -> string option
 val titleimage : t -> Frontmatter.image option
 val draft : t -> bool
-val path : t -> Fpath.t
+val path : t -> Eio.Fs.dir_ty Eio.Path.t
 val body : t -> string
 val tags : t -> string list
 val resources : t -> string list

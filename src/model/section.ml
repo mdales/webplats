@@ -1,29 +1,42 @@
+open Astring
+
 type t = { title : string; pages : Page.t list; uri : Uri.t; synthetic : bool }
 
 let rec find_markdown_files path =
-  Sys.readdir (Fpath.to_string path)
-  |> Array.to_list
-  |> List.map (fun p -> Fpath.append path (Fpath.v p))
+  Eio.Path.read_dir path
+  |> List.map (fun p -> Eio.Path.(path / p))
   |> List.concat_map (fun p ->
-         match Sys.is_directory (Fpath.to_string p) with
+         match Eio.Path.is_directory p with
          | true -> find_markdown_files p
-         | false -> ( match Fpath.get_ext p with ".md" -> [ p ] | _ -> []))
+         | false -> (
+           match Eio.Path.split p with
+           | None -> failwith "unexpected empty path"
+           | Some (_, basename) -> (
+             match String.is_suffix ~affix:".md" basename with
+             | false -> []
+             | true -> [p]
+           )
+         ))
 
 let v ?(synthetic = true) title uri pages = { title; pages; uri; synthetic }
 let updated_with_page t p = { t with pages = p :: t.pages }
 
 let of_directory ~base path =
   let url_path =
-    match Fpath.rem_prefix base path with
-    | Some path -> "/" ^ Fpath.to_string path
+    match Path.rem_prefix base path with
+    | Some path -> path
     | None -> failwith "base is not parent directory"
   in
 
-  let title = Fpath.basename path in
+  let _, title = Option.get (Eio.Path.split path) in
 
   let paths =
     find_markdown_files path
-    |> List.filter (fun p -> Fpath.basename p = "index.md")
+    |> List.filter (fun p ->
+      match Eio.Path.split p with
+      | Some (_, "index.md") -> true
+      | _ -> false
+    )
   in
   let pages =
     List.map (Page.of_file ~base:(Some path) title url_path) paths

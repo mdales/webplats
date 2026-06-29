@@ -3,20 +3,21 @@ type t = {
   original_section_url : string;
   frontmatter : Frontmatter.t;
   body : string;
-  path : Fpath.t;
-  base : Fpath.t option;
+  path : Eio.Fs.dir_ty Eio.Path.t;
+  base : (Eio.Fs.dir_ty Eio.Path.t) option;
   shortcodes : ((int * int) option * Shortcode.t) list;
 }
 
 let read_frontmatter path =
   let raw_frontmatter, body_markdown =
-    In_channel.with_open_text (Fpath.to_string path) (fun ic ->
-        let parts = In_channel.input_all ic |> Astring.String.cuts ~sep:"---" in
-        match parts with
-        | _ :: fm :: body -> (fm, String.concat "\n---\n" body)
-        | _ ->
-            failwith
-              (Printf.sprintf "failed to parse %s" (Fpath.to_string path)))
+    Eio.Path.with_open_in path (fun file -> 
+      let content = Eio.Flow.read_all file in
+      let parts = Astring.String.cuts ~sep:"---" content in
+      match parts with
+      | _ :: fm :: body -> (fm, String.concat "\n---\n" body)
+      | _ ->
+          failwith
+            (Fmt.str "failed to parse %a" Eio.Path.pp path))
   in
   let frontmatter = Frontmatter.of_string raw_frontmatter in
   (frontmatter, body_markdown)
@@ -29,62 +30,60 @@ let image_with_dimensions path (img : Frontmatter.image option) =
         (* We use metadata rather than camlimage here as it's way faster *)
         let metadata =
           Metadata.Image.parse_file
-            (Fpath.to_string (Fpath.add_seg path img.filename))
+            (Option.get (Eio.Path.native (Eio.Path.(path / img.filename))))
         in
         let width = int_of_string (List.assoc "width" metadata)
         and height = int_of_string (List.assoc "height" metadata) in
         Some { img with dimensions = Some (width, height) }
       with
       | Failure _ ->
-          Dream.log "Failed to parse %s"
-            (Fpath.to_string (Fpath.add_seg path img.filename));
+          Fmt.pr "Failed to parse %a@"
+            Eio.Path.pp Eio.Path.(path / img.filename);
           Some img
       | Metadata.Invalid ->
-          Dream.log "Error reading metadata %s"
-            (Fpath.to_string (Fpath.add_seg path img.filename));
+          Fmt.pr "Error reading metadata %a@"
+            Eio.Path.pp Eio.Path.(path / img.filename);
           Some img)
 
 let image_shortcode_with_dimensions path filename alt code =
   try
     let metadata =
-      Metadata.Image.parse_file (Fpath.to_string (Fpath.add_seg path filename))
+      Metadata.Image.parse_file (Option.get (Eio.Path.native (Eio.Path.(path / filename))))
     in
     let width = int_of_string (List.assoc "width" metadata)
     and height = int_of_string (List.assoc "height" metadata) in
     Shortcode.Raster (filename, alt, code, Some (width, height))
   with
   | Invalid_argument _ ->
-      Dream.log "Failed to process path %s + %s" (Fpath.to_string path) filename;
+      Fmt.pr "Failed to process path %a + %s@" Eio.Path.pp path filename;
       Shortcode.Raster (filename, alt, code, None)
   | Failure _ ->
-      Dream.log "Failed to parse %s"
-        (Fpath.to_string (Fpath.add_seg path filename));
+      Fmt.pr "Failed to parse %a@"
+        Eio.Path.pp Eio.Path.(path / filename);
       Shortcode.Raster (filename, alt, code, None)
   | Metadata.Invalid ->
-      Dream.log "Error reading metadata %s"
-        (Fpath.to_string (Fpath.add_seg path filename));
+      Fmt.pr "Error reading metadata %a@"
+        Eio.Path.pp Eio.Path.(path / filename);
       Shortcode.Raster (filename, alt, code, None)
 
 let compare_shortcode_with_dimensions path fn1 fn2 l1 l2  =
   (* Lazy: just take dims off first image for now *)
   try
     let metadata =
-      Metadata.Image.parse_file (Fpath.to_string (Fpath.add_seg path fn1))
+      Metadata.Image.parse_file (Option.get (Eio.Path.native (Eio.Path.(path / fn1))))
     in
     let width = int_of_string (List.assoc "width" metadata)
     and height = int_of_string (List.assoc "height" metadata) in
     Shortcode.CompareRaster (fn1, fn2, l1, l2, Some (width, height))
   with
   | Invalid_argument _ ->
-      Dream.log "Failed to process path %s + %s" (Fpath.to_string path) fn1;
+      Fmt.pr "Failed to process path %a + %s@" Eio.Path.pp path fn1;
       Shortcode.CompareRaster (fn1, fn2, l1, l2, None)
   | Failure _ ->
-      Dream.log "Failed to parse %s"
-        (Fpath.to_string (Fpath.add_seg path fn1));
+      Fmt.pr "Failed to parse %a@" Eio.Path.pp Eio.Path.(path / fn1);
         Shortcode.CompareRaster (fn1, fn2, l1, l2, None)
   | Metadata.Invalid ->
-      Dream.log "Error reading metadata %s"
-        (Fpath.to_string (Fpath.add_seg path fn1));
+      Fmt.pr "Error reading metadata %a@" Eio.Path.pp Eio.Path.(path / fn1);
         Shortcode.CompareRaster (fn1, fn2, l1, l2, None)
 
 let update_shortcodes dir sl =
@@ -102,15 +101,16 @@ let update_shortcodes dir sl =
 
 let v ?(base = None) original_section_title original_section_url path
     frontmatter body =
+  let parent, _ = Option.get (Eio.Path.split path) in
   let shortcodes =
     Shortcode.find_shortcodes body
     |> List.map (fun (p, sc) -> (Some p, sc))
-    |> update_shortcodes (Fpath.parent path)
+    |> update_shortcodes parent
   in
   let markdown_codes =
     Shortcode.find_labels body
     |> List.map (fun t -> (None, t))
-    |> update_shortcodes (Fpath.parent path)
+    |> update_shortcodes parent
   in
   let code_blocks =
     Shortcode.find_codes body
@@ -131,17 +131,18 @@ let of_file ?(base = None) original_section_title original_section_url path =
     try read_frontmatter path
     with Not_found | Invalid_argument _ ->
       failwith
-        (Printf.sprintf "Failed to find key in %s" (Fpath.to_string path))
+        (Fmt.str "Failed to find key in %a" Eio.Path.pp path)
   in
+  let parent, _ = Option.get (Eio.Path.split path) in
   let updated_images =
     List.map
-      (fun i -> Option.get (image_with_dimensions (Fpath.parent path) (Some i)))
+      (fun i -> Option.get (image_with_dimensions parent (Some i)))
       (Frontmatter.images frontmatter)
   in
   let frontmatter = Frontmatter.update_images frontmatter updated_images in
   let frontmatter =
     Frontmatter.update_titleimage frontmatter
-      (image_with_dimensions (Fpath.parent path)
+      (image_with_dimensions parent
          (Frontmatter.titleimage frontmatter))
   in
   v ~base original_section_title original_section_url path frontmatter body
@@ -153,18 +154,30 @@ let url_name t =
   let raw =
     match t.base with
     | None -> (
-        let basename = Fpath.basename (Fpath.rem_ext t.path) in
+        let parent, basename = Option.get (Eio.Path.split t.path) in
         match basename with
-        | "index" -> Fpath.basename (Fpath.parent t.path)
-        | x -> x)
+        | "index.md" -> (
+          let _, parentname = Option.get(Eio.Path.split parent) in parentname
+        )
+        | x -> (
+          let idx = String.rindex basename '.' in
+          String.sub basename 0 ((String.length basename) - idx) 
+        ))
     | Some base ->
-        let p = Option.get (Fpath.rem_prefix base t.path) in
+        let p = Option.get (Path.rem_prefix base t.path) in
+        let parent, basename = Option.get (Eio.Path.split t.path) in
         let dirpath =
-          match Fpath.basename t.path with
-          | "index.md" -> Fpath.parent p
-          | _ -> Fpath.rem_ext p
+          match basename with
+          | "index.md" -> (
+             Option.get (Path.rem_prefix base parent)
+          )
+          | _ -> ( 
+            let pstr = Option.get (Eio.Path.native parent) in           
+            let idx = String.rindex pstr '.' in
+            String.sub pstr 0 ((String.length basename) - idx)
+          )
         in
-        Fpath.to_string (Fpath.rem_empty_seg dirpath)
+        (*Fpath.to_string (Fpath.rem_empty_seg dirpath)*)dirpath
   in
   let lower_raw = String.lowercase_ascii raw in
   String.fold_left
@@ -178,7 +191,8 @@ let date t = Frontmatter.date t.frontmatter
 let synopsis t = Frontmatter.synopsis t.frontmatter
 let titleimage t = Frontmatter.titleimage t.frontmatter
 let draft t = Frontmatter.draft t.frontmatter
-let path t = Fpath.parent t.path
+let path t = 
+  let parent, _ = Option.get (Eio.Path.split t.path) in parent
 let body t = t.body
 let tags t = Frontmatter.tags t.frontmatter
 let resources t = Frontmatter.get_key_as_string_list t.frontmatter "resources"
