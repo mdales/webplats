@@ -8,7 +8,7 @@ val of_directory :
 (* Create a section based on a directory of files, recursively collecting index.md files within *)
 
 val updated_with_page : t -> Page.t -> t
-val pages : t -> Page.t list
+val pages : ?drafts:bool -> t -> Page.t list
 val title : t -> string
 val uri : ?page:Page.t -> ?resource:string -> t -> Uri.t
 val synthetic : t -> bool

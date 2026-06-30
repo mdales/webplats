@@ -41,7 +41,15 @@ let of_directory ~base path =
   v ~synthetic:false title (Uri.of_string ("/" ^ url_path ^ "/")) pages
 
 let title t = t.title
-let pages t = t.pages
+let pages ?(drafts=false) t =
+  match drafts with
+  | false -> List.filter (fun p ->
+    match Page.get_key_as_bool p "indexed" with
+    | None -> true
+    | Some x -> x
+  ) t.pages
+  | true -> t.pages
+
 let synthetic t = t.synthetic
 
 let uri ?page ?resource t =

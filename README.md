@@ -17,6 +17,7 @@ Frontmatter gives you a place to store extra information in the page, which you 
 | *tags* | list of strings | Tags associated with the page. |
 | *aliases* | list of strings | Alternative site relative URLs this page can be accessed via. These will generate 302 responses to the canonical version of the page. |
 | *in_feed* | boolean | If this key exists and is marked false, the page will not appear in the RSS feed. |
+| *indexed* | boolean | If this key exists and is marked false, the page will not appear in the section index. |
 
 ## Shortcodes
 

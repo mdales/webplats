@@ -371,7 +371,7 @@ let routes_for_page site sec previous_page page next_page page_renderer
 
 let routes_for_pages_in_section site sec page_renderer thumbnail_loader
     image_loader diagram_loader =
-  let pages = Section.pages sec in
+  let pages = Section.pages ~drafts:true sec in
   match pages with
   | [] -> []
   | hd :: tl ->
