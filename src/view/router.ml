@@ -5,7 +5,6 @@ open Astring
 type route_handler = Http.Request.t -> Cohttp_eio.Server.response
 type route = { uri : Uri.t; handler : route_handler }
 
-
 type thumbnail_loader_t = retina:bool -> Page.t -> Eio.Fs.dir_ty Eio.Path.t
 (** This function will be called when Webplats requires a thumbnail image for
     the page. The standard is to load the image specified in the frontmatter
@@ -42,7 +41,6 @@ type meta_taxonomy_section_renderer_t =
 
 type taxonomy_renderer_t = Site.t -> Taxonomy.t -> Htmlit.El.html
 type meta_taxonomy_renderer_t = Taxonomy.t -> taxonomy_renderer_t
-
 
 let render_static_file path req =
   Eio.Switch.run @@ fun sw ->

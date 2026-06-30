@@ -1,11 +1,6 @@
 open Astring
 
-type t = {
-  title : string;
-  pages : Page.t list;
-  uri : Uri.t;
-  synthetic : bool;
-}
+type t = { title : string; pages : Page.t list; uri : Uri.t; synthetic : bool }
 
 let rec find_markdown_files path =
   Eio.Path.read_dir path
