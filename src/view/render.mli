@@ -1,8 +1,8 @@
-val render_body : _ Page.t -> string
+val render_body : Page.t -> string
 
 val render_head :
-  site:'a Site.t ->
-  ?sec:'a Section.t ->
-  ?page:'a Page.t ->
+  site:Site.t ->
+  ?sec:Section.t ->
+  ?page:Page.t ->
   unit ->
   Htmlit.El.html

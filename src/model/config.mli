@@ -1,14 +1,14 @@
-type 'a t constraint 'a = [> Eio.Fs.dir_ty ]
+type t
 
-val of_file : 'a Eio.Path.t -> 'a t
+val of_file : Eio.Fs.dir_ty Eio.Path.t -> t
 (** Loads the website config from a YAML file *)
 
-val title : 'a t -> string
-val base_url : 'a t -> Uri.t
-val port : 'a t -> int
-val taxonomies : 'a t -> (string * string) list
+val title : t -> string
+val base_url : t -> Uri.t
+val port : t -> int
+val taxonomies : t -> (string * string) list
 
 (* Taxonomies in Hugo are a tuple of frontmatter key and human readable key *)
-val author : 'a t -> string option
-val css_path : 'a t -> 'a Eio.Path.t option
-val hugo_theme : 'a t -> string
+val author : t -> string option
+val css_path : t -> Eio.Fs.dir_ty Eio.Path.t option
+val hugo_theme : t -> string

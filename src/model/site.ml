@@ -1,12 +1,11 @@
-type 'a t = {
-  sections : 'a Section.t list;
-  toplevel : 'a Section.t;
-  config : 'a Config.t;
-  path : 'a Eio.Path.t;
-  taxonomies : (string * 'a Taxonomy.t) list;
-  css_digest_path : 'a Eio.Path.t option;
+type t = {
+  sections : Section.t list;
+  toplevel : Section.t;
+  config : Config.t;
+  path : Eio.Fs.dir_ty Eio.Path.t;
+  taxonomies : (string * Taxonomy.t) list;
+  css_digest_path : Eio.Fs.dir_ty Eio.Path.t option;
 }
-  constraint 'a = [> Eio.Fs.dir_ty ]
 
 let build_taxonomy taxonomy_name pages =
   Printf.printf "Building taxonomy %s" taxonomy_name;

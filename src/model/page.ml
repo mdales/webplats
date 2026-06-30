@@ -1,13 +1,12 @@
-type 'a t = {
+type t = {
   original_section_title : string;
   original_section_url : string;
   frontmatter : Frontmatter.t;
   body : string;
-  path : 'a Eio.Path.t;
-  base : 'a Eio.Path.t option;
+  path : Eio.Fs.dir_ty Eio.Path.t;
+  base : Eio.Fs.dir_ty Eio.Path.t option;
   shortcodes : ((int * int) option * Shortcode.t) list;
 }
-  constraint 'a = [> Eio.Fs.dir_ty ]
 
 let read_frontmatter path =
   let raw_frontmatter, body_markdown =

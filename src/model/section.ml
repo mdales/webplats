@@ -1,12 +1,11 @@
 open Astring
 
-type 'a t = {
+type t = {
   title : string;
-  pages : 'a Page.t list;
+  pages : Page.t list;
   uri : Uri.t;
   synthetic : bool;
 }
-  constraint 'a = [> Eio.Fs.dir_ty ]
 
 let rec find_markdown_files path =
   Eio.Path.read_dir path

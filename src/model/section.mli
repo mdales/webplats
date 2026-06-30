@@ -1,13 +1,13 @@
-type 'a t constraint 'a = [> Eio.Fs.dir_ty ]
+type t
 
-val v : ?synthetic:bool -> string -> Uri.t -> 'a Page.t list -> 'a t
+val v : ?synthetic:bool -> string -> Uri.t -> Page.t list -> t
 (* [v ?synthetic title url pages] *)
 
-val of_directory : base:'a Eio.Path.t -> 'a Eio.Path.t -> 'a t
+val of_directory : base:Eio.Fs.dir_ty Eio.Path.t -> Eio.Fs.dir_ty Eio.Path.t -> t
 (* Create a section based on a directory of files, recursively collecting index.md files within *)
 
-val updated_with_page : 'a t -> 'a Page.t -> 'a t
-val pages : 'a t -> 'a Page.t list
-val title : 'a t -> string
-val uri : ?page:'a Page.t -> ?resource:string -> 'a t -> Uri.t
-val synthetic : 'a t -> bool
+val updated_with_page : t -> Page.t -> t
+val pages : t -> Page.t list
+val title : t -> string
+val uri : ?page:Page.t -> ?resource:string -> t -> Uri.t
+val synthetic : t -> bool

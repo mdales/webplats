@@ -1,15 +1,14 @@
 open Yamlutil
 
-type 'a t = {
+type t = {
   title : string;
   taxonomies : (string * string) list;
   base_url : Uri.t;
   hugo_theme : string;
   port : int;
   author : string option;
-  css : 'a Eio.Path.t option;
+  css : Eio.Fs.dir_ty Eio.Path.t option;
 }
-  constraint 'a = [> Eio.Fs.dir_ty ]
 
 let of_file path =
   Eio.Path.with_open_in path (fun file ->
