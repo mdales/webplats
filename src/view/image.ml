@@ -20,53 +20,39 @@ let makedirs path =
 let render_diagram process_mgr cache_dir page code =
   let hash = Digest.string code |> Digest.to_hex in
   let filename = Printf.sprintf "%s.svg" hash in
-  let target_folder =
-    Eio.Path.(cache_dir / (Page.url_name page))
-  in
+  let target_folder = Eio.Path.(cache_dir / Page.url_name page) in
   let target_path = Eio.Path.(target_folder / filename) in
   match Eio.Path.is_file target_path with
   | true -> target_path
   | false ->
-    (try
-      Eio.Path.mkdir ~perm:0o755 target_folder
-    with
-    | Eio.Io (Eio.Fs.E (Eio.Fs.Already_exists _), _) -> ()
-    );
-    Eio.Switch.run @@ fun sw ->
+      (try Eio.Path.mkdir ~perm:0o755 target_folder
+       with Eio.Io (Eio.Fs.E (Eio.Fs.Already_exists _), _) -> ());
+      Eio.Switch.run @@ fun sw ->
       let stdin_r, stdin_w = Eio.Process.pipe ~sw process_mgr in
       Eio.Fiber.both
         (fun () ->
           Eio.Flow.copy_string code stdin_w;
           Eio.Flow.close stdin_w)
         (fun () ->
-          Eio.Process.run process_mgr ~stdin:stdin_r [
-            "d2";
-            "--sketch";
-            "-";
-            Option.get (Eio.Path.native target_path)
-          ]);
-    target_path
+          Eio.Process.run process_mgr ~stdin:stdin_r
+            [ "d2"; "--sketch"; "-"; Option.get (Eio.Path.native target_path) ]);
+      target_path
 
-let render_image_fill process_mgr cache_dir page filename (max_width, max_height) =
-  let imgpath = Eio.Path.((Page.path page) / filename) in
+let render_image_fill process_mgr cache_dir page filename (max_width, max_height)
+    =
+  let imgpath = Eio.Path.(Page.path page / filename) in
   let targetname =
     Printf.sprintf "image_fill_%dx%d_%s" max_width max_height filename
   in
-  let target_folder =
-    Eio.Path.(cache_dir / (Page.url_name page))
-  in
+  let target_folder = Eio.Path.(cache_dir / Page.url_name page) in
   let target_path = Eio.Path.(target_folder / targetname) in
   match Eio.Path.is_file target_path with
   | true -> target_path
   | false ->
-      (try
-        Eio.Path.mkdir ~perm:0o755 target_folder
-      with
-      | Eio.Io (Eio.Fs.E (Eio.Fs.Already_exists _), _) -> ()
-      );
+      (try Eio.Path.mkdir ~perm:0o755 target_folder
+       with Eio.Io (Eio.Fs.E (Eio.Fs.Already_exists _), _) -> ());
       let metadata =
-        Metadata.Image.parse_file
-          (Option.get (Eio.Path.native imgpath))
+        Metadata.Image.parse_file (Option.get (Eio.Path.native imgpath))
       in
       let width = int_of_string (List.assoc "width" metadata)
       and height = int_of_string (List.assoc "height" metadata) in
@@ -84,36 +70,32 @@ let render_image_fill process_mgr cache_dir page filename (max_width, max_height
       let newwidth = int_of_float (ratio *. fwidth)
       and newheight = int_of_float (ratio *. fheight) in
 
-      Eio.Process.run process_mgr [
-        "gm";
-        "convert";
-        (Option.get (Eio.Path.native imgpath));
-        "-resize";
-        Printf.sprintf "%dx%d" newwidth newheight;
-        Option.get (Eio.Path.native target_path);
-      ];
+      Eio.Process.run process_mgr
+        [
+          "gm";
+          "convert";
+          Option.get (Eio.Path.native imgpath);
+          "-resize";
+          Printf.sprintf "%dx%d" newwidth newheight;
+          Option.get (Eio.Path.native target_path);
+        ];
       target_path
 
-let render_image_fit process_mgr cache_dir page filename (max_width, max_height) =
-  let imgpath = Eio.Path.((Page.path page) / filename) in
+let render_image_fit process_mgr cache_dir page filename (max_width, max_height)
+    =
+  let imgpath = Eio.Path.(Page.path page / filename) in
   let targetname =
     Printf.sprintf "image_fit_%dx%d_%s" max_width max_height filename
   in
-  let target_folder =
-    Eio.Path.(cache_dir / (Page.url_name page))
-  in
+  let target_folder = Eio.Path.(cache_dir / Page.url_name page) in
   let target_path = Eio.Path.(target_folder / targetname) in
   match Eio.Path.is_file target_path with
   | true -> target_path
   | false -> (
-      (try
-        Eio.Path.mkdir ~perm:0o755 target_folder
-      with
-      | Eio.Io (Eio.Fs.E (Eio.Fs.Already_exists _), _) -> ()
-      );
+      (try Eio.Path.mkdir ~perm:0o755 target_folder
+       with Eio.Io (Eio.Fs.E (Eio.Fs.Already_exists _), _) -> ());
       let metadata =
-        Metadata.Image.parse_file
-          (Option.get (Eio.Path.native imgpath))
+        Metadata.Image.parse_file (Option.get (Eio.Path.native imgpath))
       in
       let width = int_of_string (List.assoc "width" metadata)
       and height = int_of_string (List.assoc "height" metadata) in
@@ -126,21 +108,26 @@ let render_image_fit process_mgr cache_dir page filename (max_width, max_height)
           let ratio = min wratio hratio in
           let newwidth = int_of_float (ratio *. fwidth)
           and newheight = int_of_float (ratio *. fheight) in
-          Eio.Process.run process_mgr    [
-            "gm";
-            "convert";
-            (Option.get (Eio.Path.native imgpath));
-            "-resize";
-            Printf.sprintf "%dx%d" newwidth newheight;
-            Option.get (Eio.Path.native target_path);
-          ];
-          target_path
-          )
+          Eio.Process.run process_mgr
+            [
+              "gm";
+              "convert";
+              Option.get (Eio.Path.native imgpath);
+              "-resize";
+              Printf.sprintf "%dx%d" newwidth newheight;
+              Option.get (Eio.Path.native target_path);
+            ];
+          target_path)
 
-let render_image process_mgr cache_dir page filename scale (max_width, max_height) =
+let render_image process_mgr cache_dir page filename scale
+    (max_width, max_height) =
   match scale with
-  | Fit -> render_image_fit process_mgr cache_dir page filename (max_width, max_height)
-  | Fill -> render_image_fill process_mgr cache_dir page filename (max_width, max_height)
+  | Fit ->
+      render_image_fit process_mgr cache_dir page filename
+        (max_width, max_height)
+  | Fill ->
+      render_image_fill process_mgr cache_dir page filename
+        (max_width, max_height)
 
 let render_thumbnail process_mgr cache_dir page thumbnail_size =
   match Page.titleimage page with

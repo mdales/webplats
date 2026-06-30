@@ -1,22 +1,26 @@
 open Astring
 
-type 'a t = { title : string; pages : ('a Page.t) list; uri : Uri.t; synthetic : bool } constraint 'a = [> Eio.Fs.dir_ty ]
+type 'a t = {
+  title : string;
+  pages : 'a Page.t list;
+  uri : Uri.t;
+  synthetic : bool;
+}
+  constraint 'a = [> Eio.Fs.dir_ty ]
 
 let rec find_markdown_files path =
   Eio.Path.read_dir path
   |> List.map (fun p -> Eio.Path.(path / p))
   |> List.concat_map (fun p ->
-         match Eio.Path.is_directory p with
-         | true -> find_markdown_files p
-         | false -> (
-           match Eio.Path.split p with
-           | None -> failwith "unexpected empty path"
-           | Some (_, basename) -> (
-             match String.is_suffix ~affix:".md" basename with
-             | false -> []
-             | true -> [p]
-           )
-         ))
+      match Eio.Path.is_directory p with
+      | true -> find_markdown_files p
+      | false -> (
+          match Eio.Path.split p with
+          | None -> failwith "unexpected empty path"
+          | Some (_, basename) -> (
+              match String.is_suffix ~affix:".md" basename with
+              | false -> []
+              | true -> [ p ])))
 
 let v ?(synthetic = true) title uri pages = { title; pages; uri; synthetic }
 let updated_with_page t p = { t with pages = p :: t.pages }
@@ -33,10 +37,7 @@ let of_directory ~base path =
   let paths =
     find_markdown_files path
     |> List.filter (fun p ->
-      match Eio.Path.split p with
-      | Some (_, "index.md") -> true
-      | _ -> false
-    )
+        match Eio.Path.split p with Some (_, "index.md") -> true | _ -> false)
   in
   let pages =
     List.map (Page.of_file ~base:(Some path) title url_path) paths

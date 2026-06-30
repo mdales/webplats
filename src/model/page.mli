@@ -1,7 +1,7 @@
 type 'a t constraint 'a = [> Eio.Fs.dir_ty ]
 
 val v :
-  ?base:('a Eio.Path.t) option ->
+  ?base:'a Eio.Path.t option ->
   string ->
   string ->
   'a Eio.Path.t ->
@@ -9,7 +9,8 @@ val v :
   string ->
   'a t
 
-val of_file : ?base:'a Eio.Path.t option -> string -> string -> 'a Eio.Path.t -> 'a t
+val of_file :
+  ?base:'a Eio.Path.t option -> string -> string -> 'a Eio.Path.t -> 'a t
 (** of_file base_path original_section_title original_section_url path *)
 
 val url_name : 'a t -> string

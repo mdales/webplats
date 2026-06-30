@@ -75,17 +75,19 @@ let find_codes body =
   let open Cmarkit in
   let body = Doc.of_string body in
   let block _m acc = function
-  | Block.Code_block (node, _) -> (
-    match Block.Code_block.info_string node with
-    | Some ("d2", _) -> (
-      let code_nodes = Block.Code_block.code node in
-      let code_lines = List.map (fun (s, _) -> s) code_nodes in
-      let code = List.fold_left (fun acc l -> Printf.sprintf "%s\n%s" acc l) "" code_lines in
-      Folder.ret ((Diagram code) :: acc)
-    )
+    | Block.Code_block (node, _) -> (
+        match Block.Code_block.info_string node with
+        | Some ("d2", _) ->
+            let code_nodes = Block.Code_block.code node in
+            let code_lines = List.map (fun (s, _) -> s) code_nodes in
+            let code =
+              List.fold_left
+                (fun acc l -> Printf.sprintf "%s\n%s" acc l)
+                "" code_lines
+            in
+            Folder.ret (Diagram code :: acc)
+        | _ -> Folder.default)
     | _ -> Folder.default
-  )
-  | _ -> Folder.default
   in
   let folder = Folder.make ~block () in
   Folder.fold_doc folder [] body
@@ -94,28 +96,29 @@ let find_shortcodes body =
   let rex = Pcre2.regexp {|"[^"]+"|[\w\.\-]+|} in
   find_raw_shortcodes body
   |> List.map (fun (r, loc) ->
-         ( loc,
-           (try Array.to_list (Pcre2.extract_all ~rex r) with Not_found -> [])
-           |> List.map (fun a ->
-                  let part = a.(0) in
-                  match String.starts_with ~prefix:"\"" part with
-                  | false -> part
-                  | true -> String.sub part 1 (String.length part - 2)) ))
+      ( loc,
+        (try Array.to_list (Pcre2.extract_all ~rex r) with Not_found -> [])
+        |> List.map (fun a ->
+            let part = a.(0) in
+            match String.starts_with ~prefix:"\"" part with
+            | false -> part
+            | true -> String.sub part 1 (String.length part - 2)) ))
   |> List.map (fun (loc, sl) ->
-         ( loc,
-           match sl with
-           | [ "video"; arg1 ] -> Video (arg1, None, false)
-           | [ "video"; arg1; arg2 ] -> Video (arg1, Some arg2, false)
-           | [ "videoloop"; arg1 ] -> Video (arg1, None, true)
-           | [ "videoloop"; arg1; arg2 ] -> Video (arg1, Some arg2, true)
-           | [ "img" ] -> Unknown sl
-           | "img" :: args -> img_expansion args
-           | [ "audio"; arg1 ] -> Audio arg1
-           | [ "photo"; arg1 ] -> Photo arg1
-           | [ "youtube"; arg1 ] -> Youtube arg1
-           | [ "chart"; arg1; arg2; arg3; arg4 ] ->
-               Chart (arg1, arg2, arg3, arg4)
-           | [ "geojson"; arg1 ] -> GeoJSON arg1
-           | [ "compare"; arg1; arg2 ] -> CompareRaster (arg1, arg2, "before", "after", None)
-           | [ "compare"; arg1; arg2; arg3; arg4 ] -> CompareRaster (arg1, arg2, arg3, arg4, None)
-           | _ -> Unknown sl ))
+      ( loc,
+        match sl with
+        | [ "video"; arg1 ] -> Video (arg1, None, false)
+        | [ "video"; arg1; arg2 ] -> Video (arg1, Some arg2, false)
+        | [ "videoloop"; arg1 ] -> Video (arg1, None, true)
+        | [ "videoloop"; arg1; arg2 ] -> Video (arg1, Some arg2, true)
+        | [ "img" ] -> Unknown sl
+        | "img" :: args -> img_expansion args
+        | [ "audio"; arg1 ] -> Audio arg1
+        | [ "photo"; arg1 ] -> Photo arg1
+        | [ "youtube"; arg1 ] -> Youtube arg1
+        | [ "chart"; arg1; arg2; arg3; arg4 ] -> Chart (arg1, arg2, arg3, arg4)
+        | [ "geojson"; arg1 ] -> GeoJSON arg1
+        | [ "compare"; arg1; arg2 ] ->
+            CompareRaster (arg1, arg2, "before", "after", None)
+        | [ "compare"; arg1; arg2; arg3; arg4 ] ->
+            CompareRaster (arg1, arg2, arg3, arg4, None)
+        | _ -> Unknown sl ))

@@ -2,10 +2,11 @@ type 'a t = {
   sections : 'a Section.t list;
   toplevel : 'a Section.t;
   config : 'a Config.t;
-  path :  'a Eio.Path.t;
-  taxonomies : (string * ('a Taxonomy.t)) list;
-  css_digest_path : ( 'a Eio.Path.t) option;
-} constraint 'a = [> Eio.Fs.dir_ty ]
+  path : 'a Eio.Path.t;
+  taxonomies : (string * 'a Taxonomy.t) list;
+  css_digest_path : 'a Eio.Path.t option;
+}
+  constraint 'a = [> Eio.Fs.dir_ty ]
 
 let build_taxonomy taxonomy_name pages =
   Printf.printf "Building taxonomy %s" taxonomy_name;
@@ -58,7 +59,8 @@ let of_directory path =
 
   let content_path = Eio.Path.(path / "content") in
 
-  let root_listing = Eio.Path.read_dir content_path
+  let root_listing =
+    Eio.Path.read_dir content_path
     |> List.map (fun item -> Eio.Path.(content_path / item))
   in
 
@@ -68,19 +70,17 @@ let of_directory path =
         match Eio.Path.is_directory p with
         | false -> None
         | true -> (
-            match
-              Eio.Path.is_file (Eio.Path.(p / "index.md"))
-            with
+            match Eio.Path.is_file Eio.Path.(p / "index.md") with
             | false -> Some p
             | true -> None))
       root_listing
     |> List.map (fun p -> Section.of_directory ~base:content_path p)
     |> List.filter_map (fun s ->
-           match Section.pages s with [] -> None | _ -> Some s)
+        match Section.pages s with [] -> None | _ -> Some s)
     |> List.sort (fun a b ->
-           Ptime.compare
-             (Page.date (List.hd (Section.pages b)))
-             (Page.date (List.hd (Section.pages a))))
+        Ptime.compare
+          (Page.date (List.hd (Section.pages b)))
+          (Page.date (List.hd (Section.pages a))))
   in
 
   let root_pages =
@@ -94,25 +94,28 @@ let of_directory path =
             match Eio.Path.is_directory p with
             | false -> None
             | true -> (
-              let root_dir_path = Eio.Path.(p / "index.md") in
-              match Eio.Path.is_file root_dir_path with
-              | true -> Some (Page.of_file "root" "/" root_dir_path)
-              | false -> None)))
+                let root_dir_path = Eio.Path.(p / "index.md") in
+                match Eio.Path.is_file root_dir_path with
+                | true -> Some (Page.of_file "root" "/" root_dir_path)
+                | false -> None)))
       root_listing
   in
 
   let toplevel = Section.v "website" (Uri.of_string "/") root_pages in
 
-  let css_digest_path = match Config.css_path config with
+  let css_digest_path =
+    match Config.css_path config with
     | None -> None
-    | Some p -> (
-      let digest = Eio.Path.with_open_in p (fun f ->
-        Digest.to_hex (Digest.string (Eio.Flow.read_all f))
-      ) in
-      let parent, basename = Option.get (Eio.Path.split p) in
-      let digest_path = Eio.Path.(parent / (Printf.sprintf "%s_%s" digest basename)) in
-      Some digest_path
-    )
+    | Some p ->
+        let digest =
+          Eio.Path.with_open_in p (fun f ->
+              Digest.to_hex (Digest.string (Eio.Flow.read_all f)))
+        in
+        let parent, basename = Option.get (Eio.Path.split p) in
+        let digest_path =
+          Eio.Path.(parent / Printf.sprintf "%s_%s" digest basename)
+        in
+        Some digest_path
   in
 
   let taxonomies =
@@ -125,7 +128,7 @@ let of_directory path =
       (Config.taxonomies config)
   in
 
-  { sections; toplevel; config; path; taxonomies; css_digest_path}
+  { sections; toplevel; config; path; taxonomies; css_digest_path }
 
 let sections t = t.toplevel :: t.sections
 let title t = Config.title t.config
@@ -137,5 +140,4 @@ let uri t = Config.base_url t.config
 let port t = Config.port t.config
 let author t = Config.author t.config
 let css_digest_path t = t.css_digest_path
-
 let css_path t = Config.css_path t.config

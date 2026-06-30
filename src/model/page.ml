@@ -4,20 +4,19 @@ type 'a t = {
   frontmatter : Frontmatter.t;
   body : string;
   path : 'a Eio.Path.t;
-  base : ('a Eio.Path.t) option;
+  base : 'a Eio.Path.t option;
   shortcodes : ((int * int) option * Shortcode.t) list;
-} constraint 'a = [> Eio.Fs.dir_ty ]
+}
+  constraint 'a = [> Eio.Fs.dir_ty ]
 
 let read_frontmatter path =
   let raw_frontmatter, body_markdown =
     Eio.Path.with_open_in path (fun file ->
-      let content = Eio.Flow.read_all file in
-      let parts = Astring.String.cuts ~sep:"---" content in
-      match parts with
-      | _ :: fm :: body -> (fm, String.concat "\n---\n" body)
-      | _ ->
-          failwith
-            (Fmt.str "failed to parse %a" Eio.Path.pp path))
+        let content = Eio.Flow.read_all file in
+        let parts = Astring.String.cuts ~sep:"---" content in
+        match parts with
+        | _ :: fm :: body -> (fm, String.concat "\n---\n" body)
+        | _ -> failwith (Fmt.str "failed to parse %a" Eio.Path.pp path))
   in
   let frontmatter = Frontmatter.of_string raw_frontmatter in
   (frontmatter, body_markdown)
@@ -29,25 +28,26 @@ let image_with_dimensions path (img : Frontmatter.image option) =
       try
         let metadata =
           Metadata.Image.parse_file
-            (Option.get (Eio.Path.native (Eio.Path.(path / img.filename))))
+            (Option.get (Eio.Path.native Eio.Path.(path / img.filename)))
         in
         let width = int_of_string (List.assoc "width" metadata)
         and height = int_of_string (List.assoc "height" metadata) in
         Some { img with dimensions = Some (width, height) }
       with
       | Failure _ ->
-          Fmt.pr "Failed to parse %a@\n"
-            Eio.Path.pp Eio.Path.(path / img.filename);
+          Fmt.pr "Failed to parse %a@\n" Eio.Path.pp
+            Eio.Path.(path / img.filename);
           Some img
       | Metadata.Invalid ->
-          Fmt.pr "Error reading metadata %a@\n"
-            Eio.Path.pp Eio.Path.(path / img.filename);
+          Fmt.pr "Error reading metadata %a@\n" Eio.Path.pp
+            Eio.Path.(path / img.filename);
           Some img)
 
 let image_shortcode_with_dimensions path filename alt code =
   try
     let metadata =
-      Metadata.Image.parse_file (Option.get (Eio.Path.native (Eio.Path.(path / filename))))
+      Metadata.Image.parse_file
+        (Option.get (Eio.Path.native Eio.Path.(path / filename)))
     in
     let width = int_of_string (List.assoc "width" metadata)
     and height = int_of_string (List.assoc "height" metadata) in
@@ -57,19 +57,19 @@ let image_shortcode_with_dimensions path filename alt code =
       Fmt.pr "Failed to process path %a + %s@\n" Eio.Path.pp path filename;
       Shortcode.Raster (filename, alt, code, None)
   | Failure _ ->
-      Fmt.pr "Failed to parse %a@\n"
-        Eio.Path.pp Eio.Path.(path / filename);
+      Fmt.pr "Failed to parse %a@\n" Eio.Path.pp Eio.Path.(path / filename);
       Shortcode.Raster (filename, alt, code, None)
   | Metadata.Invalid ->
-      Fmt.pr "Error reading metadata %a@\n"
-        Eio.Path.pp Eio.Path.(path / filename);
+      Fmt.pr "Error reading metadata %a@\n" Eio.Path.pp
+        Eio.Path.(path / filename);
       Shortcode.Raster (filename, alt, code, None)
 
-let compare_shortcode_with_dimensions path fn1 fn2 l1 l2  =
+let compare_shortcode_with_dimensions path fn1 fn2 l1 l2 =
   (* Lazy: just take dims off first image for now *)
   try
     let metadata =
-      Metadata.Image.parse_file (Option.get (Eio.Path.native (Eio.Path.(path / fn1))))
+      Metadata.Image.parse_file
+        (Option.get (Eio.Path.native Eio.Path.(path / fn1)))
     in
     let width = int_of_string (List.assoc "width" metadata)
     and height = int_of_string (List.assoc "height" metadata) in
@@ -80,10 +80,10 @@ let compare_shortcode_with_dimensions path fn1 fn2 l1 l2  =
       Shortcode.CompareRaster (fn1, fn2, l1, l2, None)
   | Failure _ ->
       Fmt.pr "Failed to parse %a@" Eio.Path.pp Eio.Path.(path / fn1);
-        Shortcode.CompareRaster (fn1, fn2, l1, l2, None)
+      Shortcode.CompareRaster (fn1, fn2, l1, l2, None)
   | Metadata.Invalid ->
       Fmt.pr "Error reading metadata %a@" Eio.Path.pp Eio.Path.(path / fn1);
-        Shortcode.CompareRaster (fn1, fn2, l1, l2, None)
+      Shortcode.CompareRaster (fn1, fn2, l1, l2, None)
 
 let update_shortcodes dir sl =
   List.map
@@ -92,7 +92,7 @@ let update_shortcodes dir sl =
       | Shortcode.Raster (fn, alt, code, _) ->
           (pos, image_shortcode_with_dimensions dir fn alt code)
       | Shortcode.CompareRaster (fn1, fn2, l1, l2, _) ->
-        (pos, compare_shortcode_with_dimensions dir fn1 fn2 l1 l2)
+          (pos, compare_shortcode_with_dimensions dir fn1 fn2 l1 l2)
       | x -> (pos, x))
     sl
 
@@ -112,8 +112,7 @@ let v ?(base = None) original_section_title original_section_url path
     |> update_shortcodes parent
   in
   let code_blocks =
-    Shortcode.find_codes body
-    |> List.map (fun t -> (None, t))
+    Shortcode.find_codes body |> List.map (fun t -> (None, t))
   in
   {
     original_section_title;
@@ -129,8 +128,7 @@ let of_file ?(base = None) original_section_title original_section_url path =
   let frontmatter, body =
     try read_frontmatter path
     with Not_found | Invalid_argument _ ->
-      failwith
-        (Fmt.str "Failed to find key in %a" Eio.Path.pp path)
+      failwith (Fmt.str "Failed to find key in %a" Eio.Path.pp path)
   in
   let parent, _ = Option.get (Eio.Path.split path) in
   let updated_images =
@@ -141,8 +139,7 @@ let of_file ?(base = None) original_section_title original_section_url path =
   let frontmatter = Frontmatter.update_images frontmatter updated_images in
   let frontmatter =
     Frontmatter.update_titleimage frontmatter
-      (image_with_dimensions parent
-         (Frontmatter.titleimage frontmatter))
+      (image_with_dimensions parent (Frontmatter.titleimage frontmatter))
   in
   v ~base original_section_title original_section_url path frontmatter body
 
@@ -155,28 +152,24 @@ let url_name t =
     | None -> (
         let parent, basename = Option.get (Eio.Path.split t.path) in
         match basename with
-        | "index.md" -> (
-          let _, parentname = Option.get(Eio.Path.split parent) in parentname
-        )
-        | x -> (
-          let idx = String.rindex basename '.' in
-          String.sub basename 0 ((String.length basename) - idx)
-        ))
+        | "index.md" ->
+            let _, parentname = Option.get (Eio.Path.split parent) in
+            parentname
+        | x ->
+            let idx = String.rindex basename '.' in
+            String.sub basename 0 (String.length basename - idx))
     | Some base ->
         let p = Option.get (Path.rem_prefix base t.path) in
         let parent, basename = Option.get (Eio.Path.split t.path) in
         let dirpath =
           match basename with
-          | "index.md" -> (
-             Option.get (Path.rem_prefix base parent)
-          )
-          | _ -> (
-            let pstr = Option.get (Eio.Path.native parent) in
-            let idx = String.rindex pstr '.' in
-            String.sub pstr 0 ((String.length basename) - idx)
-          )
+          | "index.md" -> Option.get (Path.rem_prefix base parent)
+          | _ ->
+              let pstr = Option.get (Eio.Path.native parent) in
+              let idx = String.rindex pstr '.' in
+              String.sub pstr 0 (String.length basename - idx)
         in
-        (*Fpath.to_string (Fpath.rem_empty_seg dirpath)*)dirpath
+        (*Fpath.to_string (Fpath.rem_empty_seg dirpath)*) dirpath
   in
   let lower_raw = String.lowercase_ascii raw in
   String.fold_left
@@ -190,8 +183,11 @@ let date t = Frontmatter.date t.frontmatter
 let synopsis t = Frontmatter.synopsis t.frontmatter
 let titleimage t = Frontmatter.titleimage t.frontmatter
 let draft t = Frontmatter.draft t.frontmatter
+
 let path t =
-  let parent, _ = Option.get (Eio.Path.split t.path) in parent
+  let parent, _ = Option.get (Eio.Path.split t.path) in
+  parent
+
 let body t = t.body
 let tags t = Frontmatter.tags t.frontmatter
 let resources t = Frontmatter.get_key_as_string_list t.frontmatter "resources"
