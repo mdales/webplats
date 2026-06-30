@@ -22,9 +22,10 @@
  (depends ocaml
   dune
   fpath
-  dream
   cmarkit
   hilite
+  cohttp-eio
+  eio_main
   astring
   metadata
   magic-mime
