@@ -169,13 +169,13 @@ let render_head ~site ~sec ~page () =
           | true ->
               [
                 El.script
-                  ~at:[ At.src "https://cdn.jsdelivr.net/npm/vega@6;" ]
+                  ~at:[ At.src "https://cdn.jsdelivr.net/npm/vega@6" ]
                   [];
                 El.script
-                  ~at:[ At.src "https://cdn.jsdelivr.net/npm/vega-lite@6;" ]
+                  ~at:[ At.src "https://cdn.jsdelivr.net/npm/vega-lite@6" ]
                   [];
                 El.script
-                  ~at:[ At.src "https://cdn.jsdelivr.net/npm/vega-embed@7;" ]
+                  ~at:[ At.src "https://cdn.jsdelivr.net/npm/vega-embed@7" ]
                   [];
               ]
           | false -> []
