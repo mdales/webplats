@@ -192,10 +192,28 @@ let render_photo reference =
   in
   [ html ]
 
-let render_chart _style filename xaxis yaxis =
-  let identifier = Printf.sprintf "chart%d" (Random.int 1024) in
-  let html = El.div ~at:[ At.id identifier ] [] in
-  let script =
+let line_chart_script filename xaxis yaxis identifier =
+  El.script
+    [
+      El.unsafe_raw
+        (Printf.sprintf
+           {|
+  var vlSpec = {
+    $schema: 'https://vega.github.io/schema/vega-lite/v6.json',
+    mark: 'line',
+    data: {"url": "%s"},
+    width: 1000,
+    "encoding": {
+      "x": {"field": "%s", "type": "nominal",  "axis": {"labels": false}},
+      "y": {"field": "%s", "type": "quantitative"}
+    }
+  };
+  vegaEmbed('#%s', vlSpec);
+  |}
+           filename xaxis yaxis identifier);
+    ]
+
+let bar_chart_script filename xaxis yaxis identifier =
     El.script
       [
         El.unsafe_raw
@@ -203,11 +221,11 @@ let render_chart _style filename xaxis yaxis =
              {|
     var vlSpec = {
       $schema: 'https://vega.github.io/schema/vega-lite/v6.json',
-      mark: 'line',
+      mark: 'bar',
       data: {"url": "%s"},
       width: 1000,
       "encoding": {
-        "x": {"field": "%s", "type": "nominal",  "axis": {"labels": false}},
+        "x": {"field": "%s", "type": "nominal", "sort": "-y"},
         "y": {"field": "%s", "type": "quantitative"}
       }
     };
@@ -215,6 +233,14 @@ let render_chart _style filename xaxis yaxis =
     |}
              filename xaxis yaxis identifier);
       ]
+
+let render_chart style filename xaxis yaxis =
+  let identifier = Printf.sprintf "chart%d" (Random.int 1024) in
+  let html = El.div ~at:[ At.id identifier ] [] in
+  let script = match style with
+  | "line" -> line_chart_script filename xaxis yaxis identifier
+  | "bar" -> bar_chart_script filename xaxis yaxis identifier
+  | _ -> El.script []
   in
   [ html; script ]
 
