@@ -487,11 +487,11 @@ let routes_for_taxonomies ~taxonomy_renderer ~taxonomy_section_renderer
       {
         uri = Taxonomy.uri taxonomy;
         handler =
-          (let render_taxonomy = taxonomy_renderer taxonomy in
+          (fun _ -> let render_taxonomy = taxonomy_renderer taxonomy in
            let body =
              render_taxonomy site taxonomy |> El.to_string ~doctype:true
            in
-           fun _ -> Cohttp_eio.Server.respond_string ~status:`OK ~body ());
+          Cohttp_eio.Server.respond_string ~status:`OK ~body ());
       }
       :: List.concat_map
            (fun sec ->

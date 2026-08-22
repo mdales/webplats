@@ -62,6 +62,10 @@ let image_shortcode_with_dimensions path filename alt code =
       Fmt.pr "Error reading metadata %a@\n" Eio.Path.pp
         Eio.Path.(path / filename);
       Shortcode.Raster (filename, alt, code, None)
+  | Unix.Unix_error (err, fn, arg) ->
+    Fmt.pr "Error reading metadata %a: %s (%s %s)@\n" Eio.Path.pp
+      Eio.Path.(path / filename) (Unix.error_message err) fn arg;
+    Shortcode.Raster (filename, alt, code, None)
 
 let compare_shortcode_with_dimensions path fn1 fn2 l1 l2 =
   (* Lazy: just take dims off first image for now *)
