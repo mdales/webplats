@@ -1,7 +1,11 @@
 open Htmlit
 
 let render_head_generic site =
-  (match Site.css_digest_path site with
+  (
+  [
+    El.meta ~at:[At.charset "UTF-8"] ()
+  ] @
+  match Site.css_digest_path site with
     | None -> []
     | Some p ->
         let sp = Site.path site in
