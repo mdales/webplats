@@ -25,7 +25,7 @@ let render_diagram process_mgr cache_dir page code =
   match Eio.Path.is_file target_path with
   | true -> target_path
   | false ->
-      (try Eio.Path.mkdir ~perm:0o755 target_folder
+      (try Eio.Path.mkdirs ~perm:0o755 target_folder
        with Eio.Io (Eio.Fs.E (Eio.Fs.Already_exists _), _) -> ());
       Eio.Switch.run @@ fun sw ->
       let stdin_r, stdin_w = Eio.Process.pipe ~sw process_mgr in
@@ -49,7 +49,7 @@ let render_image_fill process_mgr cache_dir page filename (max_width, max_height
   match Eio.Path.is_file target_path with
   | true -> target_path
   | false ->
-      (try Eio.Path.mkdir ~perm:0o755 target_folder
+      (try Eio.Path.mkdirs ~perm:0o755 target_folder
        with Eio.Io (Eio.Fs.E (Eio.Fs.Already_exists _), _) -> ());
       let metadata =
         Metadata.Image.parse_file (Option.get (Eio.Path.native imgpath))
@@ -92,7 +92,7 @@ let render_image_fit process_mgr cache_dir page filename (max_width, max_height)
   match Eio.Path.is_file target_path with
   | true -> target_path
   | false -> (
-      (try Eio.Path.mkdir ~perm:0o755 target_folder
+      (try Eio.Path.mkdirs ~perm:0o755 target_folder
        with Eio.Io (Eio.Fs.E (Eio.Fs.Already_exists _), _) -> ());
       let metadata =
         Metadata.Image.parse_file (Option.get (Eio.Path.native imgpath))
