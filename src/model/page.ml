@@ -172,7 +172,7 @@ let url_name t =
               let idx = String.rindex pstr '.' in
               String.sub pstr 0 (String.length basename - idx)
         in
-        (*Fpath.to_string (Fpath.rem_empty_seg dirpath)*) dirpath
+        dirpath
   in
   let lower_raw = String.lowercase_ascii raw in
   String.fold_left

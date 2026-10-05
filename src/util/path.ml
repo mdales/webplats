@@ -10,7 +10,7 @@ let rem_prefix base path =
   let rest = loop path [] in
   match rest with
   | None -> None
-  | Some rest -> Some (String.concat "/" (List.rev rest))
+  | Some rest -> Some (String.concat "/" rest)
 (* let newpath = List.fold_left (fun acc p ->
       acc ^ "/" ^ p
     ) "" rest *)

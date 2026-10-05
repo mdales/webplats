@@ -10,7 +10,7 @@ let render_video filename thumb_opt looped =
   let html =
     El.div
       [
-        El.video ~at
+        El.video ~at:[At.v "controls" ""]
           [
             El.source ~at:[ At.src filename; At.type' "video/mp4" ] ();
             El.txt "Your browser does not support the video element.";
