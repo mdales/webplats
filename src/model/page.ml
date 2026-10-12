@@ -8,14 +8,29 @@ type t = {
   shortcodes : ((int * int) option * Shortcode.t) list;
 }
 
+let split_frontmatter content =
+  let lines = String.split_on_char '\n' content in
+  let is_fence l = String.trim l = "---" in
+  match lines with
+  | first :: rest when is_fence first ->
+      let rec go acc = function
+        | [] -> None
+        | l :: tl when is_fence l -> Some (List.rev acc, tl)
+        | l :: tl -> go (l :: acc) tl
+      in
+      (match go [] rest with
+      | Some (fm, body) ->
+          Some (String.concat "\n" fm, String.concat "\n" body)
+      | None -> None)
+  | _ -> None
+
 let read_frontmatter path =
   let raw_frontmatter, body_markdown =
     Eio.Path.with_open_in path (fun file ->
         let content = Eio.Flow.read_all file in
-        let parts = Astring.String.cuts ~sep:"---" content in
-        match parts with
-        | _ :: fm :: body -> (fm, String.concat "\n---\n" body)
-        | _ -> failwith (Fmt.str "failed to parse %a" Eio.Path.pp path))
+        match split_frontmatter content with
+        | Some (fm, body) -> (fm, body)
+        | None -> failwith (Fmt.str "failed to parse %a" Eio.Path.pp path))
   in
   let frontmatter = Frontmatter.of_string raw_frontmatter in
   (frontmatter, body_markdown)
