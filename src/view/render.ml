@@ -62,7 +62,7 @@ let render_diagram_blocks doc =
   let mapper = Mapper.make ~block () in
   Mapper.map_doc mapper doc
 
-let render_body page =
+let render_body ~site page =
   let unrendered_markdown = Page.body page in
   let ordered_shortcodes =
     Page.shortcodes page
@@ -83,7 +83,7 @@ let render_body page =
         before ^ rendered_shortcode ^ after)
       unrendered_markdown ordered_shortcodes
   in
-  Doc.of_string ~strict:false body
+  Doc.of_string ~strict:false (body ^ "\n\n" ^ (Site.links site))
   |> render_markdown_images |> render_diagram_blocks
   |> Hilite_markdown.transform
   |> Cmarkit_html.of_doc ~safe:false

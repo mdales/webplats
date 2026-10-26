@@ -36,7 +36,7 @@ let render_jsonfeed base_section site pages =
                   ~path:(Some (Uri.path (Section.uri ~page sec)))
                   (Site.uri site)))
           ~title:(Page.title page)
-          ~content:(`Html (renderer page))
+          ~content:(`Html (renderer ~site page))
           ~tags ())
       pages
   in
@@ -82,7 +82,7 @@ let render_atom base_section site pages =
           Syndic.Atom.link ~title:(Page.title page) ~rel:Alternate url
         in
 
-        let content : Syndic.Atom.content = Html (None, renderer page) in
+        let content : Syndic.Atom.content = Html (None, renderer ~site page) in
         let updated = Page.date page in
         let authors = (author, []) in
 

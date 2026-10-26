@@ -8,6 +8,7 @@ type t = {
   port : int;
   author : string option;
   css : Eio.Fs.dir_ty Eio.Path.t option;
+  links : string;
 }
 
 let of_file path =
@@ -35,8 +36,17 @@ let of_file path =
             | Some p ->
                 let parent, _ = Option.get (Eio.Path.split path) in
                 Some Eio.Path.(parent / p)
+          and relative_links = yaml_dict_to_string assoc "links" in
+          let links =
+            match relative_links with
+            | None -> Fmt.pr "nothing to see\n"; ""
+            | Some p ->
+                let parent, _ = Option.get (Eio.Path.split path) in
+                let loc = Eio.Path.(parent / p) in
+                let l = Eio.Path.with_open_in loc Eio.Flow.read_all in
+                Fmt.pr "Links: %s\n" l; l
           in
-          { title; base_url; taxonomies; hugo_theme; port; author; css }
+          { title; base_url; taxonomies; hugo_theme; port; author; css; links }
       | _ -> failwith "Failed to load config")
 
 let base_url t = t.base_url
@@ -46,3 +56,4 @@ let hugo_theme t = t.hugo_theme
 let port t = t.port
 let author t = t.author
 let css_path t = t.css
+let links t = t.links

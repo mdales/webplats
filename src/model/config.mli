@@ -11,4 +11,5 @@ val taxonomies : t -> (string * string) list
 (* Taxonomies in Hugo are a tuple of frontmatter key and human readable key *)
 val author : t -> string option
 val css_path : t -> Eio.Fs.dir_ty Eio.Path.t option
+val links : t -> string
 val hugo_theme : t -> string

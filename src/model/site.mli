@@ -12,3 +12,4 @@ val port : t -> int
 val author : t -> string option
 val css_path : t -> Eio.Fs.dir_ty Eio.Path.t option
 val css_digest_path : t -> Eio.Fs.dir_ty Eio.Path.t option
+val links : t -> string

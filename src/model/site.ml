@@ -140,3 +140,4 @@ let port t = Config.port t.config
 let author t = Config.author t.config
 let css_digest_path t = t.css_digest_path
 let css_path t = Config.css_path t.config
+let links t = Config.links t.config
